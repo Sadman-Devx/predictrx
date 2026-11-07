@@ -1,0 +1,11 @@
+---
+description: AI/agent/RAG safety rules
+globs: backend/ai/**/*.py, mcp-server/**/*.py
+alwaysApply: false
+---
+- Facts come from retrieved chunks and the interaction table; the model only phrases them.
+- The Advisory agent adds no new facts. The Verifier re-checks via MCP tools and labels verified/unverified/conflict.
+- Run `ai/guardrails/output_checks.py` on every output; failures become "insufficient evidence".
+- Redact PII before any cloud call; sensitive free text prefers local Ollama.
+- Eval sets must be independent of the RAG/Verifier data; tune on `dev`, report once on `test`.
+- Changing chunking/embeddings/prompts requires re-running the eval.

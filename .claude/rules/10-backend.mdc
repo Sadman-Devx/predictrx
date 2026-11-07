@@ -1,0 +1,12 @@
+---
+description: Django/DRF conventions for PredictRx backend
+globs: backend/**/*.py
+alwaysApply: false
+---
+- Business logic in `services.py`; views stay thin. Use `core.exceptions` error shape.
+- Ownership/roles are derived server-side from `request.user`; never trust client-supplied roles.
+- Every patient-data read, analysis start, family view, consent change → `apps.audit.services.record(...)`.
+- LLM/OCR work runs in Celery; API returns a run/scan ID. Use `idempotency_key` for analysis runs.
+- Use `select_related`/`prefetch_related`, `update_fields`, specific exceptions. Read generated migrations before committing.
+- Never hard-code model names or keys; use settings/env and `ai/llm/router.py`.
+- Logs and traces store redacted text only (`ai/guardrails/pii.py`).

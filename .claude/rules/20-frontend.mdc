@@ -1,0 +1,10 @@
+---
+description: React/Vite conventions for PredictRx frontend
+globs: frontend/src/**/*.{ts,tsx,css}
+alwaysApply: false
+---
+- All UI strings via `i18n` (`bn.json` + `en.json`); Bangla is the default. No hard-coded text.
+- Colours/sizes only from `styles/tokens.css`. Severity = colour + shape + text, never colour alone.
+- Never show confidence without its basis (evidence/verification). Never render a partial run as final.
+- Respect `prefers-reduced-motion`. Touch targets ≥ 44px. Keep the disclaimer strip on every screen.
+- No tokens in localStorage; no API keys in code. API types follow the backend OpenAPI schema.

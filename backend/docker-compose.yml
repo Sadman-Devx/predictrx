@@ -1,0 +1,54 @@
+# Dev infrastructure. Run from the backend/ folder:  docker compose up -d
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: predictrx
+      POSTGRES_PASSWORD: predictrx
+      POSTGRES_DB: predictrx
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U predictrx"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes: [ollama:/root/.ollama]
+    # Pull a model after start:  docker compose exec ollama ollama pull <model>
+
+  # Optional full-container run:  docker compose --profile full up --build
+  api:
+    profiles: ["full"]
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file: ../.env
+    environment:
+      DATABASE_URL: postgres://predictrx:predictrx@db:5432/predictrx
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_BASE_URL: http://ollama:11434
+    ports: ["8000:8000"]
+    depends_on: { db: { condition: service_healthy }, redis: { condition: service_started } }
+    volumes: [".:/app"]
+
+  worker:
+    profiles: ["full"]
+    build: .
+    command: celery -A config worker -l info
+    env_file: ../.env
+    environment:
+      DATABASE_URL: postgres://predictrx:predictrx@db:5432/predictrx
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_BASE_URL: http://ollama:11434
+    depends_on: { db: { condition: service_healthy }, redis: { condition: service_started } }
+    volumes: [".:/app"]
+
+volumes:
+  pgdata:
+  ollama:

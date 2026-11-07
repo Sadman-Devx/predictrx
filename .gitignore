@@ -1,0 +1,27 @@
+# secrets
+.env
+*.pem
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.coverage
+# django
+backend/media/
+backend/staticfiles/
+db.sqlite3
+# node
+node_modules/
+frontend/dist/
+# data (keep scripts, not big/raw data)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+*.tsbuildinfo

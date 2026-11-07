@@ -1,0 +1,15 @@
+---
+description: PredictRx project-wide rules (read docs/ first)
+alwaysApply: true
+---
+# PredictRx
+Bangla-first, evidence-cited medication-safety decision support. **Not** a diagnosis or dosing tool.
+
+Read before changing code: `docs/PRD.md`, `docs/architecture.md`, `docs/backend-design.md`, `docs/rule.md`.
+
+- Monorepo: `backend/` (Django+DRF), `frontend/` (React+Vite), `mcp-server/`, `data/`, `docs/`.
+- Never output dosing/stop/start instructions. Never show a "safe" state; absence of data ≠ safe.
+- Every finding with a severity needs evidence; otherwise severity = `unknown`.
+- Never use real patient data. Never commit secrets, datasets or prescription images.
+- Do not claim a fix works without a test or a real run. Do not add features after the 16 Nov freeze.
+- Follow `docs/roadmap.md` ownership; keep changes small and in feature branches.
