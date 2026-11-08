@@ -5,7 +5,7 @@ import en from "./en.json";
 export type Lang = "bn" | "en";
 export type MessageKey = keyof typeof bn;
 
-const dictionaries: Record<Lang, Record<string, string>> = { bn, en };
+const dictionaries: Record<Lang, Record<MessageKey, string>> = { bn, en };
 
 interface I18nValue {
   lang: Lang;
