@@ -85,3 +85,52 @@ def test_seed_and_report_counts():
     r = report.build_report()
     assert r["drugs_total"] == len(read_seed())
     assert r["drugs_with_documents"] == 0 and r["interactions_total"] == 0
+
+
+# ---------------------------------------------------------------- DDInter (synthetic fixture)
+DDINTER_FIXTURE = PIPELINE_DIR / "fixtures" / "ddinter"
+
+
+def ddinter_parsed():
+    import parse_interactions
+
+    files = sorted(DDINTER_FIXTURE.glob("ddinter_downloads_code_*.csv"))
+    return parse_interactions.parse_files(files)
+
+
+def test_ddinter_parse_collapses_duplicates_and_drops_bad_rows():
+    drugs, pairs, stats = ddinter_parsed()
+    assert stats["rows"] == 6
+    assert stats["duplicate_rows_collapsed"] == 1      # Examplol/Testadine appears in both files (reversed)
+    assert stats["dropped_bad_level"] == 1             # "Bogus"
+    assert len(pairs) == 4 and len(drugs) == 5
+    ex_test = next(p for p in pairs if {p["id_a"], p["id_b"]} == {"DDInter9001", "DDInter9002"})
+    assert ex_test["level"] == "major" and sorted(ex_test["files"]) == ["A", "B"]
+    assert all(p["id_a"] < p["id_b"] for p in pairs)   # unordered pair stored in one canonical order
+
+
+@pytest.mark.django_db
+def test_ddinter_load_merges_aliases_keeps_variants_and_is_idempotent():
+    import load
+    import load_ddinter
+    from apps.drugs.models import Drug, Interaction
+
+    load.seed_drugs(read_seed())  # creates 'albuterol' with alias 'salbutamol'
+    drugs, pairs, _ = ddinter_parsed()
+    first = load_ddinter.load(drugs, pairs)
+    assert first["interactions_added"] == 4
+
+    albuterol = Drug.objects.get(generic_name="albuterol")      # "Salbutamol" merged into the seed drug
+    assert "salbutamol" in albuterol.aliases and albuterol.external_ids["ddinter"] == ["DDInter9003"]
+    assert not Drug.objects.filter(generic_name="salbutamol").exists()
+    assert Drug.objects.filter(generic_name="fakemycin").exists()
+    assert Drug.objects.filter(generic_name="fakemycin (topical)").exists()   # formulation stays separate
+
+    for ix in Interaction.objects.filter(source="ddinter"):
+        assert ix.drug_a_id < ix.drug_b_id and ix.mechanism == "" and "non-commercial" in ix.license_note
+    assert Interaction.objects.filter(severity="unknown").count() == 1
+
+    again = load_ddinter.load(drugs, pairs)
+    assert again["interactions_added"] == 0 and Interaction.objects.count() == 4
+    replaced = load_ddinter.load(drugs, pairs, replace=True)
+    assert replaced["interactions_after"] == 4
