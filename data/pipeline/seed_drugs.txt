@@ -1,0 +1,80 @@
+# One drug per line:  us_generic_name | alias1, alias2
+# Names follow openFDA/US labelling (e.g. acetaminophen), with international names as aliases (paracetamol).
+# STARTER LIST — Lead + Docs/QA edit this to match the brand-mapping sheet. Lower-case. Single-ingredient drugs only.
+acetaminophen | paracetamol
+ibuprofen
+aspirin | acetylsalicylic acid
+naproxen
+diclofenac
+celecoxib
+tramadol
+metformin
+glimepiride
+sitagliptin
+atorvastatin
+simvastatin
+rosuvastatin
+amlodipine
+nifedipine
+diltiazem
+verapamil
+losartan
+lisinopril
+enalapril
+ramipril
+metoprolol
+atenolol
+carvedilol
+bisoprolol
+furosemide
+hydrochlorothiazide
+spironolactone
+digoxin
+warfarin
+clopidogrel
+rivaroxaban
+apixaban
+omeprazole
+esomeprazole
+pantoprazole
+famotidine
+ondansetron
+metoclopramide
+amoxicillin
+azithromycin
+ciprofloxacin
+levofloxacin
+metronidazole
+doxycycline
+cefuroxime
+fluconazole
+prednisone
+prednisolone
+dexamethasone
+albuterol | salbutamol
+montelukast
+theophylline
+cetirizine
+loratadine
+fluoxetine
+sertraline
+escitalopram
+amitriptyline
+diazepam
+alprazolam
+clonazepam
+haloperidol
+risperidone
+olanzapine
+lithium carbonate | lithium
+carbamazepine
+phenytoin
+valproic acid | sodium valproate
+gabapentin
+pregabalin
+levothyroxine
+allopurinol
+colchicine
+sildenafil
+tamsulosin
+finasteride
