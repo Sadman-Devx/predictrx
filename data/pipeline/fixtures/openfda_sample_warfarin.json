@@ -1,0 +1,80 @@
+{
+  "query_name": "warfarin",
+  "aliases": [],
+  "fetched_at": "2026-11-09T00:00:00+00:00",
+  "meta": {
+    "note": "hand-made fixture mimicking the openFDA format; NOT real data"
+  },
+  "results": [
+    {
+      "id": "fixture-label-1",
+      "set_id": "00000000-aaaa-bbbb-cccc-000000000001",
+      "version": "3",
+      "effective_time": "20240101",
+      "openfda": {
+        "generic_name": [
+          "WARFARIN SODIUM"
+        ],
+        "brand_name": [
+          "FIXTUREBRAND"
+        ]
+      },
+      "drug_interactions": [
+        "SYNTHETIC TEST TEXT (not real label content). Interaction section start. synthetic filler sentence number 1 for chunking tests. synthetic filler sentence number 2 for chunking tests. synthetic filler sentence number 3 for chunking tests. synthetic filler sentence number 4 for chunking tests. synthetic filler sentence number 5 for chunking tests. synthetic filler sentence number 6 for chunking tests. synthetic filler sentence number 7 for chunking tests. synthetic filler sentence number 8 for chunking tests. synthetic filler sentence number 9 for chunking tests. synthetic filler sentence number 10 for chunking tests. synthetic filler sentence number 11 for chunking tests. synthetic filler sentence number 12 for chunking tests. synthetic filler sentence number 13 for chunking tests. synthetic filler sentence number 14 for chunking tests. synthetic filler sentence number 15 for chunking tests. synthetic filler sentence number 16 for chunking tests. synthetic filler sentence number 17 for chunking tests. synthetic filler sentence number 18 for chunking tests. synthetic filler sentence number 19 for chunking tests. synthetic filler sentence number 20 for chunking tests. synthetic filler sentence number 21 for chunking tests. synthetic filler sentence number 22 for chunking tests. synthetic filler sentence number 23 for chunking tests. synthetic filler sentence number 24 for chunking tests. synthetic filler sentence number 25 for chunking tests. synthetic filler sentence number 26 for chunking tests. synthetic filler sentence number 27 for chunking tests. synthetic filler sentence number 28 for chunking tests. synthetic filler sentence number 29 for chunking tests. synthetic filler sentence number 30 for chunking tests. synthetic filler sentence number 31 for chunking tests. synthetic filler sentence number 32 for chunking tests. synthetic filler sentence number 33 for chunking tests. synthetic filler sentence number 34 for chunking tests. synthetic filler sentence number 35 for chunking tests. synthetic filler sentence number 36 for chunking tests. synthetic filler sentence number 37 for chunking tests. synthetic filler sentence number 38 for chunking tests. synthetic filler sentence number 39 for chunking tests. synthetic filler sentence number 40 for chunking tests. synthetic filler sentence number 41 for chunking tests. synthetic filler sentence number 42 for chunking tests. synthetic filler sentence number 43 for chunking tests. synthetic filler sentence number 44 for chunking tests. synthetic filler sentence number 45 for chunking tests. synthetic filler sentence number 46 for chunking tests. synthetic filler sentence number 47 for chunking tests. synthetic filler sentence number 48 for chunking tests. synthetic filler sentence number 49 for chunking tests. synthetic filler sentence number 50 for chunking tests. synthetic filler sentence number 51 for chunking tests. synthetic filler sentence number 52 for chunking tests. synthetic filler sentence number 53 for chunking tests. synthetic filler sentence number 54 for chunking tests. synthetic filler sentence number 55 for chunking tests. synthetic filler sentence number 56 for chunking tests. synthetic filler sentence number 57 for chunking tests. synthetic filler sentence number 58 for chunking tests. synthetic filler sentence number 59 for chunking tests."
+      ],
+      "warnings": [
+        "SYNTHETIC TEST TEXT (not real label content). Warnings section."
+      ],
+      "contraindications": [
+        "SYNTHETIC TEST TEXT (not real label content). Contraindications section."
+      ]
+    },
+    {
+      "id": "fixture-label-1-copy",
+      "set_id": "00000000-aaaa-bbbb-cccc-000000000001",
+      "version": "3",
+      "effective_time": "20240101",
+      "openfda": {
+        "generic_name": [
+          "WARFARIN SODIUM"
+        ],
+        "brand_name": [
+          "FIXTUREBRAND"
+        ]
+      },
+      "drug_interactions": [
+        "SYNTHETIC TEST TEXT (not real label content). Interaction section start. synthetic filler sentence number 1 for chunking tests. synthetic filler sentence number 2 for chunking tests. synthetic filler sentence number 3 for chunking tests. synthetic filler sentence number 4 for chunking tests. synthetic filler sentence number 5 for chunking tests. synthetic filler sentence number 6 for chunking tests. synthetic filler sentence number 7 for chunking tests. synthetic filler sentence number 8 for chunking tests. synthetic filler sentence number 9 for chunking tests. synthetic filler sentence number 10 for chunking tests. synthetic filler sentence number 11 for chunking tests. synthetic filler sentence number 12 for chunking tests. synthetic filler sentence number 13 for chunking tests. synthetic filler sentence number 14 for chunking tests. synthetic filler sentence number 15 for chunking tests. synthetic filler sentence number 16 for chunking tests. synthetic filler sentence number 17 for chunking tests. synthetic filler sentence number 18 for chunking tests. synthetic filler sentence number 19 for chunking tests. synthetic filler sentence number 20 for chunking tests. synthetic filler sentence number 21 for chunking tests. synthetic filler sentence number 22 for chunking tests. synthetic filler sentence number 23 for chunking tests. synthetic filler sentence number 24 for chunking tests. synthetic filler sentence number 25 for chunking tests. synthetic filler sentence number 26 for chunking tests. synthetic filler sentence number 27 for chunking tests. synthetic filler sentence number 28 for chunking tests. synthetic filler sentence number 29 for chunking tests. synthetic filler sentence number 30 for chunking tests. synthetic filler sentence number 31 for chunking tests. synthetic filler sentence number 32 for chunking tests. synthetic filler sentence number 33 for chunking tests. synthetic filler sentence number 34 for chunking tests. synthetic filler sentence number 35 for chunking tests. synthetic filler sentence number 36 for chunking tests. synthetic filler sentence number 37 for chunking tests. synthetic filler sentence number 38 for chunking tests. synthetic filler sentence number 39 for chunking tests. synthetic filler sentence number 40 for chunking tests. synthetic filler sentence number 41 for chunking tests. synthetic filler sentence number 42 for chunking tests. synthetic filler sentence number 43 for chunking tests. synthetic filler sentence number 44 for chunking tests. synthetic filler sentence number 45 for chunking tests. synthetic filler sentence number 46 for chunking tests. synthetic filler sentence number 47 for chunking tests. synthetic filler sentence number 48 for chunking tests. synthetic filler sentence number 49 for chunking tests. synthetic filler sentence number 50 for chunking tests. synthetic filler sentence number 51 for chunking tests. synthetic filler sentence number 52 for chunking tests. synthetic filler sentence number 53 for chunking tests. synthetic filler sentence number 54 for chunking tests. synthetic filler sentence number 55 for chunking tests. synthetic filler sentence number 56 for chunking tests. synthetic filler sentence number 57 for chunking tests. synthetic filler sentence number 58 for chunking tests. synthetic filler sentence number 59 for chunking tests."
+      ],
+      "warnings": [
+        "SYNTHETIC TEST TEXT (not real label content). Warnings section."
+      ],
+      "contraindications": [
+        "SYNTHETIC TEST TEXT (not real label content). Contraindications section."
+      ]
+    },
+    {
+      "id": "fixture-label-2",
+      "set_id": "00000000-aaaa-bbbb-cccc-000000000002",
+      "version": "1",
+      "openfda": {
+        "generic_name": [
+          "WARFARIN SODIUM",
+          "SOMETHING ELSE"
+        ]
+      },
+      "warnings": [
+        "SYNTHETIC TEST TEXT combination product."
+      ]
+    },
+    {
+      "id": "fixture-label-3",
+      "set_id": "00000000-aaaa-bbbb-cccc-000000000003",
+      "version": "1",
+      "openfda": {
+        "generic_name": [
+          "WARFARIN"
+        ]
+      }
+    }
+  ]
+}

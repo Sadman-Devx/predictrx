@@ -114,6 +114,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_THROTTLE_RATES": {
         "login": "5/min",
+        "register": "10/hour",
         "scan": "20/hour",
         "analysis": "30/hour",
     },

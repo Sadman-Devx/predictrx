@@ -1,5 +1,6 @@
 {
   "app.name": "PredictRx",
+  "app.tagline": "A clinician's aid for medication-risk checks",
   "nav.dashboard": "Dashboard",
   "nav.patients": "Patients",
   "nav.scan": "Prescription",
@@ -7,6 +8,8 @@
   "nav.twin": "What-if",
   "nav.family": "Family",
   "nav.login": "Log in",
+  "nav.logout": "Log out",
+  "nav.skip": "Skip to main content",
   "disclaimer": "Decision support only. Not a diagnosis. Please consult a qualified clinician.",
   "severity.major": "Major",
   "severity.moderate": "Moderate",
@@ -24,9 +27,18 @@
   "twin.note": "This is a simulation for exploration.",
   "family.title": "Summary for family",
   "login.title": "Log in",
+  "login.subtitle": "Sign in to your account to continue.",
   "login.email": "Email",
   "login.password": "Password",
   "login.submit": "Log in",
+  "login.submitting": "Logging in…",
+  "login.show": "Show password",
+  "login.hide": "Hide password",
   "login.failed": "Could not log in. Check your email and password.",
-  "common.todo": "This page is not built yet."
+  "login.tooMany": "Too many attempts. Please wait a while and try again.",
+  "login.network": "Cannot reach the server. Check your connection and try again.",
+  "login.server": "Something went wrong on the server. Please try again shortly.",
+  "login.privacy": "Only authorised users can sign in. Every patient record you open is logged.",
+  "common.todo": "This page is not built yet.",
+  "common.loading": "Loading…"
 }

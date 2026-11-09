@@ -8,7 +8,8 @@ class UserManager(BaseUserManager):
     def _create(self, email, password, **extra):
         if not email:
             raise ValueError("Email is required")
-        email = self.normalize_email(email)
+        # Lower-case the whole address: otherwise A@x.com and a@x.com become two accounts.
+        email = self.normalize_email(email).lower()
         user = self.model(email=email, **extra)
         user.set_password(password)
         user.save(using=self._db)
