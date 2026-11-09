@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,10 +7,26 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .serializers import MeSerializer
+from .serializers import LoginSerializer, MeSerializer, RegisterSerializer
+
+
+class RegisterView(CreateAPIView):
+    """POST /api/auth/register/ — create a doctor/pharmacist account. Returns the profile, not tokens."""
+
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
+    authentication_classes: list = []  # public endpoint: a stale/invalid token header must not cause a 401
+    throttle_scope = "register"
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(MeSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
 class LoginView(TokenObtainPairView):
+    serializer_class = LoginSerializer
     permission_classes = [AllowAny]
     throttle_scope = "login"
 
@@ -32,6 +48,7 @@ class LogoutView(APIView):
 class MeView(RetrieveUpdateAPIView):
     serializer_class = MeSerializer
     permission_classes = [IsAuthenticated]
+    http_method_names = ["get", "patch", "head", "options"]
 
     def get_object(self):
         return self.request.user
