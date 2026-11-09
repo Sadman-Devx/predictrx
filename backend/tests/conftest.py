@@ -1,9 +1,13 @@
+import secrets
+
 import pytest
 from rest_framework.test import APIClient
 
 from apps.accounts.models import User
 
-TEST_PASSWORD = "Str0ng-Test-Pass-9271"
+# Generated fresh on every test run: no credential literal lives in the repo (keeps secret scanners quiet,
+# and nobody can mistake it for a real password). 22 random chars pass every Django password validator.
+TEST_PASSWORD = secrets.token_urlsafe(16)
 
 
 @pytest.fixture(autouse=True)

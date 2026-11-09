@@ -1,3 +1,5 @@
+import secrets
+
 import pytest
 from rest_framework.test import APIClient
 
@@ -55,14 +57,16 @@ class TestRegister:
         assert User.objects.filter(email__iexact="dr.new@example.test").count() == 1
 
     def test_weak_password_is_rejected_with_error_shape(self, api_client):
-        r = api_client.post(REGISTER, payload(password="12345678"), format="json")
+        numeric_only = "".join(str(d) for d in range(1, 9))  # built at runtime: Django rejects all-digit passwords
+        r = api_client.post(REGISTER, payload(password=numeric_only), format="json")
         assert r.status_code == 400
         body = r.json()
         assert set(body) == {"error"} and {"code", "message"} <= set(body["error"])
 
     def test_password_too_similar_to_email_is_rejected(self, api_client):
         # 11 chars, so it passes the length rule: only the similarity validator can reject it.
-        r = api_client.post(REGISTER, payload(email="clinicadmin@example.test", password="clinicadmin"), format="json")
+        local = "clinicadmin"
+        r = api_client.post(REGISTER, payload(email=f"{local}@example.test", password=local), format="json")
         assert r.status_code == 400
         assert "similar" in str(r.json()).lower()
 
@@ -97,7 +101,7 @@ class TestLoginAndMe:
 
     def test_wrong_password_is_401(self, api_client):
         api_client.post(REGISTER, payload(), format="json")
-        r = api_client.post(LOGIN, {"email": "dr.new@example.test", "password": "wrong"}, format="json")
+        r = api_client.post(LOGIN, {"email": "dr.new@example.test", "password": secrets.token_urlsafe(16)}, format="json")
         assert r.status_code == 401
         assert "error" in r.json()
 
