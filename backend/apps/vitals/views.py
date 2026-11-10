@@ -1,4 +1,5 @@
-from rest_framework import status
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,6 +15,12 @@ class VitalsIngestView(APIView):
     authentication_classes = [DeviceTokenAuthentication]
     permission_classes = [AllowAny]  # auth enforced below via request.auth
 
+    @extend_schema(
+        tags=["Vitals (roadmap)"],
+        summary="Ingest a device reading",
+        request=IngestSerializer,
+        responses={201: inline_serializer("VitalIngested", {"id": serializers.IntegerField()})},
+    )
     def post(self, request):
         device = request.auth
         if device is None:
@@ -46,6 +53,12 @@ class PatientVitalsView(APIView):
     """GET /api/vitals/patient/<patient_id>/?limit=50  (doctor dashboard)"""
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["Vitals (roadmap)"],
+        summary="Recent readings for a patient",
+        parameters=[OpenApiParameter("limit", int, description="max 500, default 50")],
+        responses=VitalReadingSerializer(many=True),
+    )
     def get(self, request, patient_id):
         limit = min(int(request.query_params.get("limit", 50)), 500)
         qs = VitalReading.objects.filter(patient_id=patient_id)[:limit]

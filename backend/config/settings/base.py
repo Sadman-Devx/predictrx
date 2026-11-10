@@ -132,6 +132,10 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "PredictRx API",
     "DESCRIPTION": "Decision-support API. Not a diagnosis tool.",
     "VERSION": "0.1.0",
+        "TAGS": [
+        {"name": "Drugs", "description": "Drug reference data (generic names, aliases, knowledge sources)."},
+        {"name": "Interactions", "description": "Stored drug-pair interaction records, always with their source."},
+    ],    
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
