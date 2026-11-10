@@ -1,0 +1,4 @@
+DDInterID_A,Drug_A,DDInterID_B,Drug_B,Level
+DDInter9001,Examplol,DDInter9002,Testadine,Major
+DDInter9003,Salbutamol,DDInter9001,Examplol,Minor
+DDInter9002,Testadine,DDInter9004,Fakemycin (topical),Unknown

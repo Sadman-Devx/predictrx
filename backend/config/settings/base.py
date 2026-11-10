@@ -78,6 +78,7 @@ DATABASES = {
         default="postgres://predictrx:predictrx@localhost:5432/predictrx",
     )
 }
+DATABASES["default"].setdefault("OPTIONS", {})["connect_timeout"] = 10
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
