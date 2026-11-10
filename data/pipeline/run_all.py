@@ -21,12 +21,17 @@ def main() -> None:
     ap.add_argument("--limit", default="10")
     ap.add_argument("--delay", default="0.5")
     ap.add_argument("--skip-ingest", action="store_true")
+    ap.add_argument("--with-ddinter", action="store_true",
+                    help="also parse+load DDInter (files must already be registered with ingest_ddinter.py)")
     args = ap.parse_args()
     if not args.skip_ingest:
         run("ingest_openfda.py", "--limit", args.limit, "--delay", args.delay)
     run("parse_labels.py")
     run("clean.py")
     run("load.py")
+    if args.with_ddinter:
+        run("parse_interactions.py")
+        run("load_ddinter.py")
     run("report.py")
 
 

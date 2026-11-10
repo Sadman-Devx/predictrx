@@ -4,9 +4,13 @@ Custom MCP server exposing deterministic drug tools to the LangGraph agents **an
 
 | Tool | Input | Output |
 |---|---|---|
-| `resolve_brand` | brand string, optional strength | generic, confidence, verified flag — or `unresolved` |
-| `lookup_drug` | generic name | record + sources — or `not_found` |
-| `check_interaction` | two generic names | severity, mechanism, management, source — or `no_record` |
+| `resolve_brand` | brand/generic text, optional strength | `resolved` (generic, method, confidence, verified) — or `unresolved` + candidates/suggestions |
+| `lookup_drug` | generic name or brand | record, aliases, formulation variants, source counts — or `not_found` |
+| `check_interaction` | two names | `found` (severity, evidence refs, label passages) / `no_record` / `unresolved_input` / `invalid` |
+| `check_interactions` | list of names | every pair + summary counts |
+
+Severity comes from DDInter (download files carry severity only — no mechanism/management text);
+explanations come from openFDA label passages. `no_record` and `unknown` are never "safe".
 
 ## Transport
 - **SSE (default, used in the app):** `python server.py` → `http://localhost:8001/sse`
@@ -19,13 +23,11 @@ Custom MCP server exposing deterministic drug tools to the LangGraph agents **an
   name, URL, what it is used for).
 
 ## Run
+**Run it with the backend virtualenv** (it imports the Django app) and Postgres running:
 ```bash
-cd mcp-server
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python server.py
+cd backend && source .venv/Scripts/activate      # Git Bash on Windows
+cd .. && python mcp-server/server.py             # http://localhost:8001/sse
 ```
 
 ## Status
-Placeholder data only (`SAMPLE_*`). The lead dev replaces it with queries against the Django tables.
-Response shapes must not change — the Verifier and the tests depend on them.
+Real data (Drug / BrandMapping / Interaction / label chunks). Response shapes are covered by `backend/tests/test_resolver.py`.
