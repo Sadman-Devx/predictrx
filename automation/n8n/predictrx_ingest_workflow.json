@@ -1,0 +1,380 @@
+{
+  "name": "PredictRx Data Ingestion Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {},
+      "id": "a1b2c3d4-0001-4000-8000-000000000002",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [220, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the list of drugs from seed_drugs.txt\nconst drugs = [\n  'acetaminophen', 'ibuprofen', 'aspirin', 'naproxen', 'diclofenac',\n  'celecoxib', 'tramadol', 'metformin', 'glimepiride', 'sitagliptin',\n  'atorvastatin', 'simvastatin', 'rosuvastatin', 'amlodipine', 'nifedipine',\n  'diltiazem', 'verapamil', 'losartan', 'lisinopril', 'enalapril',\n  'ramipril', 'metoprolol', 'atenolol', 'carvedilol', 'bisoprolol',\n  'furosemide', 'hydrochlorothiazide', 'spironolactone', 'digoxin', 'warfarin',\n  'clopidogrel', 'rivaroxaban', 'apixaban', 'omeprazole', 'esomeprazole',\n  'pantoprazole', 'famotidine', 'ondansetron', 'metoclopramide', 'amoxicillin',\n  'azithromycin', 'ciprofloxacin', 'levofloxacin', 'metronidazole', 'doxycycline',\n  'cefuroxime', 'fluconazole', 'prednisone', 'prednisolone', 'dexamethasone',\n  'albuterol', 'montelukast', 'theophylline', 'cetirizine', 'loratadine',\n  'fluoxetine', 'sertraline', 'escitalopram', 'amitriptyline', 'diazepam',\n  'alprazolam', 'clonazepam', 'haloperidol', 'risperidone', 'olanzapine',\n  'lithium+carbonate', 'carbamazepine', 'phenytoin', 'valproic+acid', 'gabapentin',\n  'pregabalin', 'levothyroxine', 'allopurinol', 'colchicine', 'sildenafil',\n  'tamsulosin', 'finasteride'\n];\n\nreturn drugs.map(drug => ({ json: { drug_name: drug } }));"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000003",
+      "name": "Build Drug List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 400]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000004",
+      "name": "Rate Limiter",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.fda.gov/drug/label.json?search=openfda.generic_name:\"{{ $json.drug_name }}\"&limit=5",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000005",
+      "name": "Fetch openFDA Labels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 400],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse openFDA label response and extract relevant fields\nconst items = $input.all();\nconst parsed = [];\n\nfor (const item of items) {\n  const body = item.json.body || item.json;\n  const results = body.results || [];\n\n  for (const label of results) {\n    const openfda = label.openfda || {};\n    parsed.push({\n      json: {\n        drug_name: (openfda.generic_name || ['unknown'])[0].toLowerCase(),\n        brand_names: (openfda.brand_name || []).map(b => b.toLowerCase()),\n        spl_id: label.id || null,\n        indications: (label.indications_and_usage || [''])[0].substring(0, 2000),\n        warnings: (label.warnings || [''])[0].substring(0, 2000),\n        drug_interactions: (label.drug_interactions || [''])[0].substring(0, 2000),\n        dosage_and_administration: (label.dosage_and_administration || [''])[0].substring(0, 2000),\n        contraindications: (label.contraindications || [''])[0].substring(0, 2000),\n        adverse_reactions: (label.adverse_reactions || [''])[0].substring(0, 2000),\n        active_ingredient: (label.active_ingredient || [''])[0].substring(0, 500),\n        route: (openfda.route || []),\n        product_type: (openfda.product_type || []),\n        manufacturer: (openfda.manufacturer_name || []),\n        effective_time: label.effective_time || null\n      }\n    });\n  }\n}\n\nreturn parsed.length > 0 ? parsed : [{ json: { _empty: true } }];"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000006",
+      "name": "Parse Labels",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-filter-empty",
+              "leftValue": "={{ $json._empty }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notTrue"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000007",
+      "name": "Filter Empty Results",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1360, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Clean and normalize data for PredictRx ingestion\nconst items = $input.all();\nconst cleaned = [];\n\nfor (const item of items) {\n  const d = item.json;\n\n  // Skip if no drug_name\n  if (!d.drug_name || d.drug_name === 'unknown') continue;\n\n  // Normalize text fields: trim, collapse whitespace, remove control chars\n  const cleanText = (text) => {\n    if (!text) return '';\n    return text\n      .replace(/[\\x00-\\x1F\\x7F]/g, ' ')\n      .replace(/\\s+/g, ' ')\n      .trim();\n  };\n\n  cleaned.push({\n    json: {\n      generic_name: d.drug_name.trim().toLowerCase(),\n      brand_names: d.brand_names || [],\n      spl_id: d.spl_id,\n      indications: cleanText(d.indications),\n      warnings: cleanText(d.warnings),\n      drug_interactions: cleanText(d.drug_interactions),\n      dosage_and_administration: cleanText(d.dosage_and_administration),\n      contraindications: cleanText(d.contraindications),\n      adverse_reactions: cleanText(d.adverse_reactions),\n      active_ingredient: cleanText(d.active_ingredient),\n      route: d.route,\n      product_type: d.product_type,\n      manufacturer: d.manufacturer,\n      effective_time: d.effective_time,\n      _ingested_at: new Date().toISOString(),\n      _source: 'openfda_label_api'\n    }\n  });\n}\n\nreturn cleaned.length > 0 ? cleaned : [{ json: { _skipped: true, reason: 'all records empty after cleaning' } }];"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000008",
+      "name": "Clean Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1580, 400]
+    },
+    {
+      "parameters": {
+        "command": "cd d:\\predictrx && python -m data.pipeline.load --source openfda --input-format jsonl --stdin",
+        "options": {
+          "timeout": 300
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000009",
+      "name": "Run load.py",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1800, 400]
+    },
+    {
+      "parameters": {
+        "command": "cd d:\\predictrx && python -m data.pipeline.report --format json --output d:\\predictrx\\data\\processed\\ingest_report.json",
+        "options": {
+          "timeout": 120
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000010",
+      "name": "Run report.py",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [2020, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build summary of the pipeline run\nconst loadOutput = $('Run load.py').first().json;\nconst reportOutput = $('Run report.py').first().json;\n\nconst summary = {\n  pipeline: 'PredictRx Data Ingestion',\n  completed_at: new Date().toISOString(),\n  load_result: {\n    stdout: loadOutput.stdout || '',\n    stderr: loadOutput.stderr || '',\n    exitCode: loadOutput.exitCode\n  },\n  report_result: {\n    stdout: reportOutput.stdout || '',\n    stderr: reportOutput.stderr || '',\n    exitCode: reportOutput.exitCode\n  },\n  status: (loadOutput.exitCode === 0 && reportOutput.exitCode === 0) ? 'SUCCESS' : 'FAILED'\n};\n\nreturn [{ json: summary }];"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000011",
+      "name": "Build Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2240, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-check-fail",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "FAILED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000012",
+      "name": "Check Failure",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2460, 400]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-error",
+              "name": "error_message",
+              "value": "=PredictRx ingestion pipeline FAILED at {{ new Date().toISOString() }}. Load exit: {{ $json.load_result.exitCode }}, Report exit: {{ $json.report_result.exitCode }}. Check stderr logs.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000013",
+      "name": "Set Error Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2680, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000014",
+      "name": "Done - Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2680, 500]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Drug List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Drug List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Drug List": {
+      "main": [
+        [
+          {
+            "node": "Rate Limiter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limiter": {
+      "main": [
+        [
+          {
+            "node": "Fetch openFDA Labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch openFDA Labels": {
+      "main": [
+        [
+          {
+            "node": "Parse Labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Labels": {
+      "main": [
+        [
+          {
+            "node": "Filter Empty Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Empty Results": {
+      "main": [
+        [
+          {
+            "node": "Clean Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Data": {
+      "main": [
+        [
+          {
+            "node": "Run load.py",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run load.py": {
+      "main": [
+        [
+          {
+            "node": "Run report.py",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run report.py": {
+      "main": [
+        [
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Summary": {
+      "main": [
+        [
+          {
+            "node": "Check Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Failure": {
+      "main": [
+        [
+          {
+            "node": "Set Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "predictrx",
+      "createdAt": "2026-01-15T00:00:00.000Z",
+      "updatedAt": "2026-01-15T00:00:00.000Z"
+    },
+    {
+      "name": "data-pipeline",
+      "createdAt": "2026-01-15T00:00:00.000Z",
+      "updatedAt": "2026-01-15T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-11-11T00:00:00.000Z",
+  "versionId": "1"
+}

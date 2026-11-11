@@ -7,7 +7,7 @@ from core.permissions import IsDoctorOrPharmacist, IsPatientOwner
 
 from . import services
 from .models import Patient
-from .serializers import PatientSerializer
+from .serializers import MedicationSerializer, PatientSerializer
 
 
 class PatientViewSet(
@@ -63,3 +63,59 @@ class PatientViewSet(
         changed = services.update_patient(patient, serializer.validated_data)
         audit.record(request, audit.PATIENT_UPDATE, patient=patient, obj=patient, fields=changed)
         return Response(self.get_serializer(patient).data)
+
+
+
+# Audit action constants for medication operations
+MEDICATION_LIST = "medication_list"
+MEDICATION_CREATE = "medication_create"
+
+
+class MedicationViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    /api/patients/{patient_pk}/medications/  (GET list, POST create)
+
+    Nested under a patient. Only the patient's owner (doctor/pharmacist) can access.
+    Every read/write is audit-logged.
+    """
+
+    serializer_class = MedicationSerializer
+    permission_classes = [IsDoctorOrPharmacist]
+    http_method_names = ["get", "post", "head", "options"]
+
+    def _get_patient(self):
+        """Fetch the parent patient, ensuring ownership."""
+        patient = Patient.objects.get(pk=self.kwargs["patient_pk"])
+        if patient.owner_id != self.request.user.id:
+            from rest_framework.exceptions import NotFound
+
+            raise NotFound()
+        return patient
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            from apps.clinical.models import Medication
+
+            return Medication.objects.none()
+        patient = self._get_patient()
+        return services.list_medications(patient)
+
+    @transaction.atomic
+    def list(self, request, *args, **kwargs):
+        patient = self._get_patient()
+        response = super().list(request, *args, **kwargs)
+        audit.record(request, MEDICATION_LIST, patient=patient, count=len(response.data.get("results", response.data)))
+        return response
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        patient = self._get_patient()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        medication = services.add_medication(patient, serializer.validated_data)
+        audit.record(request, MEDICATION_CREATE, patient=patient, obj=medication)
+        return Response(self.get_serializer(medication).data, status=status.HTTP_201_CREATED)

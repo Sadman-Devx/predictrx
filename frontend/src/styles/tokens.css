@@ -1,0 +1,54 @@
+/* Design tokens — source of truth: design.md. Check WCAG AA contrast before freezing any value. */
+:root {
+  /* colour */
+  --bg: #f6f9f9;
+  --surface: #ffffff;
+  --ink: #12262a;
+  --ink-muted: #4a5f64;
+  --primary: #0f5c63;
+  --primary-hover: #0b4a50;
+  --primary-soft: #e1f0f1;
+  --on-primary: #ffffff;
+  --border: #d5e2e3;
+  --border-strong: #9db3b6;
+
+  --sev-major: #b3261e;
+  --sev-moderate: #b26a00;
+  --sev-minor: #2e7d5b;
+  --sev-unknown: #5b6770;
+  --conflict: #6b3fa0;
+
+  --danger-soft: #fdecea;
+
+  /* shape */
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --radius-pill: 999px;
+
+  /* elevation: one card shadow, one overlay shadow */
+  --shadow-card: 0 1px 2px rgba(18, 38, 42, 0.06);
+  --shadow-overlay: 0 8px 24px rgba(18, 38, 42, 0.16);
+
+  /* type */
+  --font-bn: "Noto Sans Bengali", "Hind Siliguri", system-ui, sans-serif;
+  --font-latin: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs-title: 28px;
+  --fs-section: 20px;
+  --fs-body: 16px;
+  --fs-small: 14px;
+  --fs-badge: 13px;
+  --lh-bn: 1.65;
+
+  /* spacing: 4px grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --content-max: 1100px;
+  --tap: 44px; /* minimum touch target */
+
+  /* motion */
+  --dur: 150ms;
+}
