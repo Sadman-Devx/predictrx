@@ -118,6 +118,9 @@ REST_FRAMEWORK = {
         "register": "10/hour",
         "scan": "20/hour",
         "analysis": "30/hour",
+        # Day 4: resolver + drug search (no LLM, cheap lookups)
+        "resolve": "60/min",
+        "drug_search": "120/min",
     },
 }
 
@@ -132,10 +135,10 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "PredictRx API",
     "DESCRIPTION": "Decision-support API. Not a diagnosis tool.",
     "VERSION": "0.1.0",
-        "TAGS": [
+    "TAGS": [
         {"name": "Drugs", "description": "Drug reference data (generic names, aliases, knowledge sources)."},
         {"name": "Interactions", "description": "Stored drug-pair interaction records, always with their source."},
-    ],    
+    ],
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
@@ -173,3 +176,9 @@ MCP_SERVER_URL = env("MCP_SERVER_URL", default="http://localhost:8001/sse")
 OPENFDA_API_KEY = env("OPENFDA_API_KEY", default="")
 PRESCRIPTION_IMAGE_RETENTION_DAYS = env.int("PRESCRIPTION_IMAGE_RETENTION_DAYS", default=7)
 DISCLAIMER_VERSION = "v1"
+
+# ---------- Brand -> generic resolver (Day 4) ----------
+# Tune on the dev split only; report numbers on the test split (rule.md §2).
+RESOLVER_FUZZY_ACCEPT = env.float("RESOLVER_FUZZY_ACCEPT", default=0.90)  # auto-accept at/above this, only if unambiguous
+RESOLVER_SUGGEST_MIN = env.float("RESOLVER_SUGGEST_MIN", default=0.75)    # below this, don't even suggest
+RESOLVER_INDEX_TTL = env.int("RESOLVER_INDEX_TTL", default=300)           # seconds; brand index cache
