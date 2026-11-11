@@ -10,3 +10,4 @@ pgvector>=0.3
 celery>=5.4
 redis>=5.0
 gunicorn>=22.0
+rapidfuzz>=3.9
