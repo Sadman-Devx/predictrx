@@ -1,50 +1,34 @@
-from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from .serializers import (
-    DrugSearchResponseSerializer,
-    ResolveRequestSerializer,
-    ResolveResponseSerializer,
-)
-from .services import resolve_many, search_drugs
+from . import services
+from .serializers import (ResolveRequestSerializer, ResolveResponseSerializer, SearchQuerySerializer,
+                          SearchResponseSerializer)
 
 
 class ResolveMedicationsView(APIView):
-    """POST /api/medications/resolve/: brand/typed names -> generic (never guesses)."""
+    """POST /api/medications/resolve/ — brand/generic names -> generics. Synchronous, no LLM, no patient data.
 
-    permission_classes = [IsAuthenticated]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "resolve"
+    Unresolved items come back with a `reason` (and optional `candidates` to pick from). Nothing is guessed."""
+
+    throttle_scope = "drug_lookup"
 
     @extend_schema(request=ResolveRequestSerializer, responses=ResolveResponseSerializer)
     def post(self, request):
-        serializer = ResolveRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        results = resolve_many(serializer.validated_data["items"])
+        ser = ResolveRequestSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        results = [services.resolve_brand(i["name"], i.get("strength") or None) for i in ser.validated_data["items"]]
         return Response({"results": results})
 
 
 class DrugSearchView(APIView):
-    """GET /api/drugs/search/?q=nap&limit=10: autocomplete over brand + generic names."""
+    """GET /api/drugs/search/?q=&limit= — autocomplete over brand + generic + alias names."""
 
-    permission_classes = [IsAuthenticated]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "drug_search"
+    throttle_scope = "drug_lookup"
 
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("q", str, required=True),
-            OpenApiParameter("limit", int, required=False),
-        ],
-        responses=DrugSearchResponseSerializer,
-    )
+    @extend_schema(parameters=[SearchQuerySerializer], responses=SearchResponseSerializer)
     def get(self, request):
-        q = request.query_params.get("q", "")
-        try:
-            limit = max(1, min(int(request.query_params.get("limit", 10)), 20))
-        except ValueError:
-            limit = 10
-        return Response({"results": search_drugs(q, limit)})
+        ser = SearchQuerySerializer(data=request.query_params)
+        ser.is_valid(raise_exception=True)
+        return Response({"results": services.search_drugs(ser.validated_data["q"], ser.validated_data["limit"])})

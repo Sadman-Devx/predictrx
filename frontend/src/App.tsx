@@ -3,6 +3,7 @@ import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { AppShell } from "./components/layout/AppShell";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import MedicationEntry from "./pages/MedicationEntry";
 import { Placeholder } from "./pages/Placeholder";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
           <Route index element={<Dashboard />} />
           {/* TODO (frontend dev): replace each placeholder, following roadmap.md */}
           <Route path="patients" element={<Placeholder titleKey="patients.title" />} />
+          <Route path="medications" element={<MedicationEntry />} />
           <Route path="scan" element={<Placeholder titleKey="scan.title" hintKey="scan.hint" />} />
           <Route path="review" element={<Placeholder titleKey="review.title" />} />
           <Route path="analysis" element={<Placeholder titleKey="analysis.title" />} />
