@@ -2,7 +2,7 @@ from datetime import date
 
 from rest_framework import serializers
 
-from .models import Patient
+from .models import Medication, Patient
 
 SEX_CHOICES = ("male", "female", "other")
 MIN_BIRTH_YEAR = 1900
@@ -31,3 +31,25 @@ class PatientSerializer(serializers.ModelSerializer):
         if not 0 < value <= MAX_WEIGHT_KG:
             raise serializers.ValidationError(f"Weight must be greater than 0 and at most {MAX_WEIGHT_KG} kg.")
         return value
+
+
+
+class MedicationSerializer(serializers.ModelSerializer):
+    drug_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+
+    class Meta:
+        model = Medication
+        fields = [
+            "id",
+            "patient",
+            "raw_text",
+            "brand_name",
+            "strength",
+            "frequency",
+            "drug",
+            "drug_id",
+            "generic_name",
+            "resolution_status",
+            "created_at",
+        ]
+        read_only_fields = ["id", "patient", "drug", "generic_name", "resolution_status", "created_at"]

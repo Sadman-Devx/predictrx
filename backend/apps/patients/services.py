@@ -43,3 +43,42 @@ def update_patient(patient: Patient, data: dict) -> list[str]:
     if changed:
         patient.save(update_fields=changed)
     return sorted(changed)
+
+
+
+# ---------------------------------------------------------------------------
+# Medication services
+# ---------------------------------------------------------------------------
+
+from .models import Medication
+
+
+def list_medications(patient):
+    """Return all medications for a patient, newest first."""
+    return Medication.objects.filter(patient=patient).select_related("drug").order_by("-created_at", "-id")
+
+
+def add_medication(patient, data: dict) -> Medication:
+    """Create a medication record. If drug_id is provided, resolve generic_name from Drug table."""
+    from apps.drugs.models import Drug
+
+    drug_id = data.pop("drug_id", None)
+    drug = None
+    generic_name = ""
+    resolution_status = "unresolved"
+
+    if drug_id:
+        drug = Drug.objects.get(pk=drug_id)
+        generic_name = drug.generic_name
+        resolution_status = "resolved"
+
+    return Medication.objects.create(
+        patient=patient,
+        raw_text=data.get("raw_text", ""),
+        brand_name=data.get("brand_name", ""),
+        strength=data.get("strength", ""),
+        frequency=data.get("frequency", ""),
+        drug=drug,
+        generic_name=generic_name,
+        resolution_status=resolution_status,
+    )

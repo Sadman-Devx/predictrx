@@ -49,3 +49,21 @@ class DrugSearchItemSerializer(serializers.Serializer):
 
 class DrugSearchResponseSerializer(serializers.Serializer):
     results = DrugSearchItemSerializer(many=True)
+
+
+
+class InteractionDrugSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    generic_name = serializers.CharField()
+
+
+class InteractionDetailSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    drug_a = InteractionDrugSerializer()
+    drug_b = InteractionDrugSerializer()
+    severity = serializers.CharField()
+    mechanism = serializers.CharField()
+    management = serializers.CharField()
+    source = serializers.CharField()
+    source_ref = serializers.CharField()
+    license_note = serializers.CharField()

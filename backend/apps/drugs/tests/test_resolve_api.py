@@ -13,7 +13,7 @@ SEARCH_URL = "/api/drugs/search/"
 def client(db):
     cache.clear()
     user = get_user_model().objects.create_user(
-        username="doc1", email="doc1@example.com", password="pass12345", role="doctor"
+        email="doc1@example.com", password="pass12345", role="doctor"
     )
     c = APIClient()
     c.force_authenticate(user=user)
