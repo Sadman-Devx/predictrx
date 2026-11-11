@@ -2,6 +2,8 @@ import secrets
 
 from django.db import IntegrityError, transaction
 
+from apps.clinical.models import Medication
+
 from .models import Patient
 
 # Unambiguous characters only (no 0/O, 1/I/L): codes get read aloud and copied by hand.
@@ -46,13 +48,6 @@ def update_patient(patient: Patient, data: dict) -> list[str]:
 
 
 
-# ---------------------------------------------------------------------------
-# Medication services
-# ---------------------------------------------------------------------------
-
-from .models import Medication
-
-
 def list_medications(patient):
     """Return all medications for a patient, newest first."""
     return Medication.objects.filter(patient=patient).select_related("drug").order_by("-created_at", "-id")
@@ -64,12 +59,10 @@ def add_medication(patient, data: dict) -> Medication:
 
     drug_id = data.pop("drug_id", None)
     drug = None
-    generic_name = ""
     resolution_status = "unresolved"
 
     if drug_id:
         drug = Drug.objects.get(pk=drug_id)
-        generic_name = drug.generic_name
         resolution_status = "resolved"
 
     return Medication.objects.create(
@@ -79,6 +72,6 @@ def add_medication(patient, data: dict) -> Medication:
         strength=data.get("strength", ""),
         frequency=data.get("frequency", ""),
         drug=drug,
-        generic_name=generic_name,
         resolution_status=resolution_status,
+        source="manual",
     )

@@ -37,7 +37,7 @@ export function MedicationForm({ patientId, onAdded }: Props) {
     try {
       const med = await addMedication(patientId, {
         raw_text: raw,
-        brand_name: picked?.kind === "brand" ? picked.brand_name : "",
+        brand_name: picked?.kind === "brand" ? picked.brand_name ?? "" : "",
         strength: strength.trim(),
         frequency: frequency.trim(),
         drug_id: picked ? picked.drug_id : null,

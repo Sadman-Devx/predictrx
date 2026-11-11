@@ -8,6 +8,7 @@ const NAV: { to: string; key: MessageKey }[] = [
   { to: "/", key: "nav.dashboard" },
   { to: "/patients", key: "nav.patients" },
   { to: "/scan", key: "nav.scan" },
+  { to: "/medications", key: "nav.medications" },
   { to: "/analysis", key: "nav.analysis" },
   { to: "/twin", key: "nav.twin" },
   { to: "/family", key: "nav.family" },

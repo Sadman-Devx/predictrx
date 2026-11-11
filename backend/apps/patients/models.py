@@ -38,26 +38,3 @@ class FamilyLink(models.Model):
 
     class Meta:
         unique_together = [("patient", "family_user")]
-
-
-class Medication(models.Model):
-    RESOLUTION_STATUS_CHOICES = [
-        ("unresolved", "Unresolved"),
-        ("resolved", "Resolved"),
-        ("user_confirmed", "User confirmed"),
-    ]
-
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="medications")
-    raw_text = models.CharField(max_length=200)  # what the user typed/scanned
-    brand_name = models.CharField(max_length=120, blank=True)
-    strength = models.CharField(max_length=40, blank=True)
-    frequency = models.CharField(max_length=60, blank=True)
-    drug = models.ForeignKey("drugs.Drug", null=True, blank=True, on_delete=models.SET_NULL)
-    generic_name = models.CharField(max_length=150, blank=True)  # denormalized from drug
-    resolution_status = models.CharField(
-        max_length=20, choices=RESOLUTION_STATUS_CHOICES, default="unresolved"
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.raw_text} ({self.patient})"

@@ -1,0 +1,92 @@
+brand_name,strength,dosage_form,generic_name,source,confidence,verified,origin
+Napa,500 mg,tablet,acetaminophen,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Ace,500 mg,tablet,acetaminophen,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Seclo,20 mg,capsule,omeprazole,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Losectil,20 mg,capsule,omeprazole,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Maxpro,20 mg,tablet,esomeprazole,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Sergel,20 mg,capsule,esomeprazole,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Zimax,500 mg,capsule,azithromycin,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Ciprocin,500 mg,tablet,ciprofloxacin,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Monas,10 mg,tablet,montelukast,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Alatrol,10 mg,tablet,cetirizine,claude-draft-2026-11-11-unreviewed,0.90,false,BD local
+Montair,10 mg,tablet,montelukast,claude-draft-2026-11-11-unreviewed,0.80,false,BD local
+Clofenac,50 mg,tablet,diclofenac,claude-draft-2026-11-11-unreviewed,0.80,false,BD local
+Panadol,,,acetaminophen,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Tylenol,,,acetaminophen,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Brufen,,,ibuprofen,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Advil,,,ibuprofen,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Motrin,,,ibuprofen,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Voltaren,,,diclofenac,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Cataflam,,,diclofenac,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Naprosyn,,,naproxen,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Aleve,,,naproxen,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Celebrex,,,celecoxib,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Ultram,,,tramadol,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Disprin,,,aspirin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Lipitor,,,atorvastatin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Zocor,,,simvastatin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Crestor,,,rosuvastatin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Norvasc,,,amlodipine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Adalat,,,nifedipine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Cardizem,,,diltiazem,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Calan,,,verapamil,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Cozaar,,,losartan,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Zestril,,,lisinopril,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Vasotec,,,enalapril,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Altace,,,ramipril,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Lopressor,,,metoprolol,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Tenormin,,,atenolol,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Coreg,,,carvedilol,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Concor,,,bisoprolol,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Lasix,,,furosemide,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Aldactone,,,spironolactone,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Lanoxin,,,digoxin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Coumadin,,,warfarin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Plavix,,,clopidogrel,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Xarelto,,,rivaroxaban,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Eliquis,,,apixaban,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Glucophage,,,metformin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Amaryl,,,glimepiride,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Januvia,,,sitagliptin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Prilosec,,,omeprazole,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Losec,,,omeprazole,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Nexium,,,esomeprazole,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Protonix,,,pantoprazole,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Pepcid,,,famotidine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Zofran,,,ondansetron,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Reglan,,,metoclopramide,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Amoxil,,,amoxicillin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Zithromax,,,azithromycin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Cipro,,,ciprofloxacin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Levaquin,,,levofloxacin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Flagyl,,,metronidazole,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Vibramycin,,,doxycycline,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Ceftin,,,cefuroxime,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Diflucan,,,fluconazole,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Decadron,,,dexamethasone,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Ventolin,,,salbutamol,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Singulair,,,montelukast,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Zyrtec,,,cetirizine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Claritin,,,loratadine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Prozac,,,fluoxetine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Zoloft,,,sertraline,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Lexapro,,,escitalopram,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Valium,,,diazepam,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Xanax,,,alprazolam,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Rivotril,,,clonazepam,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Haldol,,,haloperidol,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Risperdal,,,risperidone,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Zyprexa,,,olanzapine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Tegretol,,,carbamazepine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Dilantin,,,phenytoin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Neurontin,,,gabapentin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Lyrica,,,pregabalin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Epilim,,,sodium valproate,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Synthroid,,,levothyroxine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Eltroxin,,,levothyroxine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Zyloprim,,,allopurinol,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Colcrys,,,colchicine,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Viagra,,,sildenafil,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Flomax,,,tamsulosin,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Proscar,,,finasteride,claude-draft-2026-11-11-unreviewed,0.90,false,International
+Lithobid,,,lithium carbonate,claude-draft-2026-11-11-unreviewed,0.90,false,International

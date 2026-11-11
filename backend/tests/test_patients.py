@@ -2,6 +2,8 @@ from datetime import date
 
 import pytest
 
+from apps.clinical.models import Medication as ClinicalMedication
+from apps.drugs.models import Drug
 from apps.patients.models import Patient
 
 URL = "/api/patients/"
@@ -114,3 +116,28 @@ def test_openapi_schema_builds_with_patients(api_client):
     r = api_client.get("/api/schema/")
     assert r.status_code == 200
     assert b"/api/patients/" in r.content and b"/api/auth/register/" in r.content
+
+
+@pytest.mark.django_db
+def test_manual_medication_uses_clinical_record(doctor, auth_client):
+    client = auth_client(doctor)
+    patient = client.post(URL, {}, format="json").json()
+    drug = Drug.objects.create(generic_name="paracetamol")
+
+    response = client.post(
+        f"{URL}{patient['id']}/medications/",
+        {
+            "raw_text": "Napa 500",
+            "brand_name": "Napa",
+            "strength": "500mg",
+            "frequency": "daily",
+            "drug_id": drug.id,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert response.json()["generic_name"] == "paracetamol"
+    medication = ClinicalMedication.objects.get(patient_id=patient["id"])
+    assert medication.drug == drug
+    assert medication.source == "manual"

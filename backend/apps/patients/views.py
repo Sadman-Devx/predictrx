@@ -98,7 +98,7 @@ class MedicationViewSet(
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
-            from apps.patients.models import Medication
+            from apps.clinical.models import Medication
 
             return Medication.objects.none()
         patient = self._get_patient()

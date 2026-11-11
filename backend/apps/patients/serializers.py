@@ -2,7 +2,9 @@ from datetime import date
 
 from rest_framework import serializers
 
-from .models import Medication, Patient
+from apps.clinical.models import Medication
+
+from .models import Patient
 
 SEX_CHOICES = ("male", "female", "other")
 MIN_BIRTH_YEAR = 1900
@@ -36,6 +38,7 @@ class PatientSerializer(serializers.ModelSerializer):
 
 class MedicationSerializer(serializers.ModelSerializer):
     drug_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    generic_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Medication
@@ -53,3 +56,6 @@ class MedicationSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "patient", "drug", "generic_name", "resolution_status", "created_at"]
+
+    def get_generic_name(self, obj):
+        return obj.drug.generic_name if obj.drug_id else None
