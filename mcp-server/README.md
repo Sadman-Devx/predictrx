@@ -4,13 +4,9 @@ Custom MCP server exposing deterministic drug tools to the LangGraph agents **an
 
 | Tool | Input | Output |
 |---|---|---|
-| `resolve_brand` | brand/generic text, optional strength | `resolved` (generic, method, confidence, verified) — or `unresolved` + candidates/suggestions |
-| `lookup_drug` | generic name or brand | record, aliases, formulation variants, source counts — or `not_found` |
-| `check_interaction` | two names | `found` (severity, evidence refs, label passages) / `no_record` / `unresolved_input` / `invalid` |
-| `check_interactions` | list of names | every pair + summary counts |
-
-Severity comes from DDInter (download files carry severity only — no mechanism/management text);
-explanations come from openFDA label passages. `no_record` and `unknown` are never "safe".
+| `resolve_brand` | brand string, optional strength | generic, confidence **+ basis** (`match_type` exact/generic/fuzzy, `source`, `verified`) — or `unresolved` (+ `reason`, optional `candidates`) |
+| `lookup_drug` | generic name | record + sources — or `not_found` |
+| `check_interaction` | two generic names | severity, mechanism, management, source — or `no_record` (+ `reason`; never means "safe") |
 
 ## Transport
 - **SSE (default, used in the app):** `python server.py` → `http://localhost:8001/sse`
@@ -22,12 +18,18 @@ explanations come from openFDA label passages. `no_record` and `unknown` are nev
 - **External MCP:** one public MCP server is also used as a client (choose during build, document here:
   name, URL, what it is used for).
 
+## Data access
+The tools call `apps.drugs.services` (same functions as the REST API), so the server needs the repo's `backend/` code,
+the same `.env` (`DATABASE_URL`, `REDIS_URL`) and the tables loaded (`data/pipeline/load.py`, `load_brands.py`).
+
 ## Run
-**Run it with the backend virtualenv** (it imports the Django app) and Postgres running:
 ```bash
-cd backend && source .venv/Scripts/activate      # Git Bash on Windows
-cd .. && python mcp-server/server.py             # http://localhost:8001/sse
+cd mcp-server
+pip install -r requirements.txt
+python server.py                 # SSE on :8001
+python test_client.py            # second terminal: calls every tool over SSE, exits 0 on success
 ```
 
 ## Status
-Real data (Drug / BrandMapping / Interaction / label chunks). Response shapes are covered by `backend/tests/test_resolver.py`.
+Day 4: DB-backed. Response shapes are a contract (Verifier + tests depend on them) — add keys, never change meaning.
+Brand rows in the sample sheet are **unreviewed** (`verified=false`) until a pharmacist/mentor checks them.

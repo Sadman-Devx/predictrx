@@ -1,51 +1,55 @@
 from rest_framework import serializers
 
+from .services import MAX_INPUT_LEN, SEARCH_MAX_LIMIT
+
+MAX_RESOLVE_ITEMS = 30
+
+
+class ResolveItemSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=MAX_INPUT_LEN)
+    strength = serializers.CharField(max_length=40, required=False, allow_blank=True, default="")
+
 
 class ResolveRequestSerializer(serializers.Serializer):
-    items = serializers.ListField(
-        child=serializers.CharField(min_length=1, max_length=200, trim_whitespace=True),
-        min_length=1,
-        max_length=30,
-    )
-
-
-class ResolvedGenericSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-
-
-class SuggestionSerializer(serializers.Serializer):
-    brand_name = serializers.CharField()
-    generic_id = serializers.IntegerField()
-    generic_name = serializers.CharField()
-    score = serializers.FloatField()
+    items = ResolveItemSerializer(many=True, allow_empty=False, max_length=MAX_RESOLVE_ITEMS)
 
 
 class ResolveResultSerializer(serializers.Serializer):
-    input = serializers.CharField()
+    """Documentation only: `resolved` carries generic/confidence/verified/source/match_type; `unresolved` a reason."""
+
     status = serializers.ChoiceField(choices=["resolved", "unresolved"])
-    match_type = serializers.ChoiceField(choices=["exact", "generic", "fuzzy", "none"])
-    generic = ResolvedGenericSerializer(allow_null=True)
-    confidence = serializers.FloatField()
-    verified = serializers.BooleanField()
-    source = serializers.CharField(allow_null=True)
-    suggestions = SuggestionSerializer(many=True)
-    reason = serializers.CharField(allow_null=True)
+    input = serializers.CharField()
+    generic = serializers.CharField(required=False)
+    confidence = serializers.FloatField(required=False)
+    verified = serializers.BooleanField(required=False)
+    source = serializers.CharField(required=False)
+    match_type = serializers.ChoiceField(choices=["exact", "generic", "fuzzy"], required=False)
+    matched_name = serializers.CharField(required=False)
+    strength = serializers.CharField(required=False, allow_blank=True)
+    strength_matched = serializers.BooleanField(required=False, allow_null=True)
+    aliases = serializers.ListField(child=serializers.CharField(), required=False)
+    reason = serializers.CharField(required=False)
+    candidates = serializers.ListField(child=serializers.CharField(), required=False)
 
 
 class ResolveResponseSerializer(serializers.Serializer):
     results = ResolveResultSerializer(many=True)
 
 
-class DrugSearchItemSerializer(serializers.Serializer):
+class SearchQuerySerializer(serializers.Serializer):
+    q = serializers.CharField(min_length=2, max_length=MAX_INPUT_LEN)
+    limit = serializers.IntegerField(min_value=1, max_value=SEARCH_MAX_LIMIT, default=10)
+
+
+class SearchResultSerializer(serializers.Serializer):
     type = serializers.ChoiceField(choices=["brand", "generic"])
-    label = serializers.CharField()
-    brand_name = serializers.CharField(allow_null=True)
-    strength = serializers.CharField(allow_null=True)
-    generic_id = serializers.IntegerField()
-    generic_name = serializers.CharField()
+    name = serializers.CharField()
+    generic = serializers.CharField()
+    strength = serializers.CharField(allow_blank=True)
+    dosage_form = serializers.CharField(allow_blank=True)
     verified = serializers.BooleanField()
+    source = serializers.CharField()
 
 
-class DrugSearchResponseSerializer(serializers.Serializer):
-    results = DrugSearchItemSerializer(many=True)
+class SearchResponseSerializer(serializers.Serializer):
+    results = SearchResultSerializer(many=True)
