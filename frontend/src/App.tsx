@@ -7,6 +7,7 @@ import MedicationEntry from "./pages/MedicationEntry";
 import PatientDetail from "./pages/PatientDetail";
 import Patients from "./pages/Patients";
 import { Placeholder } from "./pages/Placeholder";
+import ReviewConfirm from "./pages/ReviewConfirm";
 
 export default function App() {
   return (
@@ -23,7 +24,7 @@ export default function App() {
           <Route path="patients/:id" element={<PatientDetail />} />
           <Route path="medications" element={<MedicationEntry />} />
           <Route path="scan" element={<Placeholder titleKey="scan.title" hintKey="scan.hint" />} />
-          <Route path="review" element={<Placeholder titleKey="review.title" />} />
+          <Route path="review" element={<ReviewConfirm />} />
           <Route path="analysis" element={<Placeholder titleKey="analysis.title" />} />
           <Route path="twin" element={<Placeholder titleKey="twin.title" hintKey="twin.note" />} />
           <Route path="family" element={<Placeholder titleKey="family.title" />} />

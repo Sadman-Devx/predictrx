@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"name": "predictrx",
+			"path": "../../.."
+		},
+		{
+			"name": "Figma Design Files",
+			"path": "../../../../../Downloads/design/Figma Design Files"
+		},
+		{
+			"name": "Figma Link",
+			"path": "../../../../../Downloads/design/Figma Link"
+		},
+		{
+			"name": "logo",
+			"path": "../../../../../Downloads/design/logo"
+		}
+	],
+	"settings": {}
+}

@@ -28,6 +28,10 @@ class Chunk(models.Model):
         indexes = [
             HnswIndex(name="chunk_embedding_hnsw", fields=["embedding"], m=16, ef_construction=64,
                       opclasses=["vector_cosine_ops"]),
+            # Retriever filters by document + section ("DRUG INTERACTIONS" of drug X's label).
+            models.Index(fields=["document", "section"], name="chunk_doc_section_idx"),
+            # Tiny partial index: the embed job only ever scans chunks that still have no embedding.
+            models.Index(fields=["id"], condition=models.Q(embedding__isnull=True), name="chunk_unembedded_idx"),
         ]
 
 
@@ -40,4 +44,4 @@ class GraphEdge(models.Model):
     chunk = models.ForeignKey(Chunk, null=True, blank=True, on_delete=models.SET_NULL, related_name="edges")
 
     class Meta:
-        indexes = [models.Index(fields=["src_type", "src_id"]), models.Index(fields=["dst_type", "dst_id"])]
+        indexes = [models.Index(fields=["src_type", "src_id"]), models.Index(fields=["dst_type", "dst_id"])
