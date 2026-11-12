@@ -149,3 +149,5 @@ a  { color: var(--primary); }
 .resolve-badge.tone-warn { color: var(--sev-moderate); }
 .resolve-badge.tone-neutral { color: var(--sev-unknown); }
 .resolve-badge.tone-stop { color: var(--sev-major); }
+.resolve-basis { overflow-wrap: anywhere; }
+.resolve-basis a { color: inherit; }

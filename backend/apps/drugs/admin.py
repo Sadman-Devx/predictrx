@@ -5,9 +5,9 @@ from .models import BrandMapping, Drug, Interaction
 
 @admin.register(BrandMapping)
 class BrandMappingAdmin(admin.ModelAdmin):
-    list_display = ("brand_name", "strength", "drug", "source", "verified", "confidence")
+    list_display = ("brand_name", "strength", "drug", "source", "source_accessed", "verified", "confidence")
     list_filter = ("verified",)
-    search_fields = ("brand_name", "drug__generic_name")
+    search_fields = ("brand_name", "drug__generic_name", "source", "source_ref")
 
 
 @admin.register(Drug)

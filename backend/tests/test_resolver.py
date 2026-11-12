@@ -182,12 +182,12 @@ def test_check_interactions_for_a_medication_list(world):
 def test_brand_loader_validates_strictly_and_is_idempotent(world, tmp_path):
     f = tmp_path / "brands.csv"
     f.write_text(
-        "brand_name,strength,dosage_form,generic_name,source,verified,confidence\n"
-        "Goodbrand,250mg,tablet,metformin,synthetic test,false,0.8\n"
-        "Nosource,,,metformin,,false,0.8\n"
-        "Badgeneric,,,notadrug,synthetic test,false,0.8\n"
-        "Badconf,,,metformin,synthetic test,false,2\n"
-        "Badflag,,,metformin,synthetic test,maybe,0.5\n", encoding="utf-8")
+        "brand_name,strength,dosage_form,generic_name,source,source_ref,source_accessed,verified,confidence\n"
+        "Goodbrand,250mg,tablet,metformin,synthetic test,https://example.test/good,2026-11-12,false,0.8\n"
+        "Nosource,,,metformin,,,2026-11-12,false,0.8\n"
+        "Badgeneric,,,notadrug,synthetic test,https://example.test/bad,2026-11-12,false,0.8\n"
+        "Badconf,,,metformin,synthetic test,https://example.test/bad,2026-11-12,false,2\n"
+        "Badflag,,,metformin,synthetic test,https://example.test/bad,2026-11-12,maybe,0.5\n", encoding="utf-8")
     parsed = load_brands.load_rows(f)
     assert len(parsed["ok"]) == 1 and len(parsed["errors"]) == 4
     assert any("missing source" in e[2] for e in parsed["errors"])

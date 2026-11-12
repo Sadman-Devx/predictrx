@@ -44,9 +44,20 @@ export function ResolveBadge({ result }: { result: ResolveResult }) {
         {t(label)}
       </span>
       {result.status === "resolved" && (
-        <span className="resolve-basis small muted">
-          {Math.round(result.confidence * 100)}% · {t(basis[result.match_type])} · {result.source}
-        </span>
+        <>
+          <span className="resolve-basis small muted">
+            {Math.round(result.confidence * 100)}% · {t(basis[result.match_type])} · {result.source}
+          </span>
+          {result.source_ref && (
+            <span className="resolve-basis small muted">
+              {t("med.source.reference")}:{" "}
+              {/^https?:\/\//i.test(result.source_ref) ? (
+                <a href={result.source_ref} target="_blank" rel="noreferrer">{result.source_ref}</a>
+              ) : result.source_ref}
+              {result.source_accessed && ` · ${t("med.source.accessed")}: ${result.source_accessed}`}
+            </span>
+          )}
+        </>
       )}
     </span>
   );

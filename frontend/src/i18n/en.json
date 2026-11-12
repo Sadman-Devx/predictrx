@@ -129,5 +129,7 @@
   "med.use": "Use",
   "med.strengthMismatch": "This strength is not in our list. Please check it.",
   "med.error": "Could not check this medicine.",
-  "med.retry": "Try again"
+  "med.retry": "Try again",
+  "med.source.reference": "Source reference",
+  "med.source.accessed": "Checked"
 }

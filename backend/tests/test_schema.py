@@ -14,11 +14,22 @@ def schema(django_db_blocker):
     return yaml.safe_load(out.getvalue()), err.getvalue()
 
 
-def test_schema_contains_the_drug_and_interaction_routes(schema):
+def test_schema_contains_the_read_only_drug_and_interaction_routes(schema):
     paths = schema[0]["paths"]
-    for route in ("/api/drugs/", "/api/drugs/{id}/", "/api/interactions/", "/api/interactions/{id}/"):
+    for route in (
+        "/api/drugs/",
+        "/api/drugs/{id}/",
+        "/api/interactions/",
+        "/api/interactions/{id}/",
+    ):
         assert route in paths, route
         assert set(paths[route]) == {"get"}  # read-only
+
+
+def test_schema_contains_day_four_resolver_and_search_routes(schema):
+    paths = schema[0]["paths"]
+    assert set(paths["/api/medications/resolve/"]) == {"post"}
+    assert set(paths["/api/drugs/search/"]) == {"get"}
 
 
 def test_schema_has_no_warnings_or_errors_for_the_whole_project(schema):

@@ -1,8 +1,16 @@
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
+from .models import Drug
 from .services import MAX_INPUT_LEN, SEARCH_MAX_LIMIT
 
 MAX_RESOLVE_ITEMS = 30
+
+
+class DrugSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Drug
+        fields = ("id", "generic_name", "aliases")
 
 
 class ResolveItemSerializer(serializers.Serializer):
@@ -23,6 +31,8 @@ class ResolveResultSerializer(serializers.Serializer):
     confidence = serializers.FloatField(required=False)
     verified = serializers.BooleanField(required=False)
     source = serializers.CharField(required=False)
+    source_ref = serializers.CharField(required=False)
+    source_accessed = serializers.DateField(required=False, allow_null=True)
     match_type = serializers.ChoiceField(choices=["exact", "generic", "fuzzy"], required=False)
     matched_name = serializers.CharField(required=False)
     strength = serializers.CharField(required=False, allow_blank=True)
@@ -49,6 +59,8 @@ class SearchResultSerializer(serializers.Serializer):
     dosage_form = serializers.CharField(allow_blank=True)
     verified = serializers.BooleanField()
     source = serializers.CharField()
+    source_ref = serializers.CharField(required=False)
+    source_accessed = serializers.DateField(required=False, allow_null=True)
 
 
 class InteractionDrugSerializer(serializers.Serializer):
@@ -56,6 +68,7 @@ class InteractionDrugSerializer(serializers.Serializer):
     generic_name = serializers.CharField()
 
 
+@extend_schema_serializer(component_name="Interaction")
 class InteractionDetailSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     drug_a = InteractionDrugSerializer()
@@ -66,6 +79,11 @@ class InteractionDetailSerializer(serializers.Serializer):
     source = serializers.CharField()
     source_ref = serializers.CharField()
     license_note = serializers.CharField()
+
+
+class InteractionCheckResponseSerializer(serializers.Serializer):
+    interactions = InteractionDetailSerializer(many=True)
+    checked_pairs = serializers.IntegerField()
 
 
 class SearchResponseSerializer(serializers.Serializer):

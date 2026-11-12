@@ -57,5 +57,5 @@ class MedicationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "patient", "drug", "generic_name", "resolution_status", "created_at"]
 
-    def get_generic_name(self, obj):
+    def get_generic_name(self, obj) -> str | None:
         return obj.drug.generic_name if obj.drug_id else None

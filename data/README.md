@@ -8,7 +8,7 @@ The n8n workflow (`automation/n8n/`) can orchestrate these steps, but each step 
 | Ingest | `ingest_openfda.py`, `ingest_ddinter.py`, `ingest_brands.py` | source → `data/raw/` |
 | Parse | `parse_labels.py`, `parse_interactions.py` | raw → structured JSON/CSV |
 | Clean | `clean.py` | normalize names (lower-case, salts), dedupe by `content_hash`, drop malformed rows |
-| Store (brands) | `load_brands.py` | curated CSV (`fixtures/brand_mapping_sample.csv`) → `BrandMapping` (needs `source`; `verified=false` until reviewed) |
+| Store (brands) | `pipeline/load_brands.py` | curated CSV (`brands/brand_mapping.csv`) → `BrandMapping` (requires a source reference and access date; `verified=false` until reviewed) |
 | Store | `load.py` | upsert `Drug`, `Interaction`, `KnowledgeDocument`, `Chunk` (+ embeddings), `GraphEdge` |
 | Analytics | `report.py` | coverage: drugs per source, interactions by severity, unresolved-brand rate |
 

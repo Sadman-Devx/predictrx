@@ -11,6 +11,8 @@ export interface ResolvedMedication {
   confidence: number; // 0..1 — ALWAYS shown together with its basis (match_type + source + verified)
   verified: boolean; // true only after a pharmacist/mentor reviewed the mapping row
   source: string;
+  source_ref?: string;
+  source_accessed?: string | null;
   match_type: MatchType;
   matched_name: string;
   strength: string;
@@ -35,6 +37,8 @@ export interface DrugSuggestion {
   dosage_form: string;
   verified: boolean;
   source: string;
+  source_ref?: string;
+  source_accessed?: string | null;
 }
 
 export function searchDrugs(q: string, limit = 8): Promise<{ results: DrugSuggestion[] }> {

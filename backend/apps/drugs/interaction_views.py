@@ -1,13 +1,24 @@
 from itertools import combinations
 
 from django.db.models import Q
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Interaction
-from .serializers import InteractionDetailSerializer
+from .serializers import InteractionCheckResponseSerializer, InteractionDetailSerializer
+
+
+@extend_schema_view(get=extend_schema(tags=["Interactions"]))
+class InteractionListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = InteractionDetailSerializer
+    queryset = Interaction.objects.select_related("drug_a", "drug_b").order_by(
+        "drug_a__generic_name", "drug_b__generic_name", "source"
+    )
 
 
 class InteractionCheckView(APIView):
@@ -19,6 +30,17 @@ class InteractionCheckView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["Interactions"],
+        parameters=[
+            OpenApiParameter(
+                name="drug_ids",
+                type=str,
+                description="Comma-separated drug IDs. At least two IDs are needed to check pairs.",
+            )
+        ],
+        responses=InteractionCheckResponseSerializer,
+    )
     def get(self, request):
         raw = request.query_params.get("drug_ids", "")
         try:
@@ -52,6 +74,7 @@ class InteractionDetailView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(tags=["Interactions"], responses=InteractionDetailSerializer)
     def get(self, request, pk):
         try:
             interaction = Interaction.objects.select_related("drug_a", "drug_b").get(pk=pk)
