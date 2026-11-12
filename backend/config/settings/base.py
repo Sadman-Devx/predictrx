@@ -165,6 +165,12 @@ CLOUD_LLM_MODEL = env("CLOUD_LLM_MODEL", default="")
 OLLAMA_BASE_URL = env("OLLAMA_BASE_URL", default="http://localhost:11434")
 LOCAL_LLM_MODEL = env("LOCAL_LLM_MODEL", default="")
 EMBEDDING_DIM = env.int("EMBEDDING_DIM", default=1024)
+# Embeddings run on the local Ollama server. The model's output size MUST equal EMBEDDING_DIM.
+EMBEDDING_MODEL = env("EMBEDDING_MODEL", default="")
+EMBEDDING_BATCH_SIZE = env.int("EMBEDDING_BATCH_SIZE", default=16)
+EMBEDDING_TIMEOUT = env.int("EMBEDDING_TIMEOUT", default=120)
+# How the contextual-RAG prefix of a chunk is produced: template (deterministic) | local (Ollama) | cloud
+RAG_CONTEXT_MODE = env("RAG_CONTEXT_MODE", default="template")
 MCP_SERVER_URL = env("MCP_SERVER_URL", default="http://localhost:8001/sse")
 OPENFDA_API_KEY = env("OPENFDA_API_KEY", default="")
 PRESCRIPTION_IMAGE_RETENTION_DAYS = env.int("PRESCRIPTION_IMAGE_RETENTION_DAYS", default=7)

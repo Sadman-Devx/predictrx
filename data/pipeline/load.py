@@ -36,7 +36,8 @@ def seed_drugs(seed: list[dict]) -> int:
     return created
 
 
-def load_docs(docs: list[dict]) -> dict:
+def load_docs(docs: list[dict], *, embed_fn=None) -> dict:
+    """`embed_fn` (texts -> vectors) turns on meaning-based chunk boundaries (slower: one embedding per sentence)."""
     from django.db import transaction
 
     from ai.rag.chunking import chunk_section
@@ -66,7 +67,7 @@ def load_docs(docs: list[dict]) -> dict:
             chunks = []
             for title, text in doc["sections"].items():
                 prefix = context_prefix(drug_name=doc["drug_name"], section=title, source=SOURCE)
-                for piece in chunk_section(text):
+                for piece in chunk_section(text, embed_fn=embed_fn):
                     chunks.append(Chunk(document=kdoc, section=title, text=piece, context_prefix=prefix,
                                         token_count=len(piece.split())))
             Chunk.objects.bulk_create(chunks)
@@ -77,14 +78,21 @@ def load_docs(docs: list[dict]) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--inp", type=Path, default=PROCESSED_DIR / "openfda_clean.jsonl")
+    ap.add_argument("--semantic-boundaries", action="store_true",
+                    help="use embeddings to start new chunks where the topic changes (needs Ollama + EMBEDDING_MODEL)")
     args = ap.parse_args()
 
     django_setup()
+    embed_fn = None
+    if args.semantic_boundaries:
+        from ai.rag.embeddings import embed_texts
+
+        embed_fn = embed_texts
     created = seed_drugs(read_seed())
-    stats = load_docs(read_jsonl(args.inp))
+    stats = load_docs(read_jsonl(args.inp), embed_fn=embed_fn)
     print(f"drugs created: {created}")
     print(f"documents: +{stats['documents_new']} new, {stats['documents_existing']} already present")
-    print(f"chunks: +{stats['chunks_new']} (embeddings are added later, on the RAG day)")
+    print(f"chunks: +{stats['chunks_new']} (next: python backend/manage.py index_knowledge  -> embeddings + graph)")
 
 
 if __name__ == "__main__":
