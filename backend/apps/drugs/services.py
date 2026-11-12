@@ -170,12 +170,14 @@ def _build_index() -> dict:
             if isinstance(name, str) and _key(name):
                 add({"kind": "generic", "name": name, "key": _key(name), "drug_id": d.id,
                      "generic": d.generic_name, "strength": "", "dosage_form": "", "source": "drug_table",
-                     "verified": False, "confidence": 1.0})
+                     "source_ref": "", "source_accessed": None, "verified": False, "confidence": 1.0})
     for b in BrandMapping.objects.select_related("drug").all():
         if _key(b.brand_name):
             add({"kind": "brand", "name": b.brand_name, "key": _key(b.brand_name), "drug_id": b.drug_id,
                  "generic": b.drug.generic_name, "strength": b.strength, "dosage_form": b.dosage_form,
-                 "source": b.source, "verified": b.verified, "confidence": float(b.confidence)})
+                 "source": b.source, "source_ref": b.source_ref,
+                 "source_accessed": b.source_accessed.isoformat() if b.source_accessed else None,
+                 "verified": b.verified, "confidence": float(b.confidence)})
     return {
         "by_key": by_key,
         "drugs": {i: {"generic": d.generic_name, "aliases": list(d.aliases or [])} for i, d in drugs.items()},
@@ -232,6 +234,8 @@ def _resolve_entries(raw: str, entries: list[dict], strength, index: dict, *, ma
         "confidence": confidence,
         "verified": verified,
         "source": best["source"],
+        "source_ref": best["source_ref"],
+        "source_accessed": best["source_accessed"],
         "match_type": match_type,  # exact | generic | fuzzy — the basis of `confidence`
         "matched_name": best["name"],
         "strength": best["strength"],
@@ -411,6 +415,7 @@ def search_drugs(q: str, limit: int = 10) -> list[dict]:
         results.append({
             "type": e["kind"], "name": e["name"], "generic": e["generic"], "strength": e["strength"],
             "dosage_form": e["dosage_form"], "verified": e["verified"], "source": e["source"],
+            "source_ref": e["source_ref"], "source_accessed": e["source_accessed"],
         })
         if len(results) >= limit:
             break

@@ -158,6 +158,12 @@ Simple outline icons (e.g. lucide). Severity icons are distinct in shape, not on
 - Bangla is the default; English toggle available. Dates and numbers formatted per locale.
 - Clinical wording for Bangla strings should be reviewed by a mentor/clinician before the demo.
 
+### Clinical wording review status
+
+**Pending clinician/mentor sign-off.** A code or language-model review is not clinical approval. Before the demo,
+have a qualified reviewer check the Bangla disclaimer, severity labels, medication matching states, and all
+patient-facing instructions. Record the reviewer's name/role, date, and any approved wording changes here.
+
 ---
 
 ## 5. Demo Considerations

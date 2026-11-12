@@ -1,10 +1,24 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import services
-from .serializers import (ResolveRequestSerializer, ResolveResponseSerializer, SearchQuerySerializer,
-                          SearchResponseSerializer)
+from .models import Drug
+from .serializers import (DrugSerializer, ResolveRequestSerializer, ResolveResponseSerializer,
+                          SearchQuerySerializer, SearchResponseSerializer)
+
+
+@extend_schema_view(get=extend_schema(tags=["Drugs"]))
+class DrugListView(ListAPIView):
+    serializer_class = DrugSerializer
+    queryset = Drug.objects.order_by("generic_name")
+
+
+@extend_schema_view(get=extend_schema(tags=["Drugs"]))
+class DrugDetailView(RetrieveAPIView):
+    serializer_class = DrugSerializer
+    queryset = Drug.objects.all()
 
 
 class ResolveMedicationsView(APIView):

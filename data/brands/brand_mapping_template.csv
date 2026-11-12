@@ -1,1 +1,1 @@
-brand_name,strength,dosage_form,generic_name,source,verified,confidence
+brand_name,strength,dosage_form,generic_name,source,source_ref,source_accessed,verified,confidence

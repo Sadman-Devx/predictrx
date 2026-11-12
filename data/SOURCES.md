@@ -1,8 +1,12 @@
 Data Sources & Licenses
 
-Status: pre-filled on 8 Nov 2026 from the official license/terms pages listed below.
+Status: draft terms summary. Re-open the linked official pages and confirm before relying on this summary.
 Not legal advice. A team member must open each link, confirm the text still matches, and sign the last column.
 Do not ingest a source until its row is signed.
+
+Brand-mapping provenance audit (12 Nov 2026): the current brand sheets have no row-level source references or
+access dates. Their source labels are not evidence. Do not load these draft rows until the exact supporting
+record/document and date checked are recorded per row.
 
 
 
