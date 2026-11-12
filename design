@@ -1,0 +1,48 @@
+# PredictRx – Smart Healthcare Management System Design
+
+This folder contains all the UI design assets, Figma links, and screen previews for the PredictRx project.
+
+- **Live Figma Link:** [Open PredictRx Figma Design](https://www.figma.com/design/5fV8aTEasT6l4AY8xWPIqj/PredictRx-%E2%80%93-Smart-Healthcare-Management-System?node-id=0-1&t=Q0qGxheA9FT3uQgG-1)
+
+---
+
+## 🎨 UI Screen Previews
+
+### 1. Authentication Cards
+| Login Card | Registration Card |
+|---|---|
+| ![Login Card](./1.Login%20Card.png) | ![Registration Card](./1.Registration%20Card.png) |
+
+---
+
+### 2. Doctor Dashboard
+![Doctor Dashboard 1](./02%20Doctor%20Dashboard-1.png)
+![Doctor Dashboard 2](./02%20Doctor%20Dashboard.png)
+
+---
+
+### 3. Patient & Prescription Management
+#### Patients View
+![Patients](./03%20Patients.png)
+
+#### Prescription Scanner
+![Prescription Scanner](./04%20Prescription%20Scanner.png)
+
+---
+
+### 4. Medical Records & Health Analytics
+#### Medical Analyses
+![Medical Analyses](./05%20Medical%20Analyses.png)
+
+#### Family Health Records
+![Family Health Records](./06%20Family%20Health%20Records.png)
+
+---
+
+### 5. Admin Portal
+#### Admin Dashboard
+![Admin Dashboard 1](./07%20Admin%20Dashboard-1.png)
+![Admin Dashboard 2](./07%20Admin%20Dashboard.png)
+
+#### Admin Management
+![Admin Management](./08%20Admin%20Management.png)
