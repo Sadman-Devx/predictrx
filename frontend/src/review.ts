@@ -1,4 +1,4 @@
-import type { ResolveResult } from "./drugs";
+import type { ResolveResult } from "./lib/drugs";
 
 /** A row in the Review & Confirm list. `result` is always the backend resolver's answer; nothing is guessed in the UI. */
 export type RowResult = ResolveResult | "loading" | "error";

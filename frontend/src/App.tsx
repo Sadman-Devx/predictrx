@@ -7,7 +7,7 @@ import MedicationEntry from "./pages/MedicationEntry";
 import PatientDetail from "./pages/PatientDetail";
 import Patients from "./pages/Patients";
 import { Placeholder } from "./pages/Placeholder";
-import ReviewConfirm from "./pages/ReviewConfirm";
+import ReviewConfirm from "./components/ReviewConfirm";
 
 export default function App() {
   return (

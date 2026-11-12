@@ -1,8 +1,8 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../../auth/AuthContext";
-import { useI18n, type MessageKey } from "../../i18n";
-import { DisclaimerStrip } from "../ui/DisclaimerStrip";
-import { LanguageToggle } from "../ui/LanguageToggle";
+import { useAuth } from "../auth/AuthContext";
+import { useI18n, type MessageKey } from "../i18n";
+import { DisclaimerStrip } from "./ui/DisclaimerStrip";
+import { LanguageToggle } from "./ui/LanguageToggle";
 
 const NAV: { to: string; key: MessageKey }[] = [
   { to: "/", key: "nav.dashboard" },
