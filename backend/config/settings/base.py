@@ -117,6 +117,7 @@ REST_FRAMEWORK = {
         "register": "10/hour",
         "scan": "20/hour",
         "analysis": "30/hour",
+        "drug_lookup": "120/min",  # resolve + autocomplete (no LLM, cheap)
     },
 }
 

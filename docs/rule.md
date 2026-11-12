@@ -82,7 +82,8 @@ Each rule says what to avoid and gives the reason. A rule without a reason gets 
   do **not** present it as ready for a paid product. Verify the current terms on the DDInter site yourself.
 - **openFDA data must not be presented as validated medical guidance.** Its own disclaimer says not to rely on it
   for medical-care decisions. Keep that caution visible.
-- **Never add brand-mapping rows without a `source`.** `verified` stays false until a pharmacist/mentor reviews the row.
+- **Never load a brand-mapping row without a traceable source reference and access date.** Keep `verified=false`
+  until a pharmacist/mentor reviews the row; a source label alone is not provenance.
 - **Avoid scraping sites whose terms prohibit it.** Check terms first; prefer official downloads/APIs.
 - **Never overwrite loaded data without `content_hash` dedupe and a recorded fetch date.**
 - **Avoid re-running the whole ingest on every deploy.** Make loads idempotent and run on demand.

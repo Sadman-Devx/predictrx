@@ -37,6 +37,17 @@ def build_report() -> dict:
             .annotate(n=Count("id")).order_by("source", "severity")
         ],
         "interactions_total": Interaction.objects.count(),
+                "interactions_total": Interaction.objects.count(),
+        # Every loaded record must carry its license (rule.md §6)
+        "license_notes_by_source": [
+            {"table": table, "source": src, "license_note": note, "count": n}
+            for table, qs in (
+                ("interaction", Interaction.objects.values_list("source", "license_note")),
+                ("knowledge_document", KnowledgeDocument.objects.values_list("source", "license_note")),
+            )
+            for src, note, n in qs.annotate(n=Count("id")).order_by("source", "license_note")
+        ],
+        "interactions_missing_license": Interaction.objects.filter(license_note="").count(),
     }
 
 
@@ -55,6 +66,13 @@ def main() -> None:
         print(f"  {row['source']} / {row['severity']}: {row['count']}")
     if not r["interactions_total"]:
         print("  (none yet — DDInter not loaded)")
+        print("license notes stored:")
+    for row in r["license_notes_by_source"] or []:
+        print(f"  {row['table']} / {row['source']}: {row['license_note'] or '(EMPTY!)'}  [{row['count']}]")
+    if not r["license_notes_by_source"]:
+        print("  (no records yet)")
+    if r["interactions_missing_license"]:
+        print(f"  WARNING: {r['interactions_missing_license']} interaction rows have no license_note") 
     missing = r["drugs_without_documents"]
     if missing:
         print(f"drugs without any label document ({len(missing)}): {', '.join(missing)}")

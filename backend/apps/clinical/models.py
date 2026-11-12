@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 from apps.drugs.models import Drug
 from apps.patients.models import Patient
@@ -28,6 +29,7 @@ class Medication(models.Model):
     resolution_status = models.CharField(max_length=14, choices=RESOLUTION, default="unresolved")
     confirmed_by_user = models.BooleanField(default=False)  # human-in-the-loop flag
     source = models.CharField(max_length=10, default="manual")  # scan | manual
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
 
 class LabResult(models.Model):

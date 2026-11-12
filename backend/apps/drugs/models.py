@@ -23,6 +23,8 @@ class BrandMapping(models.Model):
     dosage_form = models.CharField(max_length=30, blank=True)
     drug = models.ForeignKey(Drug, on_delete=models.PROTECT, related_name="brands")
     source = models.CharField(max_length=60)  # where the mapping came from (required)
+    source_ref = models.CharField(max_length=500, blank=True)
+    source_accessed = models.DateField(blank=True, null=True)
     verified = models.BooleanField(default=False)
     confidence = models.DecimalField(max_digits=3, decimal_places=2, default=0)
 

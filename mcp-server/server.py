@@ -1,21 +1,36 @@
 """PredictRx custom MCP server (SSE transport).
 
-Tools (deterministic, backed by the database in the real implementation):
-  resolve_brand(brand, strength?)  -> generic name + confidence + verified flag, or {"status": "unresolved"}
+Tools (deterministic, backed by the Django tables through apps.drugs.services — the same functions the REST API uses):
+  resolve_brand(brand, strength?)  -> generic + confidence + basis (match_type/source/verified), or {"status": "unresolved"}
   lookup_drug(generic_name)        -> basic record + source list, or {"status": "not_found"}
   check_interaction(drug_a, drug_b)-> severity/mechanism/management/source, or {"status": "no_record"}
 
 The Verifier agent calls the SAME tools, so a finding can be checked independently of the LLM's wording.
+"no_record" means "no evidence found" — never "safe".
 
-Run (SSE):   python server.py
+Run (SSE):   python server.py            -> http://localhost:8001/sse
 Run (stdio): MCP_TRANSPORT=stdio python server.py
-
-TODO (lead dev): replace the in-memory SAMPLE_* data with queries against the Django tables
-(drugs.BrandMapping, drugs.Interaction). Keep the response shapes below unchanged.
+Needs: the repo's backend/ code, the same .env (DATABASE_URL, REDIS_URL) as the API, and `pip install -r requirements.txt`.
 """
 import os
+import sys
+from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+# ---- Django bootstrap (the server reads the same tables as the API) ----
+BACKEND_DIR = Path(__file__).resolve().parents[1] / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
+
+import django  # noqa: E402
+
+django.setup()
+
+from asgiref.sync import sync_to_async  # noqa: E402
+from django.db import close_old_connections  # noqa: E402
+from mcp.server.fastmcp import FastMCP  # noqa: E402
+
+from apps.drugs import services  # noqa: E402
 
 mcp = FastMCP(
     "predictrx-drug-tools",
@@ -23,40 +38,38 @@ mcp = FastMCP(
     port=int(os.environ.get("MCP_SERVER_PORT", "8001")),
 )
 
-# ---- Placeholder data so the tools are callable on day 1. NOT clinical data. Replace with DB queries. ----
-SAMPLE_BRANDS = {"napa": {"generic": "paracetamol", "confidence": 0.99, "verified": False,
-                          "source": "placeholder-sample"}}
-SAMPLE_INTERACTIONS: dict[frozenset, dict] = {}
+
+def _run_db(fn, *args) -> dict:
+    """Run a blocking ORM function; close the connection afterwards so a long-lived server never holds a stale one."""
+    close_old_connections()
+    try:
+        return fn(*args)
+    finally:
+        close_old_connections()
 
 
-def _norm(s: str) -> str:
-    return s.strip().lower()
-
-
-@mcp.tool()
-def resolve_brand(brand: str, strength: str | None = None) -> dict:
-    """Resolve a locally used brand name to a generic drug name. Never guesses: returns 'unresolved' if unknown."""
-    hit = SAMPLE_BRANDS.get(_norm(brand).split()[0] if brand.strip() else "")
-    if not hit:
-        return {"status": "unresolved", "input": brand}
-    return {"status": "resolved", "input": brand, **hit}
+async def _call(fn, *args) -> dict:
+    # The ORM refuses to run inside the event loop; hand it to a worker thread.
+    return await sync_to_async(_run_db, thread_sensitive=True)(fn, *args)
 
 
 @mcp.tool()
-def lookup_drug(generic_name: str) -> dict:
-    """Basic record for a generic drug name, with the sources that mention it."""
-    # TODO: query drugs.Drug + knowledge.KnowledgeDocument
-    return {"status": "not_found", "input": generic_name}
+async def resolve_brand(brand: str, strength: str | None = None) -> dict:
+    """Resolve a locally used brand name to a generic drug name. Never guesses: returns 'unresolved' if unknown
+    or ambiguous. A 'fuzzy' match_type means a typo-match: confirm with the user."""
+    return await _call(services.resolve_brand, brand, strength)
 
 
 @mcp.tool()
-def check_interaction(drug_a: str, drug_b: str) -> dict:
-    """Interaction record for a drug pair. 'no_record' means no evidence found — NOT that the pair is safe."""
-    rec = SAMPLE_INTERACTIONS.get(frozenset({_norm(drug_a), _norm(drug_b)}))
-    if not rec:
-        return {"status": "no_record", "drug_a": drug_a, "drug_b": drug_b,
-                "note": "No interaction record found. This does not mean the combination is safe."}
-    return {"status": "found", **rec}
+async def lookup_drug(generic_name: str) -> dict:
+    """Basic record for a generic drug name (or alias), with the sources that mention it."""
+    return await _call(services.lookup_drug, generic_name)
+
+
+@mcp.tool()
+async def check_interaction(drug_a: str, drug_b: str) -> dict:
+    """Interaction record for a pair of GENERIC names. 'no_record' means no evidence found — NOT that the pair is safe."""
+    return await _call(services.check_interaction, drug_a, drug_b)
 
 
 if __name__ == "__main__":

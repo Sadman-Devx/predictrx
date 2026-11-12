@@ -31,3 +31,57 @@ export interface RiskFinding {
 export interface ApiError {
   error: { code: string; message: string; details?: unknown };
 }
+
+export type Sex = "male" | "female" | "other";
+export type ResolutionStatus = "unresolved" | "resolved" | "user_confirmed";
+
+export interface Patient {
+  id: number;
+  patient_code: string;
+  birth_year: number | null;
+  sex: string;
+  weight_kg: string | null;
+  created_at: string;
+}
+
+export interface PatientInput {
+  birth_year?: number;
+  sex?: Sex;
+  weight_kg?: string;
+}
+
+export interface Paginated<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+export interface Medication {
+  id: number;
+  raw_text: string;
+  brand_name: string;
+  generic_name: string | null;
+  strength: string;
+  frequency: string;
+  resolution_status: ResolutionStatus;
+  created_at: string;
+}
+
+export interface MedicationInput {
+  raw_text: string;
+  brand_name: string;
+  strength: string;
+  frequency: string;
+  drug_id: number | null;
+}
+
+export interface DrugSuggestion {
+  kind: "brand" | "generic";
+  label: string;
+  brand_name: string | null;
+  strength: string | null;
+  drug_id: number;
+  generic_name: string;
+  verified: boolean;
+}

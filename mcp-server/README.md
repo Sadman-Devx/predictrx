@@ -4,9 +4,9 @@ Custom MCP server exposing deterministic drug tools to the LangGraph agents **an
 
 | Tool | Input | Output |
 |---|---|---|
-| `resolve_brand` | brand string, optional strength | generic, confidence, verified flag — or `unresolved` |
+| `resolve_brand` | brand string, optional strength | generic, confidence **+ basis** (`match_type` exact/generic/fuzzy, `source`, `verified`) — or `unresolved` (+ `reason`, optional `candidates`) |
 | `lookup_drug` | generic name | record + sources — or `not_found` |
-| `check_interaction` | two generic names | severity, mechanism, management, source — or `no_record` |
+| `check_interaction` | two generic names | severity, mechanism, management, source — or `no_record` (+ `reason`; never means "safe") |
 
 ## Transport
 - **SSE (default, used in the app):** `python server.py` → `http://localhost:8001/sse`
@@ -18,14 +18,18 @@ Custom MCP server exposing deterministic drug tools to the LangGraph agents **an
 - **External MCP:** one public MCP server is also used as a client (choose during build, document here:
   name, URL, what it is used for).
 
+## Data access
+The tools call `apps.drugs.services` (same functions as the REST API), so the server needs the repo's `backend/` code,
+the same `.env` (`DATABASE_URL`, `REDIS_URL`) and the tables loaded (`data/pipeline/load.py`, `load_brands.py`).
+
 ## Run
 ```bash
 cd mcp-server
-python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python server.py
+python server.py                 # SSE on :8001
+python test_client.py            # second terminal: calls every tool over SSE, exits 0 on success
 ```
 
 ## Status
-Placeholder data only (`SAMPLE_*`). The lead dev replaces it with queries against the Django tables.
-Response shapes must not change — the Verifier and the tests depend on them.
+Day 4: DB-backed. Response shapes are a contract (Verifier + tests depend on them) — add keys, never change meaning.
+Brand rows in the sample sheet are **unreviewed** (`verified=false`) until a pharmacist/mentor checks them.
