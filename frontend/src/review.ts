@@ -15,6 +15,28 @@ export interface DraftRow {
   confirmed: boolean;
 }
 
+/** Router state passed from manual entry (and, from Day 8, the scanner) into the Review screen. */
+export interface ReviewNavState {
+  rows: DraftRow[];
+}
+
+/** Accepts router state only if it really looks like a list of draft rows; anything else falls back to the labelled sample. */
+export function rowsFromState(state: unknown): DraftRow[] | null {
+  const rows = (state as { rows?: unknown } | null)?.rows;
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+  const ok = rows.every(
+    (r) =>
+      r &&
+      typeof r === "object" &&
+      typeof (r as DraftRow).id === "number" &&
+      typeof (r as DraftRow).rawText === "string" &&
+      typeof (r as DraftRow).strength === "string" &&
+      typeof (r as DraftRow).frequency === "string" &&
+      (r as DraftRow).result !== undefined,
+  );
+  return ok ? (rows as DraftRow[]) : null;
+}
+
 export type RowState = "loading" | "error" | "unresolved" | "needs_confirm" | "confirmed" | "resolved";
 
 export function rowState(row: DraftRow): RowState {

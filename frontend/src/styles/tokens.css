@@ -1,33 +1,56 @@
-/* Design tokens — source of truth: design.md. Check WCAG AA contrast before freezing any value. */
+/* Design tokens — source of truth: docs/design.md + the Figma frames in /design.
+   Every pair used for text was checked against WCAG AA (4.5:1) before freezing. */
 :root {
-  /* colour */
-  --bg: #f6f9f9;
+  /* surfaces */
+  --bg: #eef5f5;
+  --bg-gradient: linear-gradient(160deg, #e1eeee 0%, #f0f6f6 40%, #f8fbfb 100%);
   --surface: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.78);
+  --track: #e4ecee; /* segmented-control track (language toggle) */
+
+  /* text */
   --ink: #12262a;
   --ink-muted: #4a5f64;
+
+  /* brand */
   --primary: #0f5c63;
   --primary-hover: #0b4a50;
   --primary-soft: #e1f0f1;
   --on-primary: #ffffff;
+
+  /* lines */
   --border: #d5e2e3;
+  --border-soft: #e4eded;
   --border-strong: #9db3b6;
 
+  /* severity / status (colour is never the only signal: each is paired with a shape + a text label) */
   --sev-major: #b3261e;
   --sev-moderate: #b26a00;
   --sev-minor: #2e7d5b;
   --sev-unknown: #5b6770;
   --conflict: #6b3fa0;
 
+  --sev-major-soft: #fde7e6;
+  --sev-moderate-soft: #fdf0d6;
+  --sev-minor-soft: #e3f3ea;
+  --sev-unknown-soft: #eceff1;
+  --conflict-soft: #efe6f7;
+
+  /* text-safe variants for small text on the soft backgrounds above */
+  --sev-moderate-text: #8a5200; /* 5.7:1 on --sev-moderate-soft */
+  --sev-minor-text: #256b4d; /* 5.6:1 on --sev-minor-soft */
+
   --danger-soft: #fdecea;
 
-  /* shape */
-  --radius-card: 8px;
-  --radius-control: 6px;
+  /* shape (Figma: rounded cards, pill buttons and badges) */
+  --radius-card: 20px;
+  --radius-inner: 14px;
+  --radius-control: 12px;
   --radius-pill: 999px;
 
   /* elevation: one card shadow, one overlay shadow */
-  --shadow-card: 0 1px 2px rgba(18, 38, 42, 0.06);
-  --shadow-overlay: 0 8px 24px rgba(18, 38, 42, 0.16);
+  --shadow-card: 0 1px 2px rgba(18, 38, 42, 0.05), 0 6px 20px rgba(18, 38, 42, 0.05);
+  --shadow-overlay: 0 8px 28px rgba(18, 38, 42, 0.16);
 
   /* type */
   --font-bn: "Noto Sans Bengali", "Hind Siliguri", system-ui, sans-serif;
@@ -46,7 +69,8 @@
   --space-4: 16px;
   --space-5: 24px;
   --space-6: 32px;
-  --content-max: 1100px;
+  --content-max: 1180px;
+  --sidebar-w: 216px;
   --tap: 44px; /* minimum touch target */
 
   /* motion */

@@ -42,6 +42,13 @@ export interface Patient {
   sex: string;
   weight_kg: string | null;
   created_at: string;
+  /**
+   * NOT returned by the API yet (consent and medicine counts arrive with the Day 9 backend work).
+   * The Patients screen shows the consent badge / medicine count only when the server sends these
+   * fields: nothing is guessed or faked in the UI.
+   */
+  consent_active?: boolean;
+  medication_count?: number;
 }
 
 export interface PatientInput {
@@ -76,12 +83,9 @@ export interface MedicationInput {
   drug_id: number | null;
 }
 
-export interface DrugSuggestion {
-  kind: "brand" | "generic";
-  label: string;
-  brand_name: string | null;
-  strength: string | null;
-  drug_id: number;
+/** One row of GET /api/drugs/ (used only to turn a resolved generic name into the `drug_id` that POST medications needs). */
+export interface DrugRecord {
+  id: number;
   generic_name: string;
-  verified: boolean;
+  aliases: string[];
 }
