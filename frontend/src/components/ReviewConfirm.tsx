@@ -1,26 +1,32 @@
 import { useCallback, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { DrugAutocomplete } from "./medication/DrugAutocomplete";
 import { ReviewRow } from "./ReviewRow";
+import { PageHeader } from "./ui/PageHeader";
 import { useI18n, type MessageKey } from "../i18n";
 import { resolveMedications, type DrugSuggestion } from "../lib/drugs";
-import { isBlocking, newIdempotencyKey, rowState, SAMPLE_ROWS, type DraftRow } from "../review";
+import { isBlocking, newIdempotencyKey, rowsFromState, rowState, SAMPLE_ROWS, type DraftRow } from "../review";
 
 /**
  * Day 5: Review & Confirm (human-in-the-loop).
- * The list starts from STATIC sample data (labelled on screen). Edits are re-resolved by the real backend resolver.
+ * The list comes from manual entry (router state). Opened directly, it falls back to a STATIC sample that is labelled on screen.
+ * Edits are re-resolved by the real backend resolver.
  * "Run analysis" stays disabled until: the list is not empty, nothing is unresolved / unconfirmed / still checking,
  * and the user has ticked the "I checked this list" box. Unresolved rows must be fixed or explicitly removed.
  */
 export default function ReviewConfirm() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [rows, setRows] = useState<DraftRow[]>(SAMPLE_ROWS);
+  const [entered] = useState(() => rowsFromState(location.state));
+  const isSample = entered === null;
+
+  const [rows, setRows] = useState<DraftRow[]>(() => entered ?? SAMPLE_ROWS);
   const [checked, setChecked] = useState(false);
   const [starting, setStarting] = useState(false);
 
-  const nextId = useRef(SAMPLE_ROWS.length + 1);
+  const nextId = useRef(rows.reduce((max, r) => Math.max(max, r.id), 0) + 1);
   const seq = useRef(new Map<number, number>()); // latest request number per row: stale answers are ignored
   const idemKey = useRef<string | null>(null);
 
@@ -119,13 +125,12 @@ export default function ReviewConfirm() {
   }
 
   const summary =
-    blocking > 0 ? t("review.summary.attention").replace("{{n}}", String(blocking)) : rows.length > 0 ? t("review.summary.ready") : "";
+    blocking > 0 ? t("review.summary.attention", { n: blocking }) : rows.length > 0 ? t("review.summary.ready") : "";
 
   return (
     <section>
-      <h1>{t("review.title")}</h1>
-      <p className="muted">{t("review.hint")}</p>
-      <p className="sample-note" role="note">{t("review.sample")}</p>
+      <PageHeader title={t("review.title")} subtitle={t("review.hint")} />
+      {isSample && <p className="sample-note" role="note">{t("review.sample")}</p>}
 
       <div className="review-grid">
         <div className="card">
