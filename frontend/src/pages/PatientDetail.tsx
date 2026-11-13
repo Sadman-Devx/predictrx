@@ -1,15 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { MedicationForm } from "../components/patient/MedicationForm";
+import { Icon } from "../components/ui/Icon";
+import { PageHeader } from "../components/ui/PageHeader";
+import { StatusPill, type Tone } from "../components/ui/StatusPill";
 import { useI18n, type MessageKey } from "../i18n";
 import { ApiRequestError } from "../lib/api";
 import { getPatient, listMedications } from "../lib/clinical";
 import type { Medication, Patient, ResolutionStatus } from "../lib/types";
 
-const STATUS_KEY: Record<ResolutionStatus, MessageKey> = {
-  unresolved: "meds.status.unresolved",
-  resolved: "meds.status.resolved",
-  user_confirmed: "meds.status.user_confirmed",
+const STATUS: Record<ResolutionStatus, { key: MessageKey; tone: Tone }> = {
+  unresolved: { key: "meds.status.unresolved", tone: "stop" },
+  resolved: { key: "meds.status.resolved", tone: "neutral" },
+  user_confirmed: { key: "meds.status.user_confirmed", tone: "ok" },
+};
+
+const SEX_KEY: Record<string, MessageKey> = {
+  male: "patients.sex.male",
+  female: "patients.sex.female",
+  other: "patients.sex.other",
 };
 
 export default function PatientDetail() {
@@ -45,55 +54,65 @@ export default function PatientDetail() {
     void load();
   }, [load]);
 
-  if (loading) return <p className="muted">{t("common.loading")}</p>;
+  if (loading) return <p className="muted" role="status">{t("common.loading")}</p>;
 
   if (error || !patient) {
     return (
       <section>
         <p className="alert" role="alert">{t(error ?? "patients.notFound")}</p>
-        <Link to="/patients">{t("patients.back")}</Link>
+        <Link to="/patients" className="back-link"><Icon name="arrow-left" size={18} />{t("patients.back")}</Link>
       </section>
     );
   }
 
+  const year = new Date().getFullYear();
+  const w = patient.weight_kg !== null && patient.weight_kg !== "" ? Number(patient.weight_kg) : NaN;
+  const facts = [
+    patient.birth_year ? t("patients.age", { n: year - patient.birth_year }) : null,
+    patient.sex && SEX_KEY[patient.sex] ? t(SEX_KEY[patient.sex]) : null,
+    Number.isFinite(w) ? t("patients.kg", { n: w }) : null,
+  ].filter((x): x is string => x !== null);
+
   return (
     <section>
-      <p><Link to="/patients">← {t("patients.back")}</Link></p>
-      <h1>{patient.patient_code}</h1>
-      <p className="muted">
-        {t("patients.birthYear")}: {patient.birth_year ?? "—"} · {t("patients.weight")}: {patient.weight_kg ?? "—"}
-      </p>
+      <Link to="/patients" className="back-link"><Icon name="arrow-left" size={18} />{t("patients.back")}</Link>
 
-      <h2>{t("meds.title")}</h2>
+      <PageHeader title={patient.patient_code} subtitle={facts.length ? facts.join(" · ") : t("patients.noDetails")} demo />
 
-      {meds.length === 0 ? (
-        <div className="card"><p>{t("meds.empty")}</p></div>
-      ) : (
-        <div className="card table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th scope="col">{t("meds.col.name")}</th>
-                <th scope="col">{t("meds.col.generic")}</th>
-                <th scope="col">{t("meds.col.strength")}</th>
-                <th scope="col">{t("meds.col.frequency")}</th>
-                <th scope="col">{t("meds.col.status")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {meds.map((m) => (
-                <tr key={m.id}>
-                  <th scope="row">{m.raw_text}</th>
-                  <td>{m.generic_name ?? "—"}</td>
-                  <td>{m.strength || "—"}</td>
-                  <td>{m.frequency || "—"}</td>
-                  <td><span className="badge">{t(STATUS_KEY[m.resolution_status])}</span></td>
+      <div className="card">
+        <h2>{t("meds.title")}</h2>
+
+        {meds.length === 0 ? (
+          <p className="muted">{t("meds.empty")}</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th scope="col">{t("meds.col.name")}</th>
+                  <th scope="col">{t("meds.col.generic")}</th>
+                  <th scope="col">{t("meds.col.strength")}</th>
+                  <th scope="col">{t("meds.col.frequency")}</th>
+                  <th scope="col">{t("meds.col.status")}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {meds.map((m) => (
+                  <tr key={m.id}>
+                    <th scope="row">{m.raw_text}</th>
+                    <td>{m.generic_name ?? "—"}</td>
+                    <td>{m.strength || "—"}</td>
+                    <td>{m.frequency || "—"}</td>
+                    <td>
+                      <StatusPill tone={STATUS[m.resolution_status].tone}>{t(STATUS[m.resolution_status].key)}</StatusPill>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <MedicationForm patientId={patient.id} onAdded={(m) => setMeds((prev) => [m, ...prev])} />
     </section>

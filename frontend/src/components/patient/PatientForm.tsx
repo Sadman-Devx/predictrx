@@ -60,41 +60,43 @@ export function PatientForm({ onCreated, onCancel }: Props) {
 
       {errors.form && <p className="alert" role="alert">{t(errors.form)}</p>}
 
-      <label className="field">
-        {t("patients.birthYear")}
-        <input
-          type="text"
-          inputMode="numeric"
-          maxLength={4}
-          value={birthYear}
-          onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ""))}
-          aria-invalid={!!errors.birthYear}
-          aria-describedby={errors.birthYear ? "err-birth" : undefined}
-        />
-        {errors.birthYear && <span id="err-birth" className="field-error">{t(errors.birthYear)}</span>}
-      </label>
+      <div className="form-grid">
+        <label className="field">
+          {t("patients.birthYear")}
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={4}
+            value={birthYear}
+            onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ""))}
+            aria-invalid={!!errors.birthYear}
+            aria-describedby={errors.birthYear ? "err-birth" : undefined}
+          />
+          {errors.birthYear && <span id="err-birth" className="field-error">{t(errors.birthYear)}</span>}
+        </label>
 
-      <label className="field">
-        {t("patients.sex")}
-        <select value={sex} onChange={(e) => setSex(e.target.value as Sex | "")}>
-          {SEXES.map((s) => (
-            <option key={s.value} value={s.value}>{t(s.key)}</option>
-          ))}
-        </select>
-      </label>
+        <label className="field">
+          {t("patients.sex")}
+          <select value={sex} onChange={(e) => setSex(e.target.value as Sex | "")}>
+            {SEXES.map((s) => (
+              <option key={s.value} value={s.value}>{t(s.key)}</option>
+            ))}
+          </select>
+        </label>
 
-      <label className="field">
-        {t("patients.weight")}
-        <input
-          type="text"
-          inputMode="decimal"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value.replace(/[^\d.]/g, ""))}
-          aria-invalid={!!errors.weight}
-          aria-describedby={errors.weight ? "err-weight" : undefined}
-        />
-        {errors.weight && <span id="err-weight" className="field-error">{t(errors.weight)}</span>}
-      </label>
+        <label className="field">
+          {t("patients.weight")}
+          <input
+            type="text"
+            inputMode="decimal"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value.replace(/[^\d.]/g, ""))}
+            aria-invalid={!!errors.weight}
+            aria-describedby={errors.weight ? "err-weight" : undefined}
+          />
+          {errors.weight && <span id="err-weight" className="field-error">{t(errors.weight)}</span>}
+        </label>
+      </div>
 
       <div className="row">
         <button type="submit" className="btn" disabled={busy}>
