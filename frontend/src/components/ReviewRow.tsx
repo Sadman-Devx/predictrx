@@ -1,7 +1,7 @@
 import { useId, useState, type FormEvent, type KeyboardEvent } from "react";
-import { useI18n, type MessageKey } from "../../i18n";
-import { rowState, type DraftRow, type RowState } from "../../lib/review";
-import { ResolveBadge } from "./ResolveBadge";
+import { useI18n, type MessageKey } from "../i18n";
+import { rowState, type DraftRow, type RowState } from "../review";
+import { ResolveBadge } from "./medication/ResolveBadge";
 
 type Tone = "ok" | "warn" | "neutral" | "stop";
 

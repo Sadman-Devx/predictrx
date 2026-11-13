@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DrugAutocomplete } from "../components/medication/DrugAutocomplete";
-import { ReviewRow } from "../components/medication/ReviewRow";
+import { DrugAutocomplete } from "./medication/DrugAutocomplete";
+import { ReviewRow } from "./ReviewRow";
 import { useI18n, type MessageKey } from "../i18n";
 import { resolveMedications, type DrugSuggestion } from "../lib/drugs";
-import { isBlocking, newIdempotencyKey, rowState, SAMPLE_ROWS, type DraftRow } from "../lib/review";
+import { isBlocking, newIdempotencyKey, rowState, SAMPLE_ROWS, type DraftRow } from "../review";
 
 /**
  * Day 5: Review & Confirm (human-in-the-loop).

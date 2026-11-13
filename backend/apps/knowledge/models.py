@@ -44,4 +44,4 @@ class GraphEdge(models.Model):
     chunk = models.ForeignKey(Chunk, null=True, blank=True, on_delete=models.SET_NULL, related_name="edges")
 
     class Meta:
-        indexes = [models.Index(fields=["src_type", "src_id"]), models.Index(fields=["dst_type", "dst_id"])
+        indexes = [models.Index(fields=["src_type", "src_id"]), models.Index(fields=["dst_type", "dst_id"])]
