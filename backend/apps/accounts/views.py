@@ -8,7 +8,15 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .serializers import LoginSerializer, MeSerializer, RegisterSerializer
+from . import password_reset, social
+from .serializers import (
+    LoginSerializer,
+    MeSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    RegisterSerializer,
+    SocialLoginSerializer,
+)
 
 
 class RegisterView(CreateAPIView):
@@ -60,3 +68,62 @@ class MeView(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class PasswordResetRequestView(APIView):
+    """POST /api/auth/password-reset/ {email} — email a reset link. Always 202, whether or not the account exists."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+    throttle_scope = "password_reset"
+
+    @extend_schema(tags=["Auth"], summary="Request a password-reset email",
+                   request=PasswordResetRequestSerializer, responses={202: OpenApiResponse(description="Accepted")})
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        password_reset.send_reset_email(serializer.validated_data["email"])
+        return Response({"detail": "If an account exists for this email, a reset link has been sent."},
+                        status=status.HTTP_202_ACCEPTED)
+
+
+class PasswordResetConfirmView(APIView):
+    """POST /api/auth/password-reset/confirm/ {uid, token, password} — set a new password from the emailed link."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+    throttle_scope = "password_reset_confirm"
+
+    @extend_schema(tags=["Auth"], summary="Set a new password using the emailed link",
+                   request=PasswordResetConfirmSerializer, responses={200: OpenApiResponse(description="Password changed")})
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        password_reset.set_new_password(serializer.validated_data["user"], serializer.validated_data["password"])
+        return Response({"detail": "Password changed. Please log in."})
+
+
+class SocialLoginView(APIView):
+    """POST /api/auth/social/<google|facebook|linkedin>/ — exchange a provider credential for our JWT pair."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+    throttle_scope = "social"
+
+    @extend_schema(tags=["Auth"], summary="Sign in with Google / Facebook / LinkedIn",
+                   request=SocialLoginSerializer,
+                   responses={200: inline_serializer("SocialTokens", {"access": serializers.CharField(),
+                                                                       "refresh": serializers.CharField()})})
+    def post(self, request, provider: str):
+        if provider not in social.PROVIDERS:
+            return Response({"detail": "Unknown provider."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = SocialLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            user = social.login_with_provider(provider, data, data["preferred_language"])
+        except social.SocialAuthError as exc:
+            return Response({"error": {"code": exc.code, "message": exc.message, "details": None}}, status=exc.status)
+        refresh = RefreshToken.for_user(user)
+        return Response({"access": str(refresh.access_token), "refresh": str(refresh)})
+
