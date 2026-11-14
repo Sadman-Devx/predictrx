@@ -1,0 +1,256 @@
+/* Auth (Login / Registration) — sliding teal panel.
+   Design source: PredictRx screenshot. Motion source: reference video
+   (panel stretches across the whole card, holds for a beat, then glides to the other side). */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+.auth-page {
+  /* palette (from the design screenshot) */
+  --auth-teal: #094a52;
+  --auth-btn: #0f666f;
+  --auth-card: #f5f1ef;
+  --auth-input: #eeeae7;
+  --auth-text: #262626;
+  --auth-text-2: #555555;
+  --auth-white: #ffffff;
+  --auth-border: #d0ccca;
+
+  /* motion */
+  --auth-dur: 1100ms;
+  --auth-ease: cubic-bezier(0.76, 0, 0.24, 1);
+
+  --auth-radius: 24px;
+  --auth-big: 170px;
+  --auth-font: "Poppins", var(--font-bn), system-ui, sans-serif;
+
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+.auth-page .auth-top { display: flex; justify-content: flex-end; padding: 12px 24px; }
+.auth-page .auth-main { flex: 1; display: grid; place-items: center; padding: 16px; }
+
+/* ---------- card ---------- */
+.auth-card2 {
+  position: relative;
+  width: min(980px, 100%);
+  aspect-ratio: 493 / 350;
+  min-height: 600px;
+  background: var(--auth-card);
+  border-radius: var(--auth-radius);
+  box-shadow: 0 10px 40px rgba(9, 74, 82, 0.12);
+  overflow: hidden;
+  font-family: var(--auth-font);
+  color: var(--auth-text);
+  isolation: isolate;
+
+  /* panel shapes: inset(top right bottom left round TL TR BR BL) */
+  --shape-reg: inset(0 0 0 50% round var(--auth-big) var(--auth-radius) var(--auth-radius) var(--auth-big));
+  --shape-login: inset(0 50% 0 0 round var(--auth-radius) var(--auth-big) var(--auth-big) var(--auth-radius));
+  --shape-full: inset(0 0 0 0 round var(--auth-radius));
+  /* how far the panel text travels while the panel is stretching */
+  --reg-sx: 45%; --reg-sy: 0;
+  --login-sx: -45%; --login-sy: 0;
+}
+
+/* ---------- logo ---------- */
+.auth-logo2 {
+  position: absolute; top: 26px; left: 30px; z-index: 5;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 400; line-height: 1; letter-spacing: 0;
+  --logo-icon-bg: var(--auth-btn); --logo-icon-fg: var(--auth-white);
+  --logo-a: var(--auth-text); --logo-b: var(--auth-btn);
+}
+.auth-logo2[data-tone="light"] {
+  --logo-icon-bg: #eaf3f3; --logo-icon-fg: var(--auth-teal);
+  --logo-a: rgba(255, 255, 255, 0.55); --logo-b: var(--auth-white);
+}
+.auth-logo2 .mark {
+  width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+  background: var(--logo-icon-bg); color: var(--logo-icon-fg);
+}
+.auth-logo2 .a { color: var(--logo-a); }
+.auth-logo2 .b { color: var(--logo-b); font-weight: 700; }
+
+/* ---------- form panes ---------- */
+.auth-pane {
+  position: absolute; top: 0; bottom: 0; width: 50%;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 72px 6% 32px;
+  visibility: hidden;
+}
+.auth-pane--register { left: 0; }
+.auth-pane--login { right: 0; }
+.auth-card2[data-view="register"] .auth-pane--register,
+.auth-card2[data-view="login"] .auth-pane--login { visibility: visible; }
+
+.auth-form { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: stretch; }
+.auth-title {
+  margin: 0 0 22px; text-align: center; font-size: 32px; font-weight: 700; line-height: 1.2; color: var(--auth-text);
+}
+.auth-input { position: relative; margin-bottom: 14px; }
+.auth-input input {
+  width: 100%; height: 46px; border: 1px solid transparent; border-radius: 10px;
+  background: var(--auth-input); color: var(--auth-text);
+  font: 400 13px/1 var(--auth-font); padding: 0 44px 0 16px;
+}
+.auth-input input::placeholder { color: var(--auth-text-2); opacity: 1; }
+.auth-input input:focus-visible { outline: none; border-color: var(--auth-btn); box-shadow: 0 0 0 3px rgba(15, 102, 111, 0.18); }
+.auth-input .ico {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; color: var(--auth-text); pointer-events: none;
+}
+.auth-input .pw-eye {
+  position: absolute; right: 36px; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 30px; border: 0; background: transparent; color: var(--auth-text-2);
+  display: grid; place-items: center; border-radius: 8px; cursor: pointer; padding: 0;
+}
+.auth-input .pw-eye:hover { color: var(--auth-btn); }
+.auth-input .pw-eye:focus-visible { outline: 2px solid var(--auth-btn); }
+.auth-input.has-eye input { padding-right: 70px; }
+
+.auth-forgot {
+  align-self: center; margin: -2px 0 12px; border: 0; background: none; padding: 4px 8px;
+  font: 400 12px/1.2 var(--auth-font); color: var(--auth-text); cursor: pointer;
+}
+.auth-forgot:hover { color: var(--auth-btn); text-decoration: underline; }
+
+.auth-submit {
+  height: 46px; border: 0; border-radius: 10px; background: var(--auth-btn); color: var(--auth-white);
+  font: 600 14px/1 var(--auth-font); cursor: pointer; margin-top: 4px; transition: background-color 150ms ease;
+}
+.auth-submit:hover:not(:disabled) { background: var(--auth-teal); }
+.auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.auth-submit:focus-visible, .auth-social button:focus-visible, .auth-ghost:focus-visible {
+  outline: 3px solid var(--auth-btn); outline-offset: 2px;
+}
+
+.auth-or { margin: 18px 0 12px; text-align: center; font-size: 12px; color: var(--auth-text); }
+.auth-social { display: flex; justify-content: center; gap: 14px; }
+.auth-social button {
+  width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--auth-border); background: transparent;
+  font: 600 14px/1 var(--auth-font); color: var(--auth-text); cursor: pointer;
+}
+.auth-social button:hover { background: var(--auth-input); }
+
+.auth-msg {
+  margin: 0 0 12px; padding: 9px 12px; border-radius: 10px; font-size: 12px; line-height: 1.5; max-width: none;
+}
+.auth-msg.err { background: #fdecea; color: #b3261e; border: 1px solid currentColor; }
+.auth-msg.ok { background: #e3f1ee; color: #1f6b52; border: 1px solid currentColor; }
+.auth-msg.info { background: var(--auth-input); color: var(--auth-text); border: 1px solid var(--auth-border); }
+
+/* ---------- sliding teal panel ---------- */
+.auth-panel {
+  position: absolute; inset: 0; z-index: 3; background: var(--auth-teal); color: var(--auth-white);
+  clip-path: var(--shape-reg);
+  will-change: clip-path;
+}
+.auth-card2[data-view="login"] .auth-panel { clip-path: var(--shape-login); }
+
+.auth-block {
+  position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 12px; padding: 0 6%;
+  will-change: transform;
+}
+.auth-block--reg { top: 0; bottom: 0; right: 0; width: 50%; }
+.auth-block--login { top: 0; bottom: 0; left: 0; width: 50%; }
+.auth-block h2 { margin: 0; color: var(--auth-white); font-size: 32px; font-weight: 700; line-height: 1.25; }
+.auth-block p { margin: 0; max-width: none; font-size: 13px; color: var(--auth-white); }
+.auth-ghost {
+  margin-top: 6px; width: 150px; height: 44px; border-radius: 10px; border: 1.5px solid var(--auth-white);
+  background: transparent; color: var(--auth-white); font: 600 14px/1 var(--auth-font); cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.auth-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+.auth-ghost:disabled { cursor: default; }
+
+.auth-card2[data-view="register"] .auth-block--login,
+.auth-card2[data-view="login"] .auth-block--reg { visibility: hidden; }
+
+/* ---------- animation (only when motion is allowed) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* phase 1 (0–42%): panel stretches across the card · hold (42–58%) · phase 2 (58–100%): glides to the other side */
+  @keyframes auth-panel-to-login {
+    0%   { clip-path: var(--shape-reg);   animation-timing-function: var(--auth-ease); }
+    42%  { clip-path: var(--shape-full); }
+    58%  { clip-path: var(--shape-full);  animation-timing-function: var(--auth-ease); }
+    100% { clip-path: var(--shape-login); }
+  }
+  @keyframes auth-panel-to-register {
+    0%   { clip-path: var(--shape-login); animation-timing-function: var(--auth-ease); }
+    42%  { clip-path: var(--shape-full); }
+    58%  { clip-path: var(--shape-full);  animation-timing-function: var(--auth-ease); }
+    100% { clip-path: var(--shape-reg); }
+  }
+  /* text leaving the panel while it stretches */
+  @keyframes auth-block-out {
+    0%   { transform: translate(0, 0); opacity: 1; visibility: visible; animation-timing-function: var(--auth-ease); }
+    42%  { transform: translate(var(--sx), var(--sy)); opacity: 1; visibility: visible; }
+    43%, 100% { transform: translate(var(--sx), var(--sy)); opacity: 0; visibility: hidden; }
+  }
+  /* text entering while the panel glides away */
+  @keyframes auth-block-in {
+    0%, 57% { transform: translate(var(--sx), var(--sy)); opacity: 0; visibility: hidden; }
+    58% { transform: translate(var(--sx), var(--sy)); opacity: 1; visibility: visible; animation-timing-function: var(--auth-ease); }
+    100% { transform: translate(0, 0); opacity: 1; visibility: visible; }
+  }
+  /* forms: the old one stays until the panel covers it, the new one shows as the panel uncovers it */
+  @keyframes auth-pane-out { 0%, 44% { visibility: visible; } 45%, 100% { visibility: hidden; } }
+  @keyframes auth-pane-in  { 0%, 56% { visibility: hidden; }  57%, 100% { visibility: visible; } }
+
+  .auth-card2[data-anim] .auth-panel,
+  .auth-card2[data-anim] .auth-block,
+  .auth-card2[data-anim] .auth-pane {
+    animation-duration: var(--auth-dur); animation-fill-mode: both;
+  }
+  .auth-card2[data-anim="to-login"] .auth-panel { animation-name: auth-panel-to-login; }
+  .auth-card2[data-anim="to-register"] .auth-panel { animation-name: auth-panel-to-register; }
+
+  .auth-block--reg   { --sx: var(--reg-sx);   --sy: var(--reg-sy); }
+  .auth-block--login { --sx: var(--login-sx); --sy: var(--login-sy); }
+  .auth-card2[data-anim="to-login"] .auth-block--reg,
+  .auth-card2[data-anim="to-register"] .auth-block--login { animation-name: auth-block-out; }
+  .auth-card2[data-anim="to-login"] .auth-block--login,
+  .auth-card2[data-anim="to-register"] .auth-block--reg { animation-name: auth-block-in; }
+
+  .auth-card2[data-anim="to-login"] .auth-pane--register,
+  .auth-card2[data-anim="to-register"] .auth-pane--login { animation-name: auth-pane-out; }
+  .auth-card2[data-anim="to-login"] .auth-pane--login,
+  .auth-card2[data-anim="to-register"] .auth-pane--register { animation-name: auth-pane-in; }
+}
+
+/* ---------- tablet ---------- */
+@media (max-width: 900px) {
+  .auth-card2 { --auth-big: 120px; }
+  .auth-title, .auth-block h2 { font-size: 26px; }
+  .auth-pane { padding: 68px 4% 24px; }
+}
+
+/* ---------- mobile: same motion, vertical axis ---------- */
+@media (max-width: 720px) {
+  .auth-page .auth-top { padding: 12px 16px; }
+  .auth-page .auth-main { padding: 8px 12px 16px; }
+  .auth-card2 {
+    aspect-ratio: auto; min-height: 780px; --auth-big: 90px; --auth-radius: 20px;
+    --shape-reg: inset(80% 0 0 0 round var(--auth-big) var(--auth-big) var(--auth-radius) var(--auth-radius));
+    --shape-login: inset(0 0 80% 0 round var(--auth-radius) var(--auth-radius) var(--auth-big) var(--auth-big));
+    --reg-sx: 0; --reg-sy: 45%;
+    --login-sx: 0; --login-sy: -45%;
+  }
+  .auth-logo2 { left: 22px; top: 20px; }
+  .auth-pane { width: 100%; justify-content: center; padding: 64px 22px 20px; }
+  .auth-pane--register { top: 0; bottom: 20%; }
+  .auth-pane--login { top: 20%; bottom: 0; padding-top: 24px; }
+  .auth-block--reg { left: 0; right: 0; top: 80%; bottom: 0; width: auto; }
+  .auth-block--login { left: 0; right: 0; top: 0; bottom: 80%; width: auto; padding-top: 28px; }
+  .auth-title { font-size: 26px; margin-bottom: 16px; }
+  .auth-block h2 { font-size: 22px; }
+  .auth-block { gap: 6px; }
+  .auth-ghost { height: 38px; width: 130px; margin-top: 2px; }
+  .auth-input { margin-bottom: 10px; }
+  .auth-input input, .auth-submit { height: 44px; }
+}
+@media (max-width: 380px) {
+  .auth-card2 { min-height: 800px; }
+}
