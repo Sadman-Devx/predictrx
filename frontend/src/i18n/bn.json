@@ -76,7 +76,6 @@
   "common.todo": "এই পাতাটি এখনও তৈরি হয়নি।",
   "common.loading": "লোড হচ্ছে…",
   "common.retry": "পুনরায় চেষ্টা",
-
   "patients.add": "রোগী যোগ করুন",
   "patients.code": "রোগীর কোড",
   "patients.birthYear": "জন্মসাল",
@@ -103,7 +102,6 @@
   "patients.prev": "আগের",
   "patients.next": "পরের",
   "patients.page": "পৃষ্ঠা {{page}}",
-
   "meds.title": "ওষুধের তালিকা",
   "meds.add": "ওষুধ যোগ করুন",
   "meds.empty": "এখনো কোনো ওষুধ নেই।",
@@ -165,5 +163,23 @@
   "med.error": "ওষুধটি যাচাই করা যায়নি।",
   "med.retry": "আবার চেষ্টা করুন",
   "med.source.reference": "উৎসের রেফারেন্স",
-  "med.source.accessed": "যাচাইয়ের তারিখ"
+  "med.source.accessed": "যাচাইয়ের তারিখ",
+  "auth.login": "লগইন",
+  "auth.register": "রেজিস্টার",
+  "auth.registration": "রেজিস্ট্রেশন",
+  "auth.username": "ইউজারনেম",
+  "auth.confirmPassword": "পাসওয়ার্ড নিশ্চিত করুন",
+  "auth.forgot": "পাসওয়ার্ড ভুলে গেছেন?",
+  "auth.forgotInfo": "পাসওয়ার্ড রিসেট এখনো চালু হয়নি। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।",
+  "auth.welcomeBack": "আবার স্বাগতম!",
+  "auth.haveAccount": "আগে থেকেই অ্যাকাউন্ট আছে?",
+  "auth.hello": "হ্যালো, স্বাগতম!",
+  "auth.noAccount": "অ্যাকাউন্ট নেই?",
+  "auth.orRegisterSocial": "অথবা সোশ্যাল প্ল্যাটফর্মে রেজিস্টার করুন",
+  "auth.orLoginSocial": "অথবা সোশ্যাল প্ল্যাটফর্মে লগইন করুন",
+  "auth.socialSoon": "সোশ্যাল সাইন-ইন এখনো চালু হয়নি।",
+  "auth.registering": "রেজিস্টার হচ্ছে…",
+  "auth.mismatch": "পাসওয়ার্ড দুটি মেলেনি।",
+  "auth.registerFailed": "রেজিস্টার হয়নি। ইমেইলটি আগেই ব্যবহৃত হতে পারে, অথবা পাসওয়ার্ড দুর্বল (কমপক্ষে ৮ অক্ষর দিন)।",
+  "auth.registered": "অ্যাকাউন্ট তৈরি হয়েছে। এবার লগইন করুন।"
 }
