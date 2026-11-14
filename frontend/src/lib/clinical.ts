@@ -3,6 +3,21 @@ import type { DrugRecord, Medication, MedicationInput, Paginated, Patient, Patie
 
 export const listPatients = (page = 1) => api<Paginated<Patient>>(`/patients/?page=${page}`);
 
+/**
+ * Every patient the signed-in doctor owns, for the patient picker on the Review screen.
+ * The API pages at 20, so this follows `next` (capped at 10 pages = 200 patients).
+ */
+export async function listPatientOptions(): Promise<Patient[]> {
+  const MAX_PAGES = 10;
+  const all: Patient[] = [];
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const res = await listPatients(page);
+    all.push(...res.results);
+    if (!res.next) break;
+  }
+  return all;
+}
+
 export const getPatient = (id: number) => api<Patient>(`/patients/${id}/`);
 
 export const createPatient = (data: PatientInput) =>
