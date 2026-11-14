@@ -101,7 +101,6 @@
   "patients.error.save": "Could not save the patient.",
   "patients.prev": "Previous",
   "patients.next": "Next",
-  "patients.page": "Page {{page}}",
   "patients.page": "Page",
   "meds.title": "Medications",
   "meds.add": "Add medication",
@@ -182,8 +181,7 @@
   "auth.registering": "Registering…",
   "auth.mismatch": "Passwords do not match.",
   "auth.registerFailed": "Could not register. The email may already be in use, or the password is too weak (use at least 8 characters).",
-  "auth.registered": "Account created. Please log in."
-}
+  "auth.registered": "Account created. Please log in.",
   "demo.badge": "DEMO DATA",
   "shell.footer": "PredictRx · decision support",
   "shell.notifications": "Notifications",
