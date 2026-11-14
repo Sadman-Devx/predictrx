@@ -101,7 +101,6 @@
   "patients.error.save": "রোগীর তথ্য সংরক্ষণ করা যায়নি।",
   "patients.prev": "আগের",
   "patients.next": "পরের",
-  "patients.page": "পৃষ্ঠা {{page}}",
   "patients.page": "পৃষ্ঠা",
   "meds.title": "ওষুধের তালিকা",
   "meds.add": "ওষুধ যোগ করুন",
@@ -182,8 +181,7 @@
   "auth.registering": "রেজিস্টার হচ্ছে…",
   "auth.mismatch": "পাসওয়ার্ড দুটি মেলেনি।",
   "auth.registerFailed": "রেজিস্টার হয়নি। ইমেইলটি আগেই ব্যবহৃত হতে পারে, অথবা পাসওয়ার্ড দুর্বল (কমপক্ষে ৮ অক্ষর দিন)।",
-  "auth.registered": "অ্যাকাউন্ট তৈরি হয়েছে। এবার লগইন করুন।"
-}
+  "auth.registered": "অ্যাকাউন্ট তৈরি হয়েছে। এবার লগইন করুন।",
   "demo.badge": "ডেমো ডেটা",
   "shell.footer": "PredictRx · সিদ্ধান্ত-সহায়তা",
   "shell.notifications": "বিজ্ঞপ্তি",

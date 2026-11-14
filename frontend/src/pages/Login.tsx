@@ -22,13 +22,26 @@ function errorKey(err: unknown): MessageKey {
   return "login.failed"; // 400/401: wrong credentials (never say which one was wrong)
 }
 
-function registerErrorKey(err: unknown): MessageKey {
+type T = (key: MessageKey) => string;
+
+/** Flattens DRF error details ({"password": ["..."], "email": ["..."]}) into a list of readable reasons. */
+function collectReasons(details: unknown): string[] {
+  if (typeof details === "string") return [details];
+  if (Array.isArray(details)) return details.flatMap(collectReasons);
+  if (details && typeof details === "object") return Object.values(details).flatMap(collectReasons);
+  return [];
+}
+
+/** Registration error text. For a 400 the backend's own reason is shown (weak password, email already used, ...). */
+function registerErrorText(err: unknown, t: T): string {
   if (err instanceof ApiRequestError) {
-    if (err.status === 0) return "login.network";
-    if (err.status === 429) return "login.tooMany";
-    if (err.status >= 500) return "login.server";
+    if (err.status === 0) return t("login.network");
+    if (err.status === 429) return t("login.tooMany");
+    if (err.status >= 500) return t("login.server");
+    const reasons = [...new Set(collectReasons(err.body?.error?.details))];
+    if (reasons.length) return reasons.join(" ");
   }
-  return "auth.registerFailed";
+  return t("auth.registerFailed");
 }
 
 const prefersReducedMotion = () =>
@@ -64,7 +77,7 @@ export default function Login() {
   const [regPw, setRegPw] = useState("");
   const [regPw2, setRegPw2] = useState("");
   const [showRegPw, setShowRegPw] = useState(false);
-  const [regError, setRegError] = useState<MessageKey | null>(null);
+  const [regError, setRegError] = useState<string | null>(null);
   const [regBusy, setRegBusy] = useState(false);
 
   const [notice, setNotice] = useState<Notice>(null);
@@ -116,7 +129,7 @@ export default function Login() {
     if (regBusy) return;
     setRegError(null);
     if (regPw !== regPw2) {
-      setRegError("auth.mismatch");
+      setRegError(t("auth.mismatch"));
       return;
     }
     setRegBusy(true);
@@ -141,7 +154,7 @@ export default function Login() {
       switchTo("login");
       setNotice({ kind: "ok", key: "auth.registered" });
     } catch (err) {
-      setRegError(registerErrorKey(err));
+      setRegError(registerErrorText(err, t));
       setRegPw("");
       setRegPw2("");
       setRegBusy(false);
@@ -216,7 +229,7 @@ export default function Login() {
                 <LockIcon />
               </div>
 
-              {regError && <p className="auth-msg err" role="alert">{t(regError)}</p>}
+              {regError && <p className="auth-msg err" role="alert">{regError}</p>}
               {view === "register" && noticeEl}
 
               <button type="submit" className="auth-submit" disabled={regBusy}>

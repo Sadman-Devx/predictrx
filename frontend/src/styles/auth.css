@@ -254,3 +254,37 @@
 @media (max-width: 380px) {
   .auth-card2 { min-height: 800px; }
 }
+
+/* ---------- fit the whole page in ONE screen (desktop / tablet, no scrolling) ----------
+   How it works:
+   1. The page is exactly the viewport tall:  [language bar] [card = all remaining height] [disclaimer].
+   2. The card is a "size container", so everything inside it is sized in cqh/cqw (percent of the card's own
+      height/width) with clamp(min, scaled, max). Big screen = the original design size; short screen = the same
+      design, scaled down. Below 560px of window height the page simply scrolls (nothing can be that small).
+   Phones (<=720px) keep the stacked layout above. */
+@media (min-width: 721px) {
+  .auth-page { height: 100vh; height: 100dvh; min-height: 560px; }
+  .auth-page .auth-top { padding: 8px 24px 0; }
+  .auth-page .auth-main {
+    flex: 1; min-height: 0; padding: 8px 16px;
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+  }
+  .auth-card2 {
+    container-type: size;
+    aspect-ratio: auto; min-height: 0;
+    height: 100%; max-height: 700px;
+    /* keep a pleasant card shape on wide-but-short windows: width follows the available height */
+    width: min(100%, 980px, max(640px, calc((100dvh - 180px) * 1.9)));
+    --auth-big: clamp(90px, 24cqh, 170px);
+  }
+  .auth-logo2 { top: clamp(14px, 3.6cqh, 26px); left: clamp(18px, 3cqw, 30px); font-size: clamp(13px, 2.2cqh, 15px); }
+  .auth-pane { padding: clamp(50px, 11cqh, 72px) 6% clamp(14px, 4cqh, 32px); }
+  .auth-title { font-size: clamp(22px, 4.6cqh, 32px); margin-bottom: clamp(10px, 2.8cqh, 22px); }
+  .auth-input { margin-bottom: clamp(8px, 2cqh, 14px); }
+  .auth-input input, .auth-submit { height: clamp(34px, 6.6cqh, 46px); }
+  .auth-forgot { margin-bottom: clamp(6px, 1.6cqh, 12px); }
+  .auth-or { margin: clamp(10px, 2.6cqh, 18px) 0 clamp(8px, 1.8cqh, 12px); }
+  .auth-social button { width: clamp(32px, 5.8cqh, 42px); height: clamp(32px, 5.8cqh, 42px); }
+  .auth-block h2 { font-size: clamp(22px, 4.6cqh, 32px); }
+  .auth-ghost { height: clamp(36px, 6.2cqh, 44px); }
+}
