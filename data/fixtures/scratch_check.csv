@@ -1,0 +1,3 @@
+drug_a,drug_b,expected_severity,rationale_ref,reviewed_by,split
+warfarin,aspirin,major,plumbing check only - not a real label,TEST ONLY,
+warfarin,ibuprofen,major,plumbing check only - not a real label,TEST ONLY,
