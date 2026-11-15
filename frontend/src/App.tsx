@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import ReviewConfirm from "./components/ReviewConfirm";
 import { AppShell } from "./components/layout/AppShell";
+import AnalysisRun from "./pages/AnalysisRun";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import MedicationEntry from "./pages/MedicationEntry";
@@ -28,7 +29,9 @@ export default function App() {
             element={<Placeholder titleKey="scan.title" hintKey="scan.hint" actionTo="/medications" actionKey="scan.manual" />}
           />
           <Route path="review" element={<ReviewConfirm />} />
+          {/* The analyses list needs a list endpoint that does not exist yet; one run opens at /analysis/:runId (Day 6). */}
           <Route path="analysis" element={<Placeholder titleKey="analysis.title" />} />
+          <Route path="analysis/:runId" element={<AnalysisRun />} />
           <Route path="twin" element={<Placeholder titleKey="twin.title" hintKey="twin.note" />} />
           <Route path="family" element={<Placeholder titleKey="family.title" />} />
         </Route>

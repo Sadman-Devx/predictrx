@@ -1,0 +1,57 @@
+/* ===== analysis run: status card + pipeline stepper (Day 6) =====
+   Uses tokens only (styles/tokens.css). "Done" is drawn in --primary, not green: a finished step is never a "safe" signal. */
+
+.run-status { display: grid; gap: var(--space-3); }
+.run-status p { margin: 0; }
+.run-status-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+/* .alert (app.css) has a bottom margin and loads after this file, so the selector is made more specific. */
+.run-status .run-alert { margin: 0; }
+.run-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.run-skeleton { height: 120px; border-radius: var(--radius-inner); margin-top: var(--space-3); }
+.run-trace-note { margin: var(--space-4) 0 0; }
+
+/* Indeterminate activity bar: we know the run is working, not how far along it is, so it never shows a percentage. */
+.run-bar { height: 6px; border-radius: var(--radius-pill); background: var(--primary-soft); overflow: hidden; }
+.run-bar > span { display: block; width: 35%; height: 100%; border-radius: inherit; background: var(--primary); }
+
+/* ---- stepper ---- */
+.stepper { list-style: none; margin: 0; padding: 0; display: grid; }
+.step {
+  position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto;
+  column-gap: var(--space-3); align-items: start; padding-bottom: var(--space-4);
+}
+.step:last-child { padding-bottom: 0; }
+
+/* connector between two steps */
+.step::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--border); }
+.step:last-child::before { display: none; }
+.step-done::before { background: var(--primary); }
+
+.step-glyph {
+  position: relative; z-index: 1; display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; background: var(--surface); color: var(--sev-unknown);
+}
+.step-body { min-width: 0; }
+.step-title { margin: 0; font-weight: 600; }
+.step-hint { margin: 2px 0 0; }
+.step-state { padding-top: 3px; font-size: var(--fs-badge); font-weight: 600; color: var(--ink-muted); text-align: right; }
+
+.step-running .step-glyph,
+.step-done .step-glyph,
+.step-running .step-state,
+.step-done .step-state { color: var(--primary); }
+.step-stopped .step-glyph,
+.step-stopped .step-state { color: var(--sev-major); }
+
+@media (max-width: 560px) {
+  .step { grid-template-columns: 28px minmax(0, 1fr); }
+  .step-state { grid-column: 2; padding-top: 0; text-align: left; }
+}
+
+/* ---- motion: only when the user has not asked for less ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .step-spin { animation: step-spin 1s linear infinite; }
+  @keyframes step-spin { to { transform: rotate(360deg); } }
+  .run-bar > span { animation: run-slide 1.4s ease-in-out infinite; }
+  @keyframes run-slide { from { margin-left: -35%; } to { margin-left: 100%; } }
+}

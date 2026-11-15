@@ -55,9 +55,9 @@
   /* type */
   --font-bn: "Noto Sans Bengali", "Hind Siliguri", system-ui, sans-serif;
   --font-latin: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --fs-title: 28px;
-  --fs-section: 20px;
-  --fs-body: 16px;
+  --fs-title: 24px;
+  --fs-section: 18px;
+  --fs-body: 15px;
   --fs-small: 14px;
   --fs-badge: 13px;
   --lh-bn: 1.65;
@@ -70,9 +70,14 @@
   --space-5: 24px;
   --space-6: 32px;
   --content-max: 1180px;
-  --sidebar-w: 216px;
-  --tap: 44px; /* minimum touch target */
+  --sidebar-w: 200px;
+  --tap: 40px; /* mouse/keyboard control height; touch screens get 44px below */
 
   /* motion */
   --dur: 150ms;
+}
+
+/* Touch screens keep the 44px minimum target required by docs/design.md §4.5. */
+@media (pointer: coarse) {
+  :root { --tap: 44px; }
 }

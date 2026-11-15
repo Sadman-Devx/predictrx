@@ -1,12 +1,18 @@
 from django.conf import settings
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from .models import AnalysisRun
+from ai.guardrails.output_checks import DISCLAIMER_BN, DISCLAIMER_EN
+from apps.drugs.models import Drug
+
+from . import results
+from .models import AgentTrace, AnalysisRun, RiskFinding, RiskSummary
 
 MAX_MEDICATIONS_PER_RUN = 20
 MIN_MEDICATIONS_PER_RUN = 2
 
 
+# ------------------------------------------------------------------------------------------------ start
 class AnalysisStartSerializer(serializers.Serializer):
     """POST /api/analysis/ body. Ownership is NOT taken from here: `patient_id` is checked against the user."""
 
@@ -28,31 +34,227 @@ class AnalysisStartResponseSerializer(serializers.Serializer):
     disclaimer_version = serializers.CharField()
 
 
-class AnalysisStatusSerializer(serializers.ModelSerializer):
-    """Status only (Day 5). Findings / summaries / trace are added on Day 6 behind `status == completed`."""
+# ------------------------------------------------------------------------------------------------ building blocks
+class PipelineStepSerializer(serializers.Serializer):
+    agent = serializers.CharField()
+    order = serializers.IntegerField()
+    status = serializers.ChoiceField(choices=["done", "running", "failed", "pending"])
+
+
+class DisclaimerSerializer(serializers.Serializer):
+    version = serializers.CharField()
+    text_en = serializers.CharField()
+    text_bn = serializers.CharField()
+
+
+class SnapshotMedicationSerializer(serializers.Serializer):
+    medication_id = serializers.IntegerField(allow_null=True)
+    raw_text = serializers.CharField(allow_blank=True)
+    brand_name = serializers.CharField(allow_blank=True)
+    strength = serializers.CharField(allow_blank=True)
+    generic_name = serializers.CharField(allow_null=True)
+    resolution_status = serializers.CharField(allow_blank=True)
+    source = serializers.CharField(allow_blank=True)
+
+
+class GapSerializer(serializers.Serializer):
+    medication_id = serializers.IntegerField()
+    raw_text = serializers.CharField(allow_blank=True)
+    brand_name = serializers.CharField(allow_blank=True)
+    reason = serializers.CharField()
+
+
+class DrugRefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Drug
+        fields = ["id", "generic_name"]
+        read_only_fields = fields
+
+
+class EvidenceItemSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    id = serializers.IntegerField(allow_null=True)
+    source = serializers.CharField(allow_blank=True)
+    label = serializers.CharField(allow_blank=True)
+    section = serializers.CharField(allow_blank=True)
+    source_ref = serializers.CharField(allow_blank=True)
+    license_note = serializers.CharField(allow_blank=True)
+    url = serializers.CharField(allow_blank=True)
+    available = serializers.BooleanField()
+
+
+class ConfidenceBasisSerializer(serializers.Serializer):
+    verification_status = serializers.CharField()
+    evidence_count = serializers.IntegerField()
+    sources = serializers.ListField(child=serializers.CharField())
+
+
+class RiskFindingSerializer(serializers.ModelSerializer):
+    """One finding card. `evidence` is never empty for a severity other than `unknown` (model + runner enforce it)."""
+
+    drug_a = DrugRefSerializer(read_only=True)
+    drug_b = DrugRefSerializer(read_only=True)
+    entered_names_a = serializers.SerializerMethodField()
+    entered_names_b = serializers.SerializerMethodField()
+    confidence = serializers.FloatField(read_only=True)
+    confidence_basis = serializers.SerializerMethodField()
+    evidence = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RiskFinding
+        fields = ["id", "drug_a", "drug_b", "entered_names_a", "entered_names_b", "severity", "rationale",
+                  "confidence", "confidence_basis", "verification_status", "evidence"]
+        read_only_fields = fields
+
+    def get_entered_names_a(self, obj) -> list[str]:
+        return self.context.get("entered_names", {}).get(obj.drug_a_id, [])
+
+    def get_entered_names_b(self, obj) -> list[str]:
+        return self.context.get("entered_names", {}).get(obj.drug_b_id, [])
+
+    @extend_schema_field(ConfidenceBasisSerializer)
+    def get_confidence_basis(self, obj) -> dict:
+        return results.confidence_basis(obj)
+
+    @extend_schema_field(EvidenceItemSerializer(many=True))
+    def get_evidence(self, obj) -> list[dict]:
+        return results.evidence_items(obj, self.context.get("evidence_index", {}))
+
+
+class RiskSummarySerializer(serializers.ModelSerializer):
+    """Doctor summary only. The plain-Bangla patient card has its own endpoint (Day 9)."""
+
+    class Meta:
+        model = RiskSummary
+        fields = ["doctor_summary_en", "doctor_summary_bn", "disclaimer_version"]
+        read_only_fields = fields
+
+
+class AgentTraceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AgentTrace
+        fields = ["id", "agent_name", "step_order", "input_summary", "output_summary", "tool_calls", "latency_ms"]
+        read_only_fields = fields
+
+
+# ------------------------------------------------------------------------------------------------ detail / status
+class AnalysisDetailSerializer(serializers.ModelSerializer):
+    """GET /api/analysis/{id}/ — one shape for polling AND for the finished result.
+
+    While the run is queued / running / failed, every clinical field is `null`: a partial run must never look final.
+    `findings`, `summary`, `medications`, `gaps` and `guardrail_violations` are filled only when `status == completed`,
+    and only when the view supplied a `result_context` (so the serializer can never trigger hidden queries).
+    """
 
     run_id = serializers.IntegerField(source="id", read_only=True)
     patient_id = serializers.IntegerField(read_only=True)
+    is_final = serializers.SerializerMethodField()
     medication_count = serializers.SerializerMethodField()
     findings_count = serializers.SerializerMethodField()
     error_code = serializers.SerializerMethodField()
+    progress = serializers.SerializerMethodField()
+    current_step = serializers.SerializerMethodField()
     disclaimer_version = serializers.SerializerMethodField()
+    disclaimer = serializers.SerializerMethodField()
+    medications = serializers.SerializerMethodField()
+    findings = serializers.SerializerMethodField()
+    summary = serializers.SerializerMethodField()
+    gaps = serializers.SerializerMethodField()
+    guardrail_violations = serializers.SerializerMethodField()
 
     class Meta:
         model = AnalysisRun
-        fields = ["run_id", "patient_id", "status", "started_at", "finished_at", "medication_count",
-                  "findings_count", "error_code", "disclaimer_version"]
+        fields = ["run_id", "patient_id", "status", "is_final", "started_at", "finished_at", "medication_count",
+                  "findings_count", "error_code", "progress", "current_step", "disclaimer_version", "disclaimer",
+                  "medications", "findings", "summary", "gaps", "guardrail_violations"]
         read_only_fields = fields
+
+    # ---- helpers
+    def _ready(self, obj) -> bool:
+        return obj.status == "completed" and "findings" in self.context
+
+    # ---- always present
+    def get_is_final(self, obj) -> bool:
+        return obj.status in results.FINAL_STATUSES
 
     def get_medication_count(self, obj) -> int:
         return len((obj.input_snapshot or {}).get("medication_ids", []))
 
-    def get_findings_count(self, obj) -> int | None:
-        # A partial run must never look final: no count until the run is completed.
-        return obj.findings.count() if obj.status == "completed" else None
-
     def get_error_code(self, obj) -> str | None:
         return (obj.model_info or {}).get("error") if obj.status == "failed" else None
 
+    @extend_schema_field(PipelineStepSerializer(many=True))
+    def get_progress(self, obj) -> list[dict]:
+        return results.progress_steps(obj)
+
+    def get_current_step(self, obj) -> str | None:
+        return results.current_step(obj)
+
     def get_disclaimer_version(self, obj) -> str:
         return settings.DISCLAIMER_VERSION
+
+    @extend_schema_field(DisclaimerSerializer)
+    def get_disclaimer(self, obj) -> dict:
+        return {"version": settings.DISCLAIMER_VERSION, "text_en": DISCLAIMER_EN, "text_bn": DISCLAIMER_BN}
+
+    # ---- completed only
+    def get_findings_count(self, obj) -> int | None:
+        # A partial run must never look final: no count until the run is completed.
+        return len(self.context["findings"]) if self._ready(obj) else None
+
+    @extend_schema_field(SnapshotMedicationSerializer(many=True, allow_null=True))
+    def get_medications(self, obj):
+        return results.snapshot_medications(obj) if self._ready(obj) else None
+
+    @extend_schema_field(RiskFindingSerializer(many=True, allow_null=True))
+    def get_findings(self, obj):
+        if not self._ready(obj):
+            return None
+        return RiskFindingSerializer(self.context["findings"], many=True, context=self.context).data
+
+    @extend_schema_field(RiskSummarySerializer(allow_null=True))
+    def get_summary(self, obj):
+        summary = self.context.get("summary") if self._ready(obj) else None
+        return RiskSummarySerializer(summary).data if summary is not None else None
+
+    @extend_schema_field(GapSerializer(many=True, allow_null=True))
+    def get_gaps(self, obj):
+        return results.gap_list(obj) if self._ready(obj) else None
+
+    @extend_schema_field(serializers.ListField(child=serializers.CharField(), allow_null=True))
+    def get_guardrail_violations(self, obj):
+        return results.guardrail_violations(obj) if self._ready(obj) else None
+
+
+# ------------------------------------------------------------------------------------------------ trace
+class AnalysisTraceSerializer(serializers.Serializer):
+    """GET /api/analysis/{id}/trace/ — which agent did what. Step contents exist only for completed runs
+    (traces are written together with the findings, never half-way)."""
+
+    run_id = serializers.IntegerField(source="id", read_only=True)
+    status = serializers.CharField(read_only=True)
+    available = serializers.SerializerMethodField()
+    steps = serializers.SerializerMethodField()
+    total_latency_ms = serializers.SerializerMethodField()
+    traces = serializers.SerializerMethodField()
+
+    def _traces(self) -> list:
+        return self.context.get("traces", [])
+
+    def get_available(self, obj) -> bool:
+        return obj.status == "completed"
+
+    @extend_schema_field(PipelineStepSerializer(many=True))
+    def get_steps(self, obj) -> list[dict]:
+        return results.progress_steps(obj)
+
+    def get_total_latency_ms(self, obj) -> int | None:
+        return sum(t.latency_ms for t in self._traces()) if obj.status == "completed" else None
+
+    @extend_schema_field(AgentTraceSerializer(many=True))
+    def get_traces(self, obj):
+        return AgentTraceSerializer(self._traces(), many=True).data if obj.status == "completed" else []
+
+
+# Backwards-compatible name used by Day 5 imports / tests.
+AnalysisStatusSerializer = AnalysisDetailSerializer

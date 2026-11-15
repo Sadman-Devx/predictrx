@@ -1,7 +1,19 @@
 """LangGraph pipeline: Resolver -> Clinical Notes -> Drug Interaction -> Advisory -> Verifier.
 
-The nodes are stubs that keep the contract (state shape + trace entries). The lead dev fills in the logic.
-Persisting `trace` to AgentTrace rows and `findings` to RiskFinding rows is done by the Celery task (analysis app).
+Each node is a plain function `run(state) -> partial state` in `ai/agents/`:
+
+    resolver          groups medications by drug, cross-checks `resolve_brand` (MCP), turns unresolved items into gaps
+    clinical_notes    lab flags from the clinician-entered ranges, optional local-model condition phrases
+    drug_interaction  `check_interaction` (MCP) + RAG label passages -> findings with evidence references
+    advisory          doctor summary (EN/BN) and Bangla patient card, written from the findings only
+    verifier          re-checks every finding and enforces the output guardrail (Day 7; still a stub today)
+
+State rules:
+  * every node returns only the keys it changes; `trace` is merged with `operator.add`, so each node appends
+    its own AgentTrace-shaped entry and nothing is overwritten;
+  * the graph is strictly linear (no loops, no conditional edges); the runner also sets a hard recursion limit;
+  * the graph never touches the database for results: `apps/analysis/runner.py` persists `findings` to
+    RiskFinding rows, `trace` to AgentTrace rows and `summaries` to RiskSummary, after its own safety checks.
 """
 import operator
 from typing import Annotated, TypedDict

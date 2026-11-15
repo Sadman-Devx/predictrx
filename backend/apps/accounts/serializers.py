@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from . import services
+from . import password_reset, services
 from .models import User
 
 
@@ -49,3 +49,35 @@ class LoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         attrs[self.username_field] = str(attrs.get(self.username_field, "")).strip().lower()
         return super().validate(attrs)
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField(max_length=64)
+    token = serializers.CharField(max_length=128)
+    password = serializers.CharField(write_only=True, trim_whitespace=False, style={"input_type": "password"})
+
+    def validate(self, attrs):
+        user = password_reset.check_reset_token(attrs["uid"], attrs["token"])
+        if user is None:
+            raise serializers.ValidationError(
+                {"token": ["This reset link is invalid or has expired. Please request a new one."]},
+                code="invalid_reset_link",
+            )
+        problems = password_reset.validate_new_password(user, attrs["password"])
+        if problems:
+            raise serializers.ValidationError({"password": problems}, code="weak_password")
+        attrs["user"] = user
+        return attrs
+
+
+class SocialLoginSerializer(serializers.Serializer):
+    id_token = serializers.CharField(required=False, allow_blank=True, max_length=4096)       # google
+    access_token = serializers.CharField(required=False, allow_blank=True, max_length=4096)   # facebook
+    code = serializers.CharField(required=False, allow_blank=True, max_length=2048)           # linkedin
+    redirect_uri = serializers.URLField(required=False, allow_blank=True, max_length=512)     # linkedin
+    preferred_language = serializers.ChoiceField(choices=services.LANGUAGES, default="bn")
+

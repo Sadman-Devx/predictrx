@@ -11,6 +11,9 @@ That keeps the Day 6 agents configurable without touching config/settings/base.p
     CLINICAL_NOTES_USE_LLM    true -> local Ollama extracts condition phrases from redacted notes (default false)
     ADVISORY_USE_LLM          true -> an LLM may re-phrase the summaries; output is validated, else the template stays
     ADVISORY_LLM_LOCAL        true -> use the local Ollama model for that re-phrasing instead of the cloud model
+    LOCAL_LLM_TIMEOUT         seconds for one Ollama call (default 120)
+    CLOUD_LLM_TIMEOUT         seconds for one cloud-model call (default 60)
+    LLM_FALLBACK_TO_LOCAL     true (default) -> a non-sensitive call uses Ollama when the cloud model is not configured
 """
 import os
 

@@ -6,11 +6,21 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.audit import services as audit
 from core.permissions import IsDoctorOrPharmacist
 
-from . import services
+from . import results, services
 from .models import AnalysisRun
-from .serializers import AnalysisStartResponseSerializer, AnalysisStartSerializer, AnalysisStatusSerializer
+from .serializers import (AnalysisDetailSerializer, AnalysisStartResponseSerializer, AnalysisStartSerializer,
+                          AnalysisTraceSerializer)
+
+
+def get_owned_run(request, pk: int) -> AnalysisRun:
+    """Ownership is derived from the authenticated user. A foreign (or missing) run is a plain 404."""
+    run = AnalysisRun.objects.select_related("patient").filter(pk=pk, patient__owner=request.user).first()
+    if run is None:
+        raise NotFound()
+    return run
 
 
 class AnalysisStartView(APIView):
@@ -42,13 +52,40 @@ class AnalysisStartView(APIView):
 
 
 class AnalysisDetailView(APIView):
-    """GET /api/analysis/{id}/ — status for polling. No clinical content yet (Day 6 adds findings behind `completed`)."""
+    """GET /api/analysis/{id}/ — poll while running, read the result once `status == completed`.
+
+    * queued / running / failed: status + pipeline progress only. Clinical fields are `null` (never a partial result).
+    * completed: findings (major -> unknown), doctor summary, frozen medication list, gaps, guardrail flags.
+      This read returns patient-related clinical content, so it is written to the AuditLog.
+    * Status polls carry no clinical content and are NOT audited (a 2-second poll would flood the log).
+    """
 
     permission_classes = [IsDoctorOrPharmacist]
 
-    @extend_schema(tags=["Analysis"], responses=AnalysisStatusSerializer)
+    @extend_schema(tags=["Analysis"], responses=AnalysisDetailSerializer)
     def get(self, request, pk):
-        run = AnalysisRun.objects.filter(pk=pk, patient__owner=request.user).first()
-        if run is None:
-            raise NotFound()  # foreign run == not found
-        return Response(AnalysisStatusSerializer(run).data)
+        run = get_owned_run(request, pk)
+        if run.status != "completed":
+            return Response(AnalysisDetailSerializer(run).data)
+
+        context = results.result_context(run)
+        audit.record(request, audit.ANALYSIS_READ, patient=run.patient, obj=run, findings=len(context["findings"]))
+        return Response(AnalysisDetailSerializer(run, context=context).data)
+
+
+class AnalysisTraceView(APIView):
+    """GET /api/analysis/{id}/trace/ — agent trace for the UI (which agent ran, tools called, latency).
+
+    Before the run completes only the step list (`steps`, names + status) is returned; `traces` is empty and
+    `available` is false. Trace rows are redacted summaries; reading them is audited.
+    """
+
+    permission_classes = [IsDoctorOrPharmacist]
+
+    @extend_schema(tags=["Analysis"], responses=AnalysisTraceSerializer)
+    def get(self, request, pk):
+        run = get_owned_run(request, pk)
+        traces = list(run.traces.order_by("step_order", "id")) if run.status == "completed" else []
+        if traces:
+            audit.record(request, audit.ANALYSIS_TRACE_READ, patient=run.patient, obj=run, steps=len(traces))
+        return Response(AnalysisTraceSerializer(run, context={"traces": traces}).data)
