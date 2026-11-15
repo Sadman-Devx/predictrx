@@ -15,6 +15,7 @@ import asyncio
 import concurrent.futures
 import json
 import logging
+import time
 from dataclasses import dataclass
 
 from .config import setting
@@ -22,6 +23,17 @@ from .config import setting
 logger = logging.getLogger(__name__)
 
 TOOLS = ("resolve_brand", "lookup_drug", "check_interaction")
+
+# Circuit breaker: when the MCP server is unreachable, the next nodes of the same run (and the next runs) must not
+# each wait for a failing connection again. For AI_MCP_RETRY_SECONDS (default 60) calls go straight to the direct
+# functions; the trace note says so. AI_TOOL_TRANSPORT=mcp_only ignores the breaker and always tries MCP.
+_mcp_down_until = 0.0
+
+
+def reset_circuit() -> None:
+    """Forget a recorded MCP outage (used by tests and after the server is started again)."""
+    global _mcp_down_until
+    _mcp_down_until = 0.0
 
 
 class ToolCallError(RuntimeError):
@@ -114,14 +126,26 @@ def call_tools(calls: list) -> ToolBatch:
     if mode == "direct":
         return ToolBatch(_direct(prepared), "direct", "AI_TOOL_TRANSPORT=direct")
 
+    global _mcp_down_until
+    if mode != "mcp_only" and time.monotonic() < _mcp_down_until:
+        wait = int(_mcp_down_until - time.monotonic()) + 1
+        return ToolBatch(_direct(prepared), "direct",
+                         f"MCP server was unreachable moments ago (not retried for {wait}s); "
+                         "same deterministic functions called directly")
+
     url = str(setting("MCP_SERVER_URL", "http://localhost:8001/sse"))
     timeout = float(setting("AI_MCP_TIMEOUT", 15.0)) + 0.2 * len(prepared)
     try:
-        return ToolBatch(_run_sync(lambda: _call_over_sse(url, prepared, timeout)), "mcp_sse")
+        batch = ToolBatch(_run_sync(lambda: _call_over_sse(url, prepared, timeout)), "mcp_sse")
+        _mcp_down_until = 0.0
+        return batch
     except Exception as exc:  # noqa: BLE001 — connection errors arrive as ExceptionGroups/timeouts of many types
+        _mcp_down_until = time.monotonic() + float(setting("AI_MCP_RETRY_SECONDS", 60.0))
         if mode == "mcp_only":
             raise ToolCallError(f"MCP server failed ({exc.__class__.__name__}) and AI_TOOL_TRANSPORT=mcp_only") from exc
-        logger.warning("MCP call failed (%s); using the deterministic functions directly", exc.__class__.__name__,
-                       exc_info=True)
+        # One line, not a traceback wall; the full error is available at DEBUG level.
+        logger.warning("MCP server unreachable at %s (%s); using the deterministic functions directly",
+                       url, exc.__class__.__name__)
+        logger.debug("MCP failure details", exc_info=True)
         note = f"MCP unavailable ({exc.__class__.__name__}); same deterministic functions called directly"
         return ToolBatch(_direct(prepared), "direct", note)
