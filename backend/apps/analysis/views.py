@@ -9,8 +9,9 @@ from rest_framework.views import APIView
 from apps.audit import services as audit
 from core.permissions import IsDoctorOrPharmacist
 
-from . import results, services
+from . import patient_card, results, services
 from .models import AnalysisRun
+from .patient_card import PatientCardSerializer
 from .serializers import (AnalysisDetailSerializer, AnalysisStartResponseSerializer, AnalysisStartSerializer,
                           AnalysisTraceSerializer)
 
@@ -89,3 +90,27 @@ class AnalysisTraceView(APIView):
         if traces:
             audit.record(request, audit.ANALYSIS_TRACE_READ, patient=run.patient, obj=run, steps=len(traces))
         return Response(AnalysisTraceSerializer(run, context={"traces": traces}).data)
+
+
+class AnalysisPatientCardView(APIView):
+    """GET /api/analysis/{id}/patient-card/ — the plain-Bangla patient card of a finished run (owner only).
+
+    * Not completed (or no stored card): `available: false`, `patient_card_bn: null`. A partial run never looks final.
+    * Completed: the card text, re-checked by the output guardrail on every read (no dosing, no "safe" claim,
+      disclaimer attached; `guardrail_replaced` says if the stored text had to be replaced).
+    * Reading a card is patient-related content, so it is written to the AuditLog (`patient_card_read`).
+      A status-only answer carries no clinical content and is not audited. The response is `no-store`.
+    """
+
+    permission_classes = [IsDoctorOrPharmacist]
+
+    @extend_schema(tags=["Analysis"], responses=PatientCardSerializer)
+    def get(self, request, pk):
+        run = get_owned_run(request, pk)
+        payload = patient_card.build_payload(run)
+        if payload["available"]:
+            audit.record(request, audit.PATIENT_CARD_READ, patient=run.patient, obj=run,
+                         guardrail_replaced=payload["guardrail_replaced"])
+        response = Response(PatientCardSerializer(payload).data)
+        response["Cache-Control"] = "no-store"
+        return response

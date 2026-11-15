@@ -22,3 +22,10 @@ class IsDoctorOrPharmacist(HasRole):
 
 class IsAdminRole(HasRole):
     allowed_roles = ("admin",)
+
+
+class IsFamilyRole(HasRole):
+    """Family (NRB) accounts. Role only: access to a specific patient still needs an active FamilyLink + Consent,
+    checked on every request in apps/patients/family.py."""
+
+    allowed_roles = ("family",)
