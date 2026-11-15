@@ -1,19 +1,45 @@
-from django.db import models
+import uuid
+
+from django.db import models, transaction
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils import timezone
 
 from apps.drugs.models import Drug
 from apps.patients.models import Patient
+from core.storage import get_private_storage
+
+_IMAGE_EXT = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+
+
+def scan_upload_path(instance, filename):
+    """Random name, never the client's filename (it can contain a patient's name). Extension comes from the sniffed type."""
+    ext = _IMAGE_EXT.get(instance.content_type, "bin")
+    return f"prescriptions/{instance.patient_id}/{uuid.uuid4().hex}.{ext}"
 
 
 class PrescriptionScan(models.Model):
     STATUS = [("queued", "Queued"), ("processing", "Processing"), ("extracted", "Extracted"), ("failed", "Failed")]
 
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="scans")
-    image = models.FileField(upload_to="prescriptions/")  # private storage, no public URL
+    # Private storage: no public URL exists for this file (core/storage.py). Served only by an owner-checked, audited view.
+    image = models.FileField(storage=get_private_storage, upload_to=scan_upload_path)
+    content_type = models.CharField(max_length=30, blank=True, default="")  # sniffed from the file's bytes, not trusted from the client
+    image_sha256 = models.CharField(max_length=64, blank=True, default="", db_index=True)  # same image twice -> one scan
     status = models.CharField(max_length=15, choices=STATUS, default="queued")
-    extracted_json = models.JSONField(default=dict, blank=True)  # raw model output (draft)
-    retain_until = models.DateTimeField()
+    error_code = models.CharField(max_length=40, blank=True, default="")  # why a scan failed (machine code, no text from the image)
+    extracted_json = models.JSONField(default=dict, blank=True)  # validated DRAFT only (no raw model text, no PII)
+    retain_until = models.DateTimeField(db_index=True)
+    image_deleted_at = models.DateTimeField(null=True, blank=True)  # set when the file was removed (early delete or retention)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+@receiver(post_delete, sender=PrescriptionScan)
+def delete_image_with_row(sender, instance, **kwargs):
+    """A scan row can disappear (admin, cascade from a patient). Its private image file must go with it, not linger."""
+    name, storage = instance.image.name, instance.image.storage
+    if name:
+        transaction.on_commit(lambda: storage.delete(name))  # only after the delete is really committed
 
 
 class Medication(models.Model):

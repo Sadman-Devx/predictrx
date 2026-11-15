@@ -84,6 +84,45 @@ export async function api<T>(path: string, { skipRefresh, ...init }: Options = {
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
+interface BlobOptions {
+  signal?: AbortSignal;
+  skipRefresh?: boolean;
+}
+
+/**
+ * GET a binary body (the prescription image). An <img src> cannot send the Authorization header and the server has
+ * deliberately no public image URL, so the image is fetched here and shown from a blob URL (backend ScanImageView).
+ * Same auth, same single refresh-and-retry and same error type as api().
+ */
+export async function apiBlob(path: string, { signal, skipRefresh }: BlobOptions = {}): Promise<Blob> {
+  const headers = new Headers();
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, { headers, signal, cache: "no-store" });
+  } catch {
+    throw new ApiRequestError(0, null);
+  }
+
+  if (res.status === 401 && !skipRefresh && refreshToken) {
+    if (await refreshAccess()) return apiBlob(path, { signal, skipRefresh: true });
+    setTokens(null, null);
+    onSessionExpired?.();
+  }
+
+  if (!res.ok) {
+    let body: ApiError | null = null;
+    try {
+      body = (await res.json()) as ApiError;
+    } catch {
+      /* the image endpoint answers errors as JSON; anything else is treated as a plain failure */
+    }
+    throw new ApiRequestError(res.status, body);
+  }
+  return res.blob();
+}
+
 export async function login(email: string, password: string): Promise<User> {
   const data = await api<{ access: string; refresh: string }>("/auth/login/", {
     method: "POST",

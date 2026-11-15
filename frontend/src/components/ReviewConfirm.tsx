@@ -2,14 +2,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { DrugAutocomplete } from "./medication/DrugAutocomplete";
 import { ReviewRow } from "./ReviewRow";
+import { ScanImage } from "./scan/ScanImage";
 import { PageHeader } from "./ui/PageHeader";
 import { useI18n, type MessageKey, type MessageVars } from "../i18n";
 import { startAnalysis } from "../lib/analysis";
 import { ApiRequestError } from "../lib/api";
 import { addMedication, findDrugId, listPatientOptions } from "../lib/clinical";
 import { resolveMedications, type DrugSuggestion, type ResolvedMedication } from "../lib/drugs";
+import { confirmScanDraft, deleteScanDraft } from "../lib/scan";
 import type { Patient } from "../lib/types";
-import { isBlocking, newIdempotencyKey, rowsFromState, rowState, SAMPLE_ROWS, type DraftRow } from "../review";
+import {
+  idFromState,
+  isBlocking,
+  legibilityFromState,
+  newIdempotencyKey,
+  rowsFromState,
+  rowState,
+  SAMPLE_ROWS,
+  type DraftRow,
+} from "../review";
 
 const MAX_MEDICATIONS = 20; // backend: MAX_MEDICATIONS_PER_RUN
 const MIN_DISTINCT_DRUGS = 2; // backend: MIN_DISTINCT_DRUGS
@@ -53,8 +64,10 @@ function startErrorFor(err: unknown, stage: Stage): StartError {
 
 /**
  * Day 5: Review & Confirm (human-in-the-loop). Day 6: "Run analysis" now starts a real run.
+ * Day 8: the list may also come from a prescription scan; the stored image is shown beside it and scanned rows are
+ * confirmed in place (PATCH) instead of being saved a second time.
  *
- * The list comes from manual entry (router state). Opened directly, it falls back to a STATIC sample that is labelled on screen,
+ * The list comes from manual entry or from the scan page (router state). Opened directly, it falls back to a STATIC sample that is labelled on screen,
  * and a sample can never be analysed (it is not a real prescription and must not be saved to a patient's record).
  * Edits are re-resolved by the real backend resolver.
  * "Run analysis" stays disabled until: a patient is chosen, the list is not empty, nothing is unresolved / unconfirmed / still checking,
@@ -74,6 +87,18 @@ export default function ReviewConfirm() {
   const [entered] = useState(() => rowsFromState(location.state));
   const isSample = entered === null;
 
+  // Day 8: set only when the list was read from a prescription photo (the scan page passes these in router state).
+  // A scan's patient is fixed: its draft medicines already belong to that patient on the server.
+  const [scanInfo] = useState(() => {
+    const scanId = entered ? idFromState(location.state, "scanId") : null;
+    return {
+      scanId,
+      lockedPatient: scanId !== null ? idFromState(location.state, "patientId") : null,
+      legibility: scanId !== null ? legibilityFromState(location.state) : null,
+    };
+  });
+  const { scanId, lockedPatient, legibility } = scanInfo;
+
   const [rows, setRows] = useState<DraftRow[]>(() => entered ?? SAMPLE_ROWS);
   const [checked, setChecked] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -84,6 +109,7 @@ export default function ReviewConfirm() {
   const [patientsFailed, setPatientsFailed] = useState(false);
   const [patientId, setPatientId] = useState<number | null>(
     () =>
+      lockedPatient ??
       patientIdFrom((location.state as { patientId?: unknown } | null)?.patientId) ??
       patientIdFrom(searchParams.get("patient")),
   );
@@ -102,12 +128,13 @@ export default function ReviewConfirm() {
       if (patientsSeq.current !== n) return;
       setPatients(list);
       // A pre-selected id that is not one of this doctor's patients is dropped, not trusted.
-      setPatientId((cur) => (cur !== null && list.some((p) => p.id === cur) ? cur : null));
+      // The scan's own patient is kept as is: the server checks it again on every call.
+      setPatientId((cur) => (lockedPatient !== null ? lockedPatient : cur !== null && list.some((p) => p.id === cur) ? cur : null));
     } catch {
       if (patientsSeq.current !== n) return;
       setPatientsFailed(true);
     }
-  }, []);
+  }, [lockedPatient]);
 
   useEffect(() => {
     void loadPatients();
@@ -175,9 +202,14 @@ export default function ReviewConfirm() {
   }
 
   function onRemove(id: number) {
+    const row = rows.find((r) => r.id === id);
     seq.current.delete(id);
+    saved.current.delete(id);
     setRows((rs) => rs.filter((r) => r.id !== id));
     touch();
+    // A scanned row is already stored as a draft: remove it too, so it does not linger on the patient's record.
+    // Best effort: if the server refuses (for example a run was built from it) the row simply stays as an unconfirmed draft.
+    if (row?.medicationId !== undefined) void deleteScanDraft(row.medicationId).catch(() => undefined);
   }
 
   const states = rows.map(rowState);
@@ -233,13 +265,18 @@ export default function ReviewConfirm() {
       // 2. Save to the patient's record, one at a time, remembering each id so a retry never duplicates it.
       stage = "save";
       for (const { row, res } of todo) {
-        const med = await addMedication(patientId, {
+        const body = {
           raw_text: row.rawText,
           brand_name: res.match_type === "generic" ? "" : res.matched_name,
           strength: row.strength.trim(),
           frequency: row.frequency.trim(),
           drug_id: drugIds.get(res.generic.trim().toLowerCase()) ?? null,
-        });
+        };
+        // A scanned row already exists on the server as a draft: confirm THAT medicine instead of creating a second copy.
+        const med =
+          row.medicationId !== undefined
+            ? await confirmScanDraft(row.medicationId, { ...body, confirmed_by_user: true })
+            : await addMedication(patientId, body);
         saved.current.set(row.id, { sig: signature(patientId, row, res.generic), medicationId: med.id });
       }
 
@@ -279,6 +316,9 @@ export default function ReviewConfirm() {
       <div className="review-grid">
         <div className="card">
           <h2>{t("review.list.title")}</h2>
+          {scanId !== null && <p className="sample-note" role="note">{t("review.scan.note")}</p>}
+          {legibility === "partial" && <p className="legibility-note" role="note">{t("review.legibility.partial")}</p>}
+          {legibility === "poor" && <p className="legibility-note" role="note">{t("review.legibility.poor")}</p>}
           <p className="small muted review-summary" role="status" aria-live="polite">{summary}</p>
 
           {rows.length === 0 ? (
@@ -306,9 +346,13 @@ export default function ReviewConfirm() {
         <aside className="review-side" aria-label={t("review.confirm.title")}>
           <div className="card">
             <h2>{t("review.image.title")}</h2>
-            <div className="image-slot">
-              <p className="muted small">{t("review.image.placeholder")}</p>
-            </div>
+            {scanId !== null ? (
+              <ScanImage scanId={scanId} />
+            ) : (
+              <div className="image-slot">
+                <p className="muted small">{t("review.image.placeholder")}</p>
+              </div>
+            )}
           </div>
 
           <div className="card">
@@ -334,7 +378,7 @@ export default function ReviewConfirm() {
                 {t("review.patient.label")}
                 <select
                   value={patientId ?? ""}
-                  disabled={starting}
+                  disabled={starting || lockedPatient !== null}
                   onChange={(e) => {
                     setPatientId(patientIdFrom(e.target.value));
                     touch();
@@ -347,6 +391,7 @@ export default function ReviewConfirm() {
                 </select>
               </label>
             )}
+            {lockedPatient !== null && <p className="muted small">{t("review.patient.locked")}</p>}
 
             <label className="confirm-check">
               <input type="checkbox" checked={checked} disabled={!canTick} onChange={(e) => setChecked(e.target.checked)} />

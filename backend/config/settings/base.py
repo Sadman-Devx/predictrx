@@ -109,16 +109,28 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "core.pagination.StandardPagination",
     "PAGE_SIZE": 20,
     "EXCEPTION_HANDLER": "core.exceptions.api_exception_handler",
+    # Two layers: a named scope per sensitive endpoint (ScopedRateThrottle) + a generous per-user/per-IP ceiling
+    # (UserRateThrottle: logged-in users are counted by user id, anonymous callers by IP).
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.ScopedRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
+        "user": "600/min",  # global ceiling per user / IP
         "login": "5/min",
         "register": "10/hour",
-        "scan": "20/hour",
+        "password_reset": "5/hour",
+        "password_reset_confirm": "10/hour",
+        "social": "20/min",
+        "scan": "20/hour",  # prescription upload (starts a paid vision call)
+        "scan_poll": "120/min",  # scan status + image reads (the UI polls)
         "analysis": "30/hour",
         "drug_lookup": "120/min",  # resolve + autocomplete (no LLM, cheap)
     },
+    # How many reverse proxies sit in front of Django (Cloudflare Tunnel = 1). Needed so throttles and the audit log see
+    # the real client IP instead of the proxy's. 0 = trust REMOTE_ADDR only. Never set it higher than the truth:
+    # clients could then spoof X-Forwarded-For to dodge the login throttle.
+    "NUM_PROXIES": env.int("NUM_PROXIES", default=0),
 }
 
 SIMPLE_JWT = {
@@ -150,6 +162,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.clinical.tasks.purge_expired_scans",
         "schedule": 60 * 60,  # hourly
     },
+    "fail-stuck-prescription-scans": {
+        "task": "apps.clinical.tasks.fail_stuck_scans",
+        "schedule": 5 * 60,  # every 5 minutes
+    },
 }
 
 CACHES = {
@@ -173,5 +189,10 @@ EMBEDDING_TIMEOUT = env.int("EMBEDDING_TIMEOUT", default=120)
 RAG_CONTEXT_MODE = env("RAG_CONTEXT_MODE", default="template")
 MCP_SERVER_URL = env("MCP_SERVER_URL", default="http://localhost:8001/sse")
 OPENFDA_API_KEY = env("OPENFDA_API_KEY", default="")
+# Prescription images: deleted at `retain_until`. Short by default; longer only with an active `retain_images` consent.
 PRESCRIPTION_IMAGE_RETENTION_DAYS = env.int("PRESCRIPTION_IMAGE_RETENTION_DAYS", default=7)
+PRESCRIPTION_IMAGE_RETAINED_DAYS = env.int("PRESCRIPTION_IMAGE_RETAINED_DAYS", default=90)
+SCAN_MAX_UPLOAD_BYTES = env.int("SCAN_MAX_UPLOAD_BYTES", default=8 * 1024 * 1024)  # 8 MB per image
+SCAN_DEDUPE_WINDOW_SECONDS = env.int("SCAN_DEDUPE_WINDOW_SECONDS", default=600)  # same image twice = one scan
+SCAN_STUCK_MINUTES = env.int("SCAN_STUCK_MINUTES", default=10)  # queued/processing longer than this -> failed
 DISCLAIMER_VERSION = "v1"

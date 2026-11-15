@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import services
+from .filters import DrugFilter
 from .models import Drug
 from .serializers import (DrugSerializer, ResolveRequestSerializer, ResolveResponseSerializer,
                           SearchQuerySerializer, SearchResponseSerializer)
@@ -13,6 +14,7 @@ from .serializers import (DrugSerializer, ResolveRequestSerializer, ResolveRespo
 class DrugListView(ListAPIView):
     serializer_class = DrugSerializer
     queryset = Drug.objects.order_by("generic_name")
+    filterset_class = DrugFilter
 
 
 @extend_schema_view(get=extend_schema(tags=["Drugs"]))

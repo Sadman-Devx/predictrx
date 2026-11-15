@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { AnalysisResults } from "../components/analysis/AnalysisResults";
 import { PipelineStepper } from "../components/analysis/PipelineStepper";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatusPill, type Tone } from "../components/ui/StatusPill";
@@ -60,23 +61,20 @@ function RunView({ runId }: { runId: number }) {
   }
 
   const status = run?.status ?? null;
+  const completed = status === "completed";
   const inFlight = status === "queued" || status === "running";
   // Once we have given up polling, the last known status may be stale: no moving bar.
   const gaveUp = issue === "connection" || issue === "server" || issue === "slow";
   const showBar = inFlight && !gaveUp;
   const steps = deriveSteps(status ?? "queued", trace);
 
+  // Message for a run that is NOT finished successfully. A completed run shows the results screen instead (Day 7).
   let message: string | null = null;
   let failed = false;
   if (run) {
     if (run.status === "queued") message = t("analysis.hint.queued");
     else if (run.status === "running") message = t("analysis.hint.running");
-    else if (run.status === "completed") {
-      const n = run.findings_count;
-      if (n === 0) message = t("analysis.done.none"); // never a "safe" statement
-      else if (n === 1) message = t("analysis.done.one");
-      else if (n !== null) message = t("analysis.done.count", { n });
-    } else {
+    else if (run.status === "failed") {
       failed = true;
       message = t(ERROR_TEXT[run.error_code ?? ""] ?? "analysis.error.unknown");
     }
@@ -86,7 +84,10 @@ function RunView({ runId }: { runId: number }) {
 
   return (
     <section>
-      <PageHeader title={t("analysis.run.title", { id: runId })} subtitle={t("analysis.run.subtitle")} />
+      <PageHeader
+        title={t("analysis.run.title", { id: runId })}
+        subtitle={completed ? t("results.subtitle") : t("analysis.run.subtitle")}
+      />
 
       {loading && (
         <div className="card" aria-busy="true">
@@ -95,55 +96,49 @@ function RunView({ runId }: { runId: number }) {
         </div>
       )}
 
-      {run && (
-        <div className="card run-status">
-          <div className="run-status-head">
-            <StatusPill tone={STATUS_TONE[run.status]}>{t(STATUS_TEXT[run.status])}</StatusPill>
-            <span className="muted small">
-              {t(run.medication_count === 1 ? "patients.medicines.one" : "patients.medicines", { n: run.medication_count })}
-            </span>
+      {run && completed && <AnalysisResults run={run} trace={trace} traceKnown={traceKnown} />}
+
+      {run && !completed && (
+        <>
+          <div className="card run-status">
+            <div className="run-status-head">
+              <StatusPill tone={STATUS_TONE[run.status]}>{t(STATUS_TEXT[run.status])}</StatusPill>
+              <span className="muted small">
+                {t(run.medication_count === 1 ? "patients.medicines.one" : "patients.medicines", { n: run.medication_count })}
+              </span>
+            </div>
+
+            {showBar && (
+              <div className="run-bar" role="progressbar" aria-label={t("analysis.progress.label")}>
+                <span />
+              </div>
+            )}
+
+            {/* aria-live: a screen-reader user hears the change from "in progress" to "failed". */}
+            <div role="status" aria-live="polite">
+              {message && (failed ? <p className="alert run-alert">{message}</p> : <p>{message}</p>)}
+            </div>
+
+            {issue === "reconnecting" && <p className="muted small" role="status">{t("analysis.poll.reconnecting")}</p>}
+
+            {issueKey && (
+              <p className="alert run-alert" role="alert">
+                {t(issueKey)}{" "}
+                <button type="button" className="link-btn" onClick={retry}>{t("common.retry")}</button>
+              </p>
+            )}
+
+            {run.status === "failed" && (
+              <div className="run-actions">
+                <Link to="/scan" className="btn">{t("dashboard.cta")}</Link>
+              </div>
+            )}
           </div>
 
-          {showBar && (
-            <div className="run-bar" role="progressbar" aria-label={t("analysis.progress.label")}>
-              <span />
-            </div>
-          )}
-
-          {/* aria-live: a screen-reader user hears the change from "in progress" to "complete" / "failed". */}
-          <div role="status" aria-live="polite">
-            {message && (failed ? <p className="alert run-alert">{message}</p> : <p>{message}</p>)}
+          <div className="card">
+            <PipelineStepper steps={steps} />
           </div>
-
-          {issue === "reconnecting" && <p className="muted small" role="status">{t("analysis.poll.reconnecting")}</p>}
-
-          {issueKey && (
-            <p className="alert run-alert" role="alert">
-              {t(issueKey)}{" "}
-              <button type="button" className="link-btn" onClick={retry}>{t("common.retry")}</button>
-            </p>
-          )}
-
-          {run.status === "completed" && <p className="muted small">{t("analysis.done.detailsSoon")}</p>}
-
-          {(run.status === "completed" || run.status === "failed") && (
-            <div className="run-actions">
-              {run.status === "completed" && (
-                <Link to={`/patients/${run.patient_id}`} className="btn secondary">{t("analysis.done.patient")}</Link>
-              )}
-              {run.status === "failed" && <Link to="/scan" className="btn">{t("dashboard.cta")}</Link>}
-            </div>
-          )}
-        </div>
-      )}
-
-      {run && (
-        <div className="card">
-          <PipelineStepper steps={steps} />
-          {run.status === "completed" && !traceKnown && (
-            <p className="muted small run-trace-note">{t("analysis.trace.unavailable")}</p>
-          )}
-        </div>
+        </>
       )}
     </section>
   );

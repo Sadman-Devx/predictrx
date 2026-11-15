@@ -1,0 +1,151 @@
+/* ===== analysis results: tabs, findings, evidence, verification, agent trace (Day 7) =====
+   Tokens only (styles/tokens.css). Severity and verification are never colour alone: each has a shape and a text label.
+   There is no green "safe" state anywhere: the best a pair can be is "minor" or "no record found". */
+
+/* ---- tabs ---- */
+.tabs { display: grid; gap: var(--space-4); }
+.tablist { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; background: var(--track); border-radius: var(--radius-pill); justify-self: start; }
+.tab {
+  min-height: var(--tap); padding: 0 20px; border: 0; border-radius: var(--radius-pill);
+  background: transparent; color: var(--ink-muted); font: inherit; font-weight: 500; cursor: pointer;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: var(--shadow-card); }
+.tabpanel { display: grid; gap: var(--space-4); min-width: 0; }
+.tabpanel[hidden] { display: none; }
+/* the global `.card + .card` margin would add to the grid gap */
+.tabpanel > .card + .card,
+.results-grid .card + .card,
+.results-side .card + .card { margin-top: 0; }
+
+/* ---- overview card ---- */
+.overview { display: grid; gap: var(--space-4); }
+.overview p { margin: 0; }
+.overview h2 { margin-bottom: var(--space-2); }
+.overview-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.count-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-5); }
+.count-item { display: inline-flex; align-items: center; gap: var(--space-2); }
+.summary-text { white-space: pre-line; overflow-wrap: anywhere; margin-bottom: var(--space-2); }
+
+/* ---- notices (medicines not checked, guardrail changes): never hidden ----
+   `.card.notice` (not `.notice`): app.css loads after this file and its `.card` rule would otherwise win. */
+.card.notice { background: var(--sev-moderate-soft); border-color: var(--sev-moderate); color: var(--ink); }
+.notice h2 { margin-bottom: var(--space-2); }
+.notice p { margin: 0 0 var(--space-2); }
+.notice ul { margin: 0; padding-left: var(--space-5); }
+.notice details { margin-top: var(--space-2); }
+.notice summary { cursor: pointer; min-height: var(--tap); display: flex; align-items: center; }
+
+/* ---- findings layout: list + side column ---- */
+.results-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+.results-grid > section > h2 { margin-bottom: var(--space-3); }
+.results-side { display: grid; gap: var(--space-4); position: sticky; top: var(--space-4); }
+.results-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+.med-summary { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.med-summary li { display: grid; gap: 2px; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-soft); overflow-wrap: anywhere; }
+.med-summary li:last-child { padding-bottom: 0; border-bottom: 0; }
+
+/* ---- finding card ---- */
+.finding-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
+.finding {
+  display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5);
+  background: var(--surface); border: 1px solid var(--border-soft); border-left: 6px solid var(--border-strong);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+}
+.finding p { margin: 0; max-width: none; }
+/* the left edge is only a second cue: the severity badge always carries a shape and a word */
+.finding.sev-major { border-left-color: var(--sev-major); }
+.finding.sev-moderate { border-left-color: var(--sev-moderate); }
+.finding.sev-minor { border-left-color: var(--sev-minor); }
+.finding.sev-unknown { border-left-color: var(--sev-unknown); }
+/* unverified: calmer, lower contrast surface (design.md §1.5), the text stays fully readable */
+.finding.is-unverified { background: var(--bg); }
+/* conflict: visibly different, never hidden */
+.finding.is-conflict { border-color: var(--conflict); border-width: 2px; border-left-width: 6px; border-left-color: var(--conflict); }
+
+.finding-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-2) var(--space-4); }
+.finding-pair {
+  margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-2);
+  font-size: var(--fs-section); font-weight: 600; overflow-wrap: anywhere; min-width: 0;
+}
+.finding-plus { color: var(--ink-muted); }
+.finding-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.finding-rationale { white-space: pre-line; overflow-wrap: anywhere; }
+
+.finding-note {
+  padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-control);
+  background: var(--bg); color: var(--ink);
+}
+.finding-note.note-conflict { background: var(--conflict-soft); border-color: var(--conflict); }
+.finding-note.note-warn { background: var(--sev-moderate-soft); border-color: var(--sev-moderate); color: var(--sev-moderate-text); }
+
+/* ---- verification badge ---- */
+.vbadge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--radius-pill);
+  border: 1px solid currentColor; font-size: var(--fs-badge); font-weight: 600; line-height: 1.5; white-space: nowrap;
+}
+.vbadge.v-verified { background: var(--sev-minor-soft); color: var(--sev-minor-text); }
+.vbadge.v-unverified { background: var(--sev-unknown-soft); color: var(--sev-unknown); border-style: dashed; }
+.vbadge.v-conflict { background: var(--conflict-soft); color: var(--conflict); border-width: 2px; }
+
+/* ---- confidence meter (always next to its basis) ---- */
+.confidence { display: grid; gap: 4px; }
+.confidence-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
+.confidence-label { color: var(--ink-muted); font-size: var(--fs-small); font-weight: 600; }
+.confidence-bar { height: 8px; max-width: 320px; border-radius: var(--radius-pill); background: var(--track); overflow: hidden; }
+.confidence-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+.confidence .confidence-basis { overflow-wrap: anywhere; }
+
+/* ---- evidence chips + source detail ---- */
+.ev { display: grid; gap: var(--space-2); }
+.ev-title { color: var(--ink-muted); font-size: var(--fs-small); font-weight: 600; }
+.ev-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ev-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 14px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--ink);
+  font: inherit; font-size: var(--fs-small); font-weight: 500; cursor: pointer;
+}
+.ev-chip:hover { background: var(--primary-soft); border-color: var(--primary); }
+.ev-chip[aria-expanded="true"] { background: var(--primary-soft); border-color: var(--primary); font-weight: 600; }
+.ev-chip.is-missing { border-style: dashed; }
+.ev-detail { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--radius-inner); }
+.ev-detail dl { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-4); }
+.ev-detail dt { color: var(--ink-muted); font-size: var(--fs-small); }
+.ev-detail dd { margin: 0; overflow-wrap: anywhere; }
+.ev-detail .ev-open { margin: 0; }
+
+/* ---- agent trace tab ---- */
+.trace-list { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-4); }
+.trace-step { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-inner); }
+.trace-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-1) var(--space-3); }
+.trace-head h3 { margin: 0; font-size: var(--fs-body); font-weight: 600; }
+.trace-label { margin: 0 0 var(--space-1); color: var(--ink-muted); font-size: var(--fs-small); font-weight: 600; }
+.trace-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-width: none; }
+.trace-tools { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.trace-tool { padding: 2px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); background: var(--surface); font-size: var(--fs-small); overflow-wrap: anywhere; }
+.trace-step details { margin-top: var(--space-2); }
+.trace-step summary { cursor: pointer; min-height: var(--tap); display: flex; align-items: center; color: var(--primary); }
+.trace-json {
+  margin: var(--space-2) 0 0; padding: var(--space-3); max-height: 320px; overflow: auto;
+  background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--radius-control);
+  font-size: var(--fs-small); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+/* ---- motion: only when the user has not asked for less ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .tab, .ev-chip { transition: background-color var(--dur) ease, color var(--dur) ease, border-color var(--dur) ease; }
+}
+
+/* ---- responsive ---- */
+@media (max-width: 900px) {
+  .results-grid { grid-template-columns: minmax(0, 1fr); }
+  .results-side { position: static; }
+}
+@media (max-width: 560px) {
+  .finding { padding: var(--space-4); }
+  .ev-detail dl { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ev-detail dd { margin-bottom: var(--space-2); }
+  .tablist { display: flex; justify-self: stretch; }
+  .tab { flex: 1 1 0; padding: 0 var(--space-3); }
+}
