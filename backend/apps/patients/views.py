@@ -10,9 +10,10 @@ from apps.audit import services as audit
 from apps.clinical.models import Medication
 from core.permissions import IsDoctorOrPharmacist, IsPatientOwner
 
-from . import invites, services
+from . import consent_banner, invites, services
 from .models import Patient
 from .serializers import (
+    ConsentBannerSerializer,
     ConsentCreateSerializer,
     ConsentListSerializer,
     ConsentRevokeResponseSerializer,
@@ -195,6 +196,28 @@ class ConsentRevokeView(APIView):
                              scope=consent.scope, **effects)
         effects = effects or {"family_links_deactivated": 0, "images_retention_shortened": 0}
         return Response({"consent": ConsentSerializer(consent).data, **effects})
+
+
+class ConsentBannerView(APIView):
+    """GET /api/patients/{patient_pk}/consent-banner/
+
+    What the ConsentBanner shows for this patient: per-scope state (active / revoked / missing), whether anything is
+    blocked (a prescription scan needs an active `analysis` consent), the next action, family access and image
+    retention. Read-only: granting and revoking stay in the consent endpoints. Owner only; a foreign or missing
+    patient is a 404. Audited as `consent_list` (meta: view=banner). Never cached.
+    """
+
+    permission_classes = [IsDoctorOrPharmacist]
+
+    @extend_schema(tags=["Consent"], responses=ConsentBannerSerializer)
+    def get(self, request, patient_pk):
+        with transaction.atomic():
+            patient = services.get_owned_patient(request.user, patient_pk)
+            body = consent_banner.consent_banner(patient)
+            audit.record(request, audit.CONSENT_LIST, patient=patient, view="banner", count=len(body["scopes"]))
+        response = Response(ConsentBannerSerializer(body).data)
+        response["Cache-Control"] = "no-store"
+        return response
 
 
 # ------------------------------------------------------------------------------------------------ family links
