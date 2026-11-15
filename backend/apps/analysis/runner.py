@@ -11,6 +11,9 @@ Contract with the LangGraph pipeline (ai/graph.py). The final graph state must l
     gaps:      [<medication dicts from the snapshot that the resolver could not resolve>]
     violations:[<output guardrail violation codes>]
 
+Live progress (Day 6): while the graph runs, `model_info["progress"]["completed_agents"]` is updated after every node, so
+the status endpoint can drive the pipeline stepper. Progress carries agent NAMES only, never clinical content.
+
 Safety net (rule.md §1, §2): even if an agent misbehaves, this module will
   * downgrade a finding that has a severity but no evidence to `unknown` ("insufficient evidence"),
   * replace summaries / rationales containing dosing language with the insufficient-evidence text,
@@ -69,7 +72,23 @@ def fail(run_id: int, error: str, **info) -> None:
 
 
 # ------------------------------------------------------------------------------------------------ pipeline call
-def _invoke_pipeline(snapshot: dict) -> dict:
+def _agents_done(state: dict) -> list[str]:
+    """Agent names that have already written a trace entry, in the order they finished."""
+    return [t["agent_name"] for t in (state.get("trace") or []) if isinstance(t, dict) and t.get("agent_name")]
+
+
+def _record_progress(run: AnalysisRun, state: dict) -> None:
+    """Persist 'which agents are done' so a polling UI can show a live stepper. Names only, no clinical content."""
+    done = _agents_done(state)
+    previous = ((run.model_info or {}).get("progress") or {}).get("completed_agents")
+    if done == previous:
+        return
+    run.model_info = {**(run.model_info or {}), "progress": {"completed_agents": done}}
+    # update() on purpose: only touches a run that is still `running`, never resurrects a finished one.
+    AnalysisRun.objects.filter(pk=run.pk, status="running").update(model_info=run.model_info)
+
+
+def _invoke_pipeline(snapshot: dict, on_step=None) -> dict:
     try:
         from ai.graph import build_graph
     except ImportError as exc:  # langgraph / anthropic not installed in this environment
@@ -80,7 +99,18 @@ def _invoke_pipeline(snapshot: dict) -> dict:
         "patient_context": snapshot.get("patient_context", {}),
         "trace": [],
     }
-    return build_graph().invoke(state, config={"recursion_limit": RECURSION_LIMIT})
+    final = None
+    # stream_mode="values" yields the FULL state after every node; the last one equals what invoke() returns.
+    for current in build_graph().stream(state, config={"recursion_limit": RECURSION_LIMIT}, stream_mode="values"):
+        final = current
+        if on_step is not None:
+            try:
+                on_step(current)
+            except Exception:  # noqa: BLE001 — progress is cosmetic: it must never be able to fail a run
+                logger.warning("could not record analysis progress", exc_info=True)
+    if final is None:
+        raise RuntimeError("pipeline produced no state")
+    return final
 
 
 # ------------------------------------------------------------------------------------------------ normalise
@@ -177,6 +207,7 @@ def persist_result(run: AnalysisRun, result: dict) -> None:
     gap_ids = [g.get("medication_id") for g in result.get("gaps") or [] if isinstance(g, dict)]
     run.model_info = {
         **(run.model_info or {}),
+        "progress": {"completed_agents": [str(t.get("agent_name", "")) for t in trace]},
         "pipeline": {"engine": "langgraph", "steps": len(trace), "recursion_limit": RECURSION_LIMIT},
         "result_meta": {"findings": len(findings), "gap_medication_ids": gap_ids, "violations": violations},
     }
@@ -192,7 +223,7 @@ def execute_run(run_id: int) -> str:
     if run is None:
         return "skipped"
     try:
-        result = _invoke_pipeline(run.input_snapshot)
+        result = _invoke_pipeline(run.input_snapshot, on_step=lambda state: _record_progress(run, state))
         persist_result(run, result)
         return "completed"
     except SoftTimeLimitExceeded:
