@@ -1,0 +1,64 @@
+/* ===== prescription scan (Day 8): choose image, progress, image next to the Review list =====
+   Tokens only (styles/tokens.css). Status is never colour alone: the pill carries a shape and a text label. */
+
+.scan-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--space-5); align-items: start; }
+.scan-grid .card + .card { margin-top: 0; }
+.scan-privacy { margin: 0; }
+.scan-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
+.scan-submit { display: grid; gap: var(--space-2); margin-top: var(--space-4); }
+.scan-submit p { margin: 0; }
+.scan-grid .alert.scan-form-error { margin: var(--space-4) 0 0; }
+
+/* drop zone: dashed, like the image slot on Review */
+.dropzone {
+  display: grid; place-items: center; align-content: center; gap: var(--space-1); text-align: center;
+  min-height: 200px; padding: var(--space-5); background: var(--bg);
+  border: 2px dashed var(--border-strong); border-radius: var(--radius-inner);
+}
+.dropzone p { margin: 0; }
+.dropzone.is-dragging { border-color: var(--primary); background: var(--primary-soft); }
+
+.scan-preview { display: grid; gap: var(--space-2); justify-items: start; }
+.scan-preview p { margin: 0; overflow-wrap: anywhere; }
+.scan-preview img,
+.image-view img {
+  display: block; max-width: 100%; max-height: 420px; width: auto; height: auto; object-fit: contain;
+  background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-control);
+}
+
+/* progress card */
+.scan-status { display: grid; gap: var(--space-3); }
+.scan-status p { margin: 0; }
+.scan-status-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+/* .alert (app.css) has a bottom margin and loads after this file, so the selector is made more specific. */
+.scan-status .scan-alert { margin: 0; }
+.scan-status .scan-actions { margin-top: 0; }
+
+/* Indeterminate activity bar: the scan is working, we do not know how far along it is, so it never shows a percentage. */
+.scan-bar { height: 6px; border-radius: var(--radius-pill); background: var(--primary-soft); overflow: hidden; }
+.scan-bar > span { display: block; width: 35%; height: 100%; border-radius: inherit; background: var(--primary); }
+
+/* Review screen: the stored image sits in the existing .image-slot */
+.image-slot.has-image { place-items: start center; }
+.image-view { display: grid; gap: var(--space-2); justify-items: center; width: 100%; }
+.image-view p { margin: 0; }
+
+/* Review screen: scanned list notes */
+.legibility-note {
+  background: var(--sev-moderate-soft); color: var(--sev-moderate-text); border: 1px solid var(--sev-moderate);
+  border-radius: var(--radius-control); padding: var(--space-2) var(--space-3); font-size: var(--fs-small); margin: 0 0 var(--space-4);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dropzone { transition: background-color var(--dur) ease, border-color var(--dur) ease; }
+  .scan-bar > span { animation: scan-slide 1.4s ease-in-out infinite; }
+  @keyframes scan-slide { from { margin-left: -35%; } to { margin-left: 100%; } }
+}
+
+@media (max-width: 900px) {
+  .scan-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .dropzone { min-height: 150px; padding: var(--space-4); }
+  .scan-actions .btn { flex: 1 1 100%; }
+}

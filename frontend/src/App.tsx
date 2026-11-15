@@ -9,6 +9,7 @@ import MedicationEntry from "./pages/MedicationEntry";
 import PatientDetail from "./pages/PatientDetail";
 import Patients from "./pages/Patients";
 import { Placeholder } from "./pages/Placeholder";
+import Scan from "./pages/Scan";
 
 export default function App() {
   return (
@@ -23,13 +24,10 @@ export default function App() {
           <Route path="patients" element={<Patients />} />
           <Route path="patients/:id" element={<PatientDetail />} />
           <Route path="medications" element={<MedicationEntry />} />
-          {/* Day 8 builds the scanner. Until then the screen links to manual entry so the flow is never a dead end. */}
-          <Route
-            path="scan"
-            element={<Placeholder titleKey="scan.title" hintKey="scan.hint" actionTo="/medications" actionKey="scan.manual" />}
-          />
+          {/* Day 8: photo upload. The draft list it reads is checked on /review; manual entry stays one click away. */}
+          <Route path="scan" element={<Scan />} />
           <Route path="review" element={<ReviewConfirm />} />
-          {/* The analyses list needs a list endpoint that does not exist yet; one run opens at /analysis/:runId (Day 6). */}
+          {/* The analyses list needs a list endpoint that does not exist yet; one run opens at /analysis/:runId (Day 6, results Day 7). */}
           <Route path="analysis" element={<Placeholder titleKey="analysis.title" />} />
           <Route path="analysis/:runId" element={<AnalysisRun />} />
           <Route path="twin" element={<Placeholder titleKey="twin.title" hintKey="twin.note" />} />

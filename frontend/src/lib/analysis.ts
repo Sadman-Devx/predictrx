@@ -21,7 +21,7 @@ export const PIPELINE_AGENTS: readonly PipelineAgent[] = [
 export const startAnalysis = (body: AnalysisStartRequest) =>
   api<AnalysisStartResponse>("/analysis/", { method: "POST", body: JSON.stringify(body) });
 
-/** GET /api/analysis/{id}/ — the polling target. */
+/** GET /api/analysis/{id}/ — the polling target. Once `status` is "completed" the same body carries the findings. */
 export const getAnalysis = (runId: number, signal?: AbortSignal) =>
   api<AnalysisRunStatus>(`/analysis/${runId}/`, { signal });
 
@@ -32,7 +32,17 @@ function toStep(raw: unknown): AgentTraceStep | null {
   const order = Number(r.step_order);
   const latency = Number(r.latency_ms ?? 0);
   if (!Number.isFinite(order)) return null;
-  return { agent_name: r.agent_name, step_order: order, latency_ms: Number.isFinite(latency) && latency >= 0 ? latency : 0 };
+
+  const step: AgentTraceStep = {
+    agent_name: r.agent_name,
+    step_order: order,
+    latency_ms: Number.isFinite(latency) && latency >= 0 ? latency : 0,
+  };
+  // Day 7: the Agent trace tab shows what each step read, wrote and called. Anything that is not the expected type is dropped.
+  if (typeof r.input_summary === "string") step.input_summary = r.input_summary;
+  if (typeof r.output_summary === "string") step.output_summary = r.output_summary;
+  if (Array.isArray(r.tool_calls)) step.tool_calls = r.tool_calls;
+  return step;
 }
 
 /**
