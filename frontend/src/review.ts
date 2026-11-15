@@ -13,11 +13,22 @@ export interface DraftRow {
   result: RowResult;
   /** Human-in-the-loop flag: the user accepted a fuzzy match. Reset whenever the row is re-resolved. */
   confirmed: boolean;
+  /**
+   * Day 8: set only for a row that came from a prescription scan. The server already holds this row as a DRAFT medicine
+   * (source "scan", not confirmed). Review & Confirm then updates and confirms THAT row instead of creating a second one.
+   */
+  medicationId?: number;
 }
 
-/** Router state passed from manual entry (and, from Day 8, the scanner) into the Review screen. */
+/** Router state passed from manual entry and from the scanner (Day 8) into the Review screen. */
 export interface ReviewNavState {
   rows: DraftRow[];
+  /** Scan flow only: the patient the scan was uploaded for. The Review screen locks the patient to this one. */
+  patientId?: number;
+  /** Scan flow only: lets the Review screen show the stored image next to the list. */
+  scanId?: number;
+  /** Scan flow only: how readable the model found the image ("clear" | "partial" | "poor" | "unknown"). */
+  legibility?: string;
 }
 
 /** Accepts router state only if it really looks like a list of draft rows; anything else falls back to the labelled sample. */
@@ -35,6 +46,18 @@ export function rowsFromState(state: unknown): DraftRow[] | null {
       (r as DraftRow).result !== undefined,
   );
   return ok ? (rows as DraftRow[]) : null;
+}
+
+/** A positive whole number from router state (patient id, scan id), or null. Never trusted blindly. */
+export function idFromState(state: unknown, key: "patientId" | "scanId"): number | null {
+  const v = (state as Record<string, unknown> | null)?.[key];
+  const n = typeof v === "string" ? Number(v) : v;
+  return typeof n === "number" && Number.isInteger(n) && n > 0 ? n : null;
+}
+
+export function legibilityFromState(state: unknown): string | null {
+  const v = (state as { legibility?: unknown } | null)?.legibility;
+  return typeof v === "string" ? v : null;
 }
 
 export type RowState = "loading" | "error" | "unresolved" | "needs_confirm" | "confirmed" | "resolved";
