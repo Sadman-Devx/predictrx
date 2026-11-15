@@ -17,5 +17,6 @@ urlpatterns = [
     path("api/", include("apps.vitals.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
-    # TODO (backend dev): twin, family, eval routes (Day 9-10)
+    path("api/", include("apps.evaluation.urls")),  # Day 9: eval run + metrics history (admin only)
+    # TODO (backend dev): twin, family routes (Day 9-10)
 ]

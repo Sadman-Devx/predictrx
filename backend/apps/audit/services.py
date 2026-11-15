@@ -26,6 +26,7 @@ CONSENT_CHANGE = "consent_change"
 IMAGE_ACCESS = "image_access"  # a prescription image was streamed to its owner
 IMAGE_DELETE = "image_delete"  # the owner deleted the image early
 IMAGE_PURGE = "image_purge"  # retention deadline passed: the system deleted the image
+EVAL_RUN = "eval_run"  # an admin started an evaluation run (no patient data involved)
 
 
 def client_ip(request) -> str | None:
