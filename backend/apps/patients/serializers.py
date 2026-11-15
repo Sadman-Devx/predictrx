@@ -123,6 +123,65 @@ class ConsentRevokeResponseSerializer(serializers.Serializer):
     images_retention_shortened = serializers.IntegerField()
 
 
+# ------------------------------------------------------------------------------------------------ consent banner
+class ConsentBannerScopeSerializer(serializers.Serializer):
+    """One consent scope. `status`: active | revoked | missing (a withdrawn consent is NOT the same as a missing one)."""
+
+    scope = serializers.CharField()
+    status = serializers.CharField()
+    required = serializers.BooleanField()
+    label_bn = serializers.CharField()
+    label_en = serializers.CharField()
+    purpose_bn = serializers.CharField()
+    purpose_en = serializers.CharField()
+    consent_id = serializers.IntegerField(allow_null=True)  # the ACTIVE consent (use it to revoke); null otherwise
+    granted_at = serializers.DateTimeField(allow_null=True)
+    revoked_at = serializers.DateTimeField(allow_null=True)
+
+
+class ConsentBannerNextActionSerializer(serializers.Serializer):
+    type = serializers.CharField()  # record_consent
+    scope = serializers.CharField()
+
+
+class ConsentBannerFamilySerializer(serializers.Serializer):
+    links_with_access = serializers.IntegerField()
+    links_without_consent = serializers.IntegerField()
+
+
+class ConsentBannerRetentionSerializer(serializers.Serializer):
+    mode = serializers.CharField()  # short | extended
+    days = serializers.IntegerField()
+    stored_images = serializers.IntegerField()
+
+
+class ConsentBannerNoticeSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    severity = serializers.CharField()  # info | warning
+    message_bn = serializers.CharField()
+    message_en = serializers.CharField()
+
+
+class ConsentBannerSerializer(serializers.Serializer):
+    """GET /api/patients/{id}/consent-banner/ — everything the ConsentBanner shows, decided by the server.
+
+    `level` is `ok` while the analysis consent is active, else `action_required`. `blocks` lists only what the
+    server really refuses right now (today: `prescription_scan`).
+    """
+
+    patient_id = serializers.IntegerField()
+    patient_code = serializers.CharField()
+    level = serializers.CharField()
+    blocks = serializers.ListField(child=serializers.CharField())
+    message_bn = serializers.CharField()
+    message_en = serializers.CharField()
+    next_action = ConsentBannerNextActionSerializer(allow_null=True)
+    scopes = ConsentBannerScopeSerializer(many=True)
+    family = ConsentBannerFamilySerializer()
+    image_retention = ConsentBannerRetentionSerializer()
+    notices = ConsentBannerNoticeSerializer(many=True)
+
+
 # ------------------------------------------------------------------------------------------------ family links (clinician side)
 class FamilyLinkSerializer(serializers.ModelSerializer):
     family_user_id = serializers.IntegerField(read_only=True)

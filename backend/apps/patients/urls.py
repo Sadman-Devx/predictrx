@@ -3,6 +3,7 @@ from rest_framework.routers import SimpleRouter
 
 from .family_views import FamilyPatientListView, FamilyPatientSummaryView
 from .views import (
+    ConsentBannerView,
     ConsentListCreateView,
     ConsentRevokeView,
     FamilyLinkDetailView,
@@ -24,6 +25,8 @@ urlpatterns = [
     path("patients/<int:patient_pk>/consents/", ConsentListCreateView.as_view(), name="patient-consents"),
     path("patients/<int:patient_pk>/consents/<int:pk>/revoke/", ConsentRevokeView.as_view(),
          name="patient-consent-revoke"),
+    # Day 10 — consent banner data (owner: doctor / pharmacist)
+    path("patients/<int:patient_pk>/consent-banner/", ConsentBannerView.as_view(), name="patient-consent-banner"),
     # Day 9 — family links (owner: doctor / pharmacist)
     path("patients/<int:patient_pk>/family/", FamilyLinkListCreateView.as_view(), name="patient-family"),
     path("patients/<int:patient_pk>/family/<int:pk>/", FamilyLinkDetailView.as_view(), name="patient-family-detail"),

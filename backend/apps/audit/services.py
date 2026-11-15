@@ -30,6 +30,9 @@ IMAGE_ACCESS = "image_access"  # a prescription image was streamed to its owner
 IMAGE_DELETE = "image_delete"  # the owner deleted the image early
 IMAGE_PURGE = "image_purge"  # retention deadline passed: the system deleted the image
 EVAL_RUN = "eval_run"  # an admin started an evaluation run (no patient data involved)
+BRAND_REVIEW = "brand_review"  # an admin verified / un-verified a brand mapping (meta: change, via, reason)
+ADMIN_RECORD_READ = "admin_record_read"  # a staff user opened ONE patient-data record in the Django admin (meta: model)
+ADMIN_LIST_READ = "admin_list_read"  # a staff user opened a list of patient-data records in the Django admin (meta: model)
 
 
 def client_ip(request) -> str | None:

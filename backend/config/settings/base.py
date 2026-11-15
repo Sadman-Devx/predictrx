@@ -2,6 +2,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 REPO_ROOT = BASE_DIR.parent
@@ -14,7 +15,17 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-only-change-me")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
+# Admin reskin (django-unfold). If the package is not installed the project falls back to the plain Django admin
+# (roadmap cut order: "Admin reskin -> use plain Django admin"); core/admin_base.py handles both cases.
+try:
+    import unfold  # noqa: F401
+
+    UNFOLD_AVAILABLE = True
+except ImportError:
+    UNFOLD_AVAILABLE = False
+
 INSTALLED_APPS = [
+    *(["unfold"] if UNFOLD_AVAILABLE else []),  # must be listed before django.contrib.admin
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -196,3 +207,63 @@ SCAN_MAX_UPLOAD_BYTES = env.int("SCAN_MAX_UPLOAD_BYTES", default=8 * 1024 * 1024
 SCAN_DEDUPE_WINDOW_SECONDS = env.int("SCAN_DEDUPE_WINDOW_SECONDS", default=600)  # same image twice = one scan
 SCAN_STUCK_MINUTES = env.int("SCAN_STUCK_MINUTES", default=10)  # queued/processing longer than this -> failed
 DISCLAIMER_VERSION = "v1"
+
+# ---------- Admin skin (django-unfold) ----------
+# Palette = design.md primary (#0F5C63). Only read when "unfold" is installed.
+UNFOLD = {
+    "SITE_TITLE": "PredictRx Admin",
+    "SITE_HEADER": "PredictRx",
+    "SITE_SUBHEADER": "Decision support - not a diagnosis tool",
+    "SITE_SYMBOL": "medication",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "COLORS": {
+        "primary": {
+            "50": "#EAF6F7", "100": "#D0EBED", "200": "#A5D7DB", "300": "#6FBCC2", "400": "#3C9AA2",
+            "500": "#1F7C85", "600": "#0F5C63", "700": "#0D4C52", "800": "#0C3E43", "900": "#0A3236",
+            "950": "#051F22",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Review",
+                "separator": True,
+                "items": [
+                    {"title": "Brand mappings", "icon": "medication", "link": reverse_lazy("admin:drugs_brandmapping_changelist")},
+                    {"title": "Eval cases", "icon": "fact_check", "link": reverse_lazy("admin:evaluation_evalcase_changelist")},
+                    {"title": "Eval runs", "icon": "analytics", "link": reverse_lazy("admin:evaluation_evalrun_changelist")},
+                ],
+            },
+            {
+                "title": "Patients and consent",
+                "separator": True,
+                "items": [
+                    {"title": "Patients", "icon": "personal_injury", "link": reverse_lazy("admin:patients_patient_changelist")},
+                    {"title": "Consents", "icon": "verified_user", "link": reverse_lazy("admin:patients_consent_changelist")},
+                    {"title": "Family links", "icon": "family_restroom", "link": reverse_lazy("admin:patients_familylink_changelist")},
+                ],
+            },
+            {
+                "title": "Clinical and analysis",
+                "separator": True,
+                "items": [
+                    {"title": "Prescription scans", "icon": "document_scanner", "link": reverse_lazy("admin:clinical_prescriptionscan_changelist")},
+                    {"title": "Medications", "icon": "pill", "link": reverse_lazy("admin:clinical_medication_changelist")},
+                    {"title": "Analysis runs", "icon": "troubleshoot", "link": reverse_lazy("admin:analysis_analysisrun_changelist")},
+                    {"title": "Findings", "icon": "warning", "link": reverse_lazy("admin:analysis_riskfinding_changelist")},
+                ],
+            },
+            {
+                "title": "Accounts and audit",
+                "separator": True,
+                "items": [
+                    {"title": "Users", "icon": "person", "link": reverse_lazy("admin:accounts_user_changelist")},
+                    {"title": "Audit log", "icon": "history", "link": reverse_lazy("admin:audit_auditlog_changelist")},
+                ],
+            },
+        ],
+    },
+}
