@@ -13,8 +13,11 @@ Settings / env (all optional except the model names you actually use):
     OLLAMA_BASE_URL, LOCAL_LLM_MODEL        local model (`ollama pull <model>` first)
     LOCAL_LLM_TIMEOUT / CLOUD_LLM_TIMEOUT   seconds (defaults 120 / 60)
     LLM_FALLBACK_TO_LOCAL                   true (default) | false
+    SCAN_VISION_LOCAL                       true -> prescription images go to the LOCAL vision model only (never the cloud)
 """
+import base64
 import logging
+from typing import NamedTuple
 
 from django.conf import settings
 
@@ -79,6 +82,66 @@ def local_complete(prompt: str, *, system: str = "", max_tokens: int | None = No
     )
     r.raise_for_status()
     return r.json().get("response", "")
+
+
+class VisionReply(NamedTuple):
+    text: str
+    provider: str  # "cloud" | "local"
+    model: str  # model name taken from settings (never hard-coded), kept for the "AI tools used" documentation
+
+
+def _cloud_vision(prompt: str, image: bytes, media_type: str, system: str, max_tokens: int) -> str:
+    import anthropic
+
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY, timeout=float(setting("CLOUD_LLM_TIMEOUT", 60.0)))
+    msg = client.messages.create(
+        model=settings.CLOUD_LLM_MODEL,
+        max_tokens=max_tokens,
+        system=system,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": media_type,
+                                             "data": base64.b64encode(image).decode("ascii")}},
+                {"type": "text", "text": prompt},
+            ],
+        }],
+    )
+    return "".join(b.text for b in msg.content if getattr(b, "type", "") == "text")
+
+
+def _local_vision(prompt: str, image: bytes, system: str, max_tokens: int) -> str:
+    """Ollama vision model (e.g. a llava / qwen-vl class model). LOCAL_LLM_MODEL must be a vision-capable model."""
+    import httpx
+
+    r = httpx.post(
+        f"{str(settings.OLLAMA_BASE_URL).rstrip('/')}/api/generate",
+        json={"model": settings.LOCAL_LLM_MODEL, "prompt": prompt, "system": system, "stream": False,
+              "images": [base64.b64encode(image).decode("ascii")],
+              "options": {"temperature": 0, "num_predict": int(max_tokens)}},
+        timeout=float(setting("LOCAL_LLM_TIMEOUT", 120.0)),
+    )
+    r.raise_for_status()
+    return r.json().get("response", "")
+
+
+def vision_complete(prompt: str, *, image: bytes, media_type: str, system: str = "", max_tokens: int = 1500) -> VisionReply:
+    """Read an image. The prompt must be static text (no patient data): the image itself cannot be redacted, which is why
+    the API only starts a scan after the patient's `analysis` consent (apps/clinical/services.py).
+
+    SCAN_VISION_LOCAL=true keeps the image on this network (local Ollama only, no cloud fallback).
+    Otherwise: cloud model if configured, else the local model when LLM_FALLBACK_TO_LOCAL allows it.
+    """
+    if setting("SCAN_VISION_LOCAL", False):
+        if not is_local_configured():
+            raise LLMNotConfigured("SCAN_VISION_LOCAL is on but LOCAL_LLM_MODEL is not set")
+        return VisionReply(_local_vision(prompt, image, system, max_tokens), "local", settings.LOCAL_LLM_MODEL)
+    if is_cloud_configured():
+        return VisionReply(_cloud_vision(prompt, image, media_type, system, max_tokens), "cloud", settings.CLOUD_LLM_MODEL)
+    if setting("LLM_FALLBACK_TO_LOCAL", True) and is_local_configured():
+        logger.info("cloud vision model not configured; using the local model")
+        return VisionReply(_local_vision(prompt, image, system, max_tokens), "local", settings.LOCAL_LLM_MODEL)
+    raise LLMNotConfigured("No vision model configured: set CLOUD_LLM_MODEL + ANTHROPIC_API_KEY, or a vision LOCAL_LLM_MODEL")
 
 
 def complete(prompt: str, *, sensitive: bool, **kw) -> str:
