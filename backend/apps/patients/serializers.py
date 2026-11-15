@@ -3,6 +3,7 @@ from datetime import date
 from rest_framework import serializers
 
 from apps.clinical.models import Medication
+from apps.drugs.models import Drug
 
 from .models import Patient
 
@@ -53,9 +54,19 @@ class MedicationSerializer(serializers.ModelSerializer):
             "drug_id",
             "generic_name",
             "resolution_status",
+            "confirmed_by_user",
+            "source",
             "created_at",
         ]
-        read_only_fields = ["id", "patient", "drug", "generic_name", "resolution_status", "created_at"]
+        read_only_fields = [
+            "id", "patient", "drug", "generic_name", "resolution_status", "confirmed_by_user", "source", "created_at",
+        ]
+
+    def validate_drug_id(self, value):
+        """An unknown drug id is a 400 the client can fix, never a 500."""
+        if value is not None and not Drug.objects.filter(pk=value).exists():
+            raise serializers.ValidationError("Unknown drug id.")
+        return value
 
     def get_generic_name(self, obj) -> str | None:
         return obj.drug.generic_name if obj.drug_id else None

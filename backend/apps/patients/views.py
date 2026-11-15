@@ -1,8 +1,10 @@
 from django.db import transaction
 from rest_framework import mixins, status, viewsets
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from apps.audit import services as audit
+from apps.clinical.models import Medication
 from core.permissions import IsDoctorOrPharmacist, IsPatientOwner
 
 from . import services
@@ -66,9 +68,9 @@ class PatientViewSet(
 
 
 
-# Audit action constants for medication operations
-MEDICATION_LIST = "medication_list"
-MEDICATION_CREATE = "medication_create"
+# Re-exported for backwards compatibility: the constants now live in apps/audit/services.py with every other action.
+MEDICATION_LIST = audit.MEDICATION_LIST
+MEDICATION_CREATE = audit.MEDICATION_CREATE
 
 
 class MedicationViewSet(
@@ -79,36 +81,36 @@ class MedicationViewSet(
     """
     /api/patients/{patient_pk}/medications/  (GET list, POST create)
 
-    Nested under a patient. Only the patient's owner (doctor/pharmacist) can access.
-    Every read/write is audit-logged.
+    Nested under a patient. Only the patient's owner (doctor/pharmacist) can access; a foreign or missing patient
+    is a plain 404 (existence is not leaked, and it is never a 500). Every read/write is audit-logged.
+    Edit / confirm / delete of ONE medication lives in apps/clinical (PATCH/DELETE /api/medications/{id}/).
     """
 
     serializer_class = MedicationSerializer
     permission_classes = [IsDoctorOrPharmacist]
     http_method_names = ["get", "post", "head", "options"]
 
-    def _get_patient(self):
-        """Fetch the parent patient, ensuring ownership."""
-        patient = Patient.objects.get(pk=self.kwargs["patient_pk"])
-        if patient.owner_id != self.request.user.id:
-            from rest_framework.exceptions import NotFound
-
-            raise NotFound()
-        return patient
+    def _get_patient(self) -> Patient:
+        """Parent patient, fetched ONCE per request and only if the caller owns it (ownership comes from the token)."""
+        if not hasattr(self, "_patient_cache"):
+            patient = Patient.objects.filter(pk=self.kwargs["patient_pk"], owner=self.request.user).first()
+            if patient is None:
+                raise NotFound()
+            self._patient_cache = patient
+        return self._patient_cache
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
-            from apps.clinical.models import Medication
-
             return Medication.objects.none()
-        patient = self._get_patient()
-        return services.list_medications(patient)
+        return services.list_medications(self._get_patient())
 
     @transaction.atomic
     def list(self, request, *args, **kwargs):
         patient = self._get_patient()
         response = super().list(request, *args, **kwargs)
-        audit.record(request, MEDICATION_LIST, patient=patient, count=len(response.data.get("results", response.data)))
+        data = response.data
+        count = len(data["results"]) if isinstance(data, dict) and "results" in data else len(data)
+        audit.record(request, audit.MEDICATION_LIST, patient=patient, count=count)
         return response
 
     @transaction.atomic
@@ -117,5 +119,5 @@ class MedicationViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         medication = services.add_medication(patient, serializer.validated_data)
-        audit.record(request, MEDICATION_CREATE, patient=patient, obj=medication)
+        audit.record(request, audit.MEDICATION_CREATE, patient=patient, obj=medication)
         return Response(self.get_serializer(medication).data, status=status.HTTP_201_CREATED)
