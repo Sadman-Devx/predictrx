@@ -146,6 +146,7 @@
   .finding { padding: var(--space-4); }
   .ev-detail dl { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .ev-detail dd { margin-bottom: var(--space-2); }
-  .tablist { display: flex; justify-self: stretch; }
-  .tab { flex: 1 1 0; padding: 0 var(--space-3); }
+  /* Four tabs now (Doctor view, Patient card, Agent trace, What-if): two per row on a phone, labels may wrap, none is cut off. */
+  .tablist { display: flex; justify-self: stretch; border-radius: var(--radius-inner); }
+  .tab { flex: 1 1 45%; min-width: 0; padding: var(--space-2) var(--space-3); line-height: 1.3; text-align: center; white-space: normal; }
 }

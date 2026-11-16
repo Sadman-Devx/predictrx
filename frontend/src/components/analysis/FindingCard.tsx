@@ -1,8 +1,8 @@
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import "../../styles/results.css";
 import { useI18n } from "../../i18n";
 import { enteredAs, normalizeVerification } from "../../lib/results";
-import type { RiskFinding } from "../../lib/types";
+import type { FindingView } from "../../lib/types";
 import { SeverityBadge } from "../ui/SeverityBadge";
 import { ConfidenceMeter } from "./ConfidenceMeter";
 import { EvidenceChip, EvidenceDetail } from "./EvidenceChip";
@@ -16,8 +16,12 @@ import { VerificationBadge } from "./VerificationBadge";
  *  - "unknown" with no source  -> "No interaction record found. This does not mean the combination is safe."
  *  - any other severity with no source (the server should never send this) -> a visible warning, not a silent card.
  *  - "unverified" is shown muted with its reason; "conflict" is visually distinct and explained in one sentence.
+ *
+ * Used by the doctor view (a stored RiskFinding) and by the What-if tab (a simulated finding, which has no database id):
+ * both fit `FindingView`. `extra` is an optional block shown at the bottom of the card (the What-if tab puts the source's
+ * management note there).
  */
-export function FindingCard({ finding }: { finding: RiskFinding }) {
+export function FindingCard({ finding, extra }: { finding: FindingView; extra?: ReactNode }) {
   const { t } = useI18n();
   const uid = useId();
   const [open, setOpen] = useState<number | null>(null);
@@ -90,6 +94,8 @@ export function FindingCard({ finding }: { finding: RiskFinding }) {
           <p className="finding-note note-warn" role="alert">{t("finding.noSource")}</p>
         )}
       </div>
+
+      {extra}
     </li>
   );
 }

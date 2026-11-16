@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { useI18n, type MessageKey } from "../../i18n";
+import type { Role } from "../../lib/types";
 import { BrandMark } from "../ui/BrandMark";
 import { DemoBadge } from "../ui/DemoBadge";
 import { DisclaimerStrip } from "../ui/DisclaimerStrip";
+import { ErrorBoundary } from "../ui/ErrorBoundary";
 import { Icon, type IconName } from "../ui/Icon";
 import { LanguageToggle } from "../ui/LanguageToggle";
 
@@ -16,14 +18,19 @@ interface NavItem {
   end?: boolean;
   /** Extra path prefixes that keep this item highlighted (the new-analysis flow spans several screens). */
   also?: string[];
+  /** Roles that see this item. The server is the real gate; this only keeps people from seeing screens that are not theirs. */
+  roles: Role[];
 }
 
-// Main navigation exactly as in the design: Dashboard · Patients · New analysis · Analyses.
+const STAFF: Role[] = ["doctor", "pharmacist", "admin"];
+
+// Main navigation as in the design: Dashboard · Patients · New analysis · Analyses. A family member (Day 9) sees only "Family".
 const NAV: NavItem[] = [
-  { to: "/", key: "nav.dashboard", icon: "dashboard", end: true },
-  { to: "/patients", key: "nav.patients", icon: "patients" },
-  { to: "/scan", key: "nav.scan", icon: "scan", also: ["/medications", "/review"] },
-  { to: "/analysis", key: "nav.analysis", icon: "analyses" },
+  { to: "/", key: "nav.dashboard", icon: "dashboard", end: true, roles: STAFF },
+  { to: "/patients", key: "nav.patients", icon: "patients", roles: STAFF },
+  { to: "/scan", key: "nav.scan", icon: "scan", also: ["/medications", "/review"], roles: STAFF },
+  { to: "/analysis", key: "nav.analysis", icon: "analyses", roles: STAFF },
+  { to: "/family", key: "nav.family", icon: "heart", roles: ["family"] },
 ];
 
 function isActive(item: NavItem, pathname: string): boolean {
@@ -88,6 +95,7 @@ export function AppShell() {
   }
 
   const displayName = user?.display_name || user?.email || "";
+  const items = NAV.filter((n) => !!user && n.roles.includes(user.role));
 
   return (
     <div className="shell">
@@ -96,7 +104,7 @@ export function AppShell() {
       <aside className="sidebar">
         <Brand />
         <nav className="side-nav" aria-label={t("shell.nav.label")}>
-          {NAV.map((n) => {
+          {items.map((n) => {
             const active = isActive(n, pathname);
             return (
               <Link key={n.to} to={n.to} className="nav-item" aria-current={active ? "page" : undefined}>
@@ -143,7 +151,12 @@ export function AppShell() {
           </div>
         </header>
 
-        <main id="main" className="main"><Outlet /></main>
+        {/* A screen that throws shows a clear message, not a blank page. Keyed by the address so moving on clears it. */}
+        <main id="main" className="main">
+          <ErrorBoundary key={pathname}>
+            <Outlet />
+          </ErrorBoundary>
+        </main>
 
         {/* Persistent on every screen: results pages must never lose the disclaimer. */}
         <DisclaimerStrip />

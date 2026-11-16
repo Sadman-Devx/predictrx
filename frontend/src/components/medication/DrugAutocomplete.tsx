@@ -9,10 +9,14 @@ interface Props {
   /** Enter pressed on free text with no highlighted suggestion: the caller resolves it (never guessed here). */
   onSubmitText: (text: string) => void;
   disabled?: boolean;
+  /** Optional wording for screens that reuse the box for another job (the What-if tab). Defaults are the medicine-entry texts. */
+  label?: string;
+  placeholder?: string;
+  actionLabel?: string;
 }
 
 /** WAI-ARIA 1.2 combobox with a listbox popup. Brand and generic names are searched together. */
-export function DrugAutocomplete({ onPick, onSubmitText, disabled }: Props) {
+export function DrugAutocomplete({ onPick, onSubmitText, disabled, label, placeholder, actionLabel }: Props) {
   const { t } = useI18n();
   const uid = useId();
   const listId = `${uid}-list`;
@@ -55,7 +59,7 @@ export function DrugAutocomplete({ onPick, onSubmitText, disabled }: Props) {
 
   return (
     <div className="ac">
-      <label htmlFor={`${uid}-input`} className="ac-label">{t("med.search.label")}</label>
+      <label htmlFor={`${uid}-input`} className="ac-label">{label ?? t("med.search.label")}</label>
       <div className="ac-row">
         <input
           id={`${uid}-input`}
@@ -70,7 +74,7 @@ export function DrugAutocomplete({ onPick, onSubmitText, disabled }: Props) {
           maxLength={120}
           value={text}
           disabled={disabled}
-          placeholder={t("med.search.placeholder")}
+          placeholder={placeholder ?? t("med.search.placeholder")}
           onChange={(e) => {
             setText(e.target.value);
             setOpen(true);
@@ -89,12 +93,12 @@ export function DrugAutocomplete({ onPick, onSubmitText, disabled }: Props) {
             setOpen(false);
           }}
         >
-          {t("med.add")}
+          {actionLabel ?? t("med.add")}
         </button>
       </div>
 
       {showList && (
-        <ul id={listId} role="listbox" aria-label={t("med.search.label")} className="ac-list">
+        <ul id={listId} role="listbox" aria-label={label ?? t("med.search.label")} className="ac-list">
           {state === "loading" && <li className="ac-note" role="presentation">{t("common.loading")}</li>}
           {state === "error" && <li className="ac-note ac-error" role="presentation">{t("med.search.error")}</li>}
           {state === "ready" && results.length === 0 && <li className="ac-note" role="presentation">{t("med.search.empty")}</li>}

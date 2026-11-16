@@ -69,12 +69,15 @@ export interface Patient {
   weight_kg: string | null;
   created_at: string;
   /**
-   * NOT returned by the API yet (consent and medicine counts arrive with the Day 9 backend work).
-   * The Patients screen shows the consent badge / medicine count only when the server sends these
-   * fields: nothing is guessed or faked in the UI.
+   * Day 9 backend fields. The Patients screen and the consent banner show them only when the server sends them:
+   * nothing is guessed or faked in the UI.
+   *  - consents: every consent record of the patient (active and withdrawn): the banner shows one row per type.
+   *  - consent_active: one overall flag, used when `consents` is not sent.
+   *  - medication_count: number of medicines on the record.
    */
   consent_active?: boolean;
   medication_count?: number;
+  consents?: ConsentRecord[];
 }
 
 export interface PatientInput {
@@ -209,4 +212,132 @@ export interface AgentTraceStep {
   output_summary?: string;
   /** MCP / internal tool calls. Each is an object with at least a `tool` name; the rest of its shape varies by agent. */
   tool_calls?: unknown[];
+}
+// ---------------------------------------------------------------------------------------------------------------
+// Consent (Day 9). Mirrors backend/apps/patients/models.py (Consent) and POST /api/patients/{id}/consents/.
+// ---------------------------------------------------------------------------------------------------------------
+export type ConsentScope = "analysis" | "family_view" | "retain_images";
+
+export interface ConsentRecord {
+  id: number;
+  /** One of ConsentScope; kept as a string so an unknown value from the server cannot crash the screen. */
+  scope: string;
+  /** Who gave the consent (the patient or a guardian). A role such as "Patient", not a full name. */
+  granted_by: string;
+  granted_at: string;
+  /** Set once the consent is withdrawn. A consent with `revoked_at` is no longer active. */
+  revoked_at: string | null;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Patient card (Day 9). GET /api/analysis/{id}/patient-card/ — already parsed by lib/patientCard.ts.
+// ---------------------------------------------------------------------------------------------------------------
+/** Plain-language summary for the patient or a caregiver. Never carries dosing or start/stop instructions. */
+export interface PatientCard {
+  run_id: number | null;
+  /** "" when the server did not send that language. At least one of the two is non-empty. */
+  text_bn: string;
+  text_en: string;
+  disclaimer_version: string;
+  generated_at: string | null;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Family view (Day 9, NRB). GET /api/family/patients/ and /api/family/patients/{id}/summary/ — parsed by lib/family.ts.
+// ---------------------------------------------------------------------------------------------------------------
+/** One patient shared with the signed-in family user (active family_view consent + active family link). */
+export interface FamilyPatient {
+  id: number;
+  patient_code: string;
+  relationship: string;
+}
+
+export interface FamilySummary {
+  patient_id: number;
+  patient_code: string;
+  relationship: string;
+  /** Highest severity among the findings of the latest analysis; null = no analysis has been shared yet. */
+  severity: Severity | null;
+  text_bn: string;
+  text_en: string;
+  /** Generic names only: no strength, no frequency. */
+  medicines: string[];
+  updated_at: string | null;
+  consent_granted_by: string;
+  disclaimer_version: string;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// What-if / Digital Twin (Day 10). Mirrors backend/apps/twin/serializers.py. Always a SIMULATION, always labelled as one.
+// POST /api/twin/ · GET /api/twin/{id}/ · GET /api/analysis/{id}/twin/ — parsed by lib/twin.ts.
+// ---------------------------------------------------------------------------------------------------------------
+/** What a finding card needs: every RiskFinding field except the database id (a what-if finding is not stored as one). */
+export type FindingView = Omit<RiskFinding, "id">;
+
+export interface TwinBaseDrug extends DrugRef {
+  /** Names as the person entered them for this drug in the base analysis. */
+  entered_names: string[];
+}
+
+/** A finding the added medicine introduces. Same shape as a main finding, plus the source's own management note. */
+export interface TwinFinding extends FindingView {
+  /** Text from the interaction record (already checked server-side for dosing language). Null when the record has none. */
+  management: string | null;
+  /** Always "record" for an added finding. */
+  pair_status: string;
+  severity_conflict: boolean;
+}
+
+/** A pair with no interaction record. NEVER "safe": the screen says so with its own text. */
+export interface TwinNoRecordPair {
+  drug_a: DrugRef;
+  drug_b: DrugRef;
+  entered_names_a: string[];
+  entered_names_b: string[];
+}
+
+export interface SeverityPicture {
+  /** null = no known severity at all (this is NOT "safe"). */
+  highest_severity: Severity | null;
+  counts: Record<Severity, number>;
+  total: number;
+}
+
+export interface TwinComparison {
+  before: SeverityPicture;
+  after: SeverityPicture;
+  highest_severity_changed: boolean;
+  base_findings_count: number;
+  new_findings_count: number;
+  pairs_checked: number;
+}
+
+export interface TwinScenario {
+  scenario_id: number;
+  base_run_id: number;
+  patient_id: number;
+  created_at: string;
+  /** Always true on a real scenario. The UI labels the whole tab as a simulation either way. */
+  simulation: boolean;
+  simulation_note: { text_en: string; text_bn: string };
+  hypothetical_drug: DrugRef;
+  base_drugs: TwinBaseDrug[];
+  added_findings: TwinFinding[];
+  no_record_pairs: TwinNoRecordPair[];
+  comparison: TwinComparison;
+  gaps: AnalysisGap[];
+  /** Machine codes (interaction_table_only · labs_vitals_not_used · label_passages_not_searched · unresolved_medications_not_checked). */
+  limitations: string[];
+  guardrail_violations: string[];
+  disclaimer_version: string;
+}
+
+/** One row of the what-if history of an analysis (no findings, no evidence: open the scenario for those). */
+export interface TwinScenarioSummary {
+  scenario_id: number;
+  hypothetical_drug: DrugRef;
+  created_at: string;
+  new_findings_count: number;
+  highest_severity_after: Severity | null;
+  highest_severity_changed: boolean;
 }

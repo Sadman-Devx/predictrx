@@ -1,13 +1,19 @@
 import { Link } from "react-router-dom";
+import { StateBlock } from "../components/ui/StateBlock";
 import { useI18n } from "../i18n";
 
 export default function Dashboard() {
   const { t } = useI18n();
   return (
-    <section className="card">
+    <section>
       <h1>{t("dashboard.title")}</h1>
-      <p>{t("dashboard.empty")}</p>
-      <Link to="/scan"><button type="button" className="btn">{t("dashboard.cta")}</button></Link>
+      <StateBlock
+        kind="empty"
+        title={t("dashboard.empty")}
+        action={<Link to="/scan" className="btn">{t("dashboard.cta")}</Link>}
+      >
+        <p>{t("dashboard.hint")}</p>
+      </StateBlock>
     </section>
   );
 }
