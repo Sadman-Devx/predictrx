@@ -6,6 +6,7 @@ import type { Role } from "../../lib/types";
 import { BrandMark } from "../ui/BrandMark";
 import { DemoBadge } from "../ui/DemoBadge";
 import { DisclaimerStrip } from "../ui/DisclaimerStrip";
+import { ErrorBoundary } from "../ui/ErrorBoundary";
 import { Icon, type IconName } from "../ui/Icon";
 import { LanguageToggle } from "../ui/LanguageToggle";
 
@@ -150,7 +151,12 @@ export function AppShell() {
           </div>
         </header>
 
-        <main id="main" className="main"><Outlet /></main>
+        {/* A screen that throws shows a clear message, not a blank page. Keyed by the address so moving on clears it. */}
+        <main id="main" className="main">
+          <ErrorBoundary key={pathname}>
+            <Outlet />
+          </ErrorBoundary>
+        </main>
 
         {/* Persistent on every screen: results pages must never lose the disclaimer. */}
         <DisclaimerStrip />

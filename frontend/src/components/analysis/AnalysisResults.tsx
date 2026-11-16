@@ -10,6 +10,7 @@ import { Tabs } from "../ui/Tabs";
 import { FindingCard } from "./FindingCard";
 import { PatientCardView } from "./PatientCardView";
 import { TraceView } from "./TraceView";
+import { TwinView } from "./TwinView";
 import { VerificationBadge } from "./VerificationBadge";
 
 interface Props {
@@ -23,15 +24,15 @@ const GAP_REASON: Record<string, MessageKey> = {
   needs_user_selection: "results.gap.needs_user_selection",
 };
 
-type TabId = "doctor" | "card" | "trace";
+type TabId = "doctor" | "card" | "trace" | "twin";
 
 function tabFrom(id: string): TabId {
-  return id === "trace" || id === "card" ? id : "doctor";
+  return id === "trace" || id === "card" || id === "twin" ? id : "doctor";
 }
 
 /**
- * Results screen (Day 7). Tabs: Doctor view · Patient card (Day 9) · Agent trace. The What-if tab (Day 10) is added
- * to the `tabs` list below when that screen exists: nothing here links to a screen that is not built.
+ * Results screen (Day 7). Tabs: Doctor view · Patient card (Day 9) · Agent trace · What-if (Day 10, a labelled simulation
+ * that starts from this completed analysis and never changes it).
  *
  * Doctor view order (design.md §1.4): overview + summary → anything NOT checked (gaps) → guardrail notice → findings
  * sorted by severity next to the medicines that were analysed. Nothing is hidden: "unknown", "unverified" and "conflict"
@@ -48,6 +49,11 @@ export function AnalysisResults({ run, trace, traceKnown }: Props) {
   const medicines = run.medications ?? [];
   const gaps = run.gaps ?? [];
   const violations = run.guardrail_violations ?? [];
+  // Generic names of the matched medicines: the What-if tab refuses to "add" one of these a second time.
+  const baseGenerics = useMemo(
+    () => (run.medications ?? []).map((m) => (m.generic_name ?? "").trim()).filter((g) => g !== ""),
+    [run.medications],
+  );
 
   if (run.findings == null) {
     return (
@@ -204,6 +210,11 @@ export function AnalysisResults({ run, trace, traceKnown }: Props) {
         { id: "doctor", label: t("results.tab.doctor"), panel: doctor },
         { id: "card", label: t("results.tab.card"), panel: <PatientCardView runId={run.run_id} active={tab === "card"} /> },
         { id: "trace", label: t("results.tab.trace"), panel: <TraceView trace={trace} traceKnown={traceKnown} /> },
+        {
+          id: "twin",
+          label: t("results.tab.twin"),
+          panel: <TwinView runId={run.run_id} active={tab === "twin"} baseGenerics={baseGenerics} />,
+        },
       ]}
     />
   );
