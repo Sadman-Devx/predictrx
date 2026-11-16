@@ -136,6 +136,8 @@ REST_FRAMEWORK = {
         "scan": "20/hour",  # prescription upload (starts a paid vision call)
         "scan_poll": "120/min",  # scan status + image reads (the UI polls)
         "analysis": "30/hour",
+        "twin": "60/hour",  # what-if simulation (database only, no LLM)
+        "twin_read": "120/min",  # scenario detail + history reads
         "drug_lookup": "120/min",  # resolve + autocomplete (no LLM, cheap)
     },
     # How many reverse proxies sit in front of Django (Cloudflare Tunnel = 1). Needed so throttles and the audit log see

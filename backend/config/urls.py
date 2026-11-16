@@ -14,9 +14,9 @@ urlpatterns = [
     path("api/", include("apps.clinical.urls")),  # Day 8: prescription scan + medication confirm
     path("api/", include("apps.drugs.urls")),
     path("api/", include("apps.analysis.urls")),
+    path("api/", include("apps.twin.urls")),  # Day 10: what-if (Digital Twin) simulation
     path("api/", include("apps.vitals.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
     path("api/", include("apps.evaluation.urls")),  # Day 9: eval run + metrics history (admin only)
-    # TODO (backend dev): twin, family routes (Day 9-10)
 ]
