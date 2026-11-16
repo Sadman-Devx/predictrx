@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { PageHeader } from "../components/ui/PageHeader";
+import { StateBlock } from "../components/ui/StateBlock";
 import { useI18n, type MessageKey } from "../i18n";
 
 interface Props {
@@ -10,17 +11,23 @@ interface Props {
   actionKey?: MessageKey;
 }
 
+/** A screen that has no content of its own yet. It says so, explains what to do instead, and always offers a way forward. */
 export function Placeholder({ titleKey, hintKey, actionTo, actionKey }: Props) {
   const { t } = useI18n();
   return (
     <section>
-      <PageHeader title={t(titleKey)} subtitle={hintKey ? t(hintKey) : undefined} />
-      <div className="card">
-        <p>{t("common.todo")}</p>
-        {actionTo && actionKey && (
-          <Link to={actionTo} className="btn secondary">{t(actionKey)}</Link>
-        )}
-      </div>
+      <PageHeader title={t(titleKey)} />
+      <StateBlock
+        kind="empty"
+        title={hintKey ? t(titleKey) : t("common.todo")}
+        action={
+          actionTo && actionKey ? (
+            <Link to={actionTo} className="btn">{t(actionKey)}</Link>
+          ) : undefined
+        }
+      >
+        {hintKey && <p>{t(hintKey)}</p>}
+      </StateBlock>
     </section>
   );
 }

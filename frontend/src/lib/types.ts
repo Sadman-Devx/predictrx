@@ -266,3 +266,78 @@ export interface FamilySummary {
   consent_granted_by: string;
   disclaimer_version: string;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// What-if / Digital Twin (Day 10). Mirrors backend/apps/twin/serializers.py. Always a SIMULATION, always labelled as one.
+// POST /api/twin/ · GET /api/twin/{id}/ · GET /api/analysis/{id}/twin/ — parsed by lib/twin.ts.
+// ---------------------------------------------------------------------------------------------------------------
+/** What a finding card needs: every RiskFinding field except the database id (a what-if finding is not stored as one). */
+export type FindingView = Omit<RiskFinding, "id">;
+
+export interface TwinBaseDrug extends DrugRef {
+  /** Names as the person entered them for this drug in the base analysis. */
+  entered_names: string[];
+}
+
+/** A finding the added medicine introduces. Same shape as a main finding, plus the source's own management note. */
+export interface TwinFinding extends FindingView {
+  /** Text from the interaction record (already checked server-side for dosing language). Null when the record has none. */
+  management: string | null;
+  /** Always "record" for an added finding. */
+  pair_status: string;
+  severity_conflict: boolean;
+}
+
+/** A pair with no interaction record. NEVER "safe": the screen says so with its own text. */
+export interface TwinNoRecordPair {
+  drug_a: DrugRef;
+  drug_b: DrugRef;
+  entered_names_a: string[];
+  entered_names_b: string[];
+}
+
+export interface SeverityPicture {
+  /** null = no known severity at all (this is NOT "safe"). */
+  highest_severity: Severity | null;
+  counts: Record<Severity, number>;
+  total: number;
+}
+
+export interface TwinComparison {
+  before: SeverityPicture;
+  after: SeverityPicture;
+  highest_severity_changed: boolean;
+  base_findings_count: number;
+  new_findings_count: number;
+  pairs_checked: number;
+}
+
+export interface TwinScenario {
+  scenario_id: number;
+  base_run_id: number;
+  patient_id: number;
+  created_at: string;
+  /** Always true on a real scenario. The UI labels the whole tab as a simulation either way. */
+  simulation: boolean;
+  simulation_note: { text_en: string; text_bn: string };
+  hypothetical_drug: DrugRef;
+  base_drugs: TwinBaseDrug[];
+  added_findings: TwinFinding[];
+  no_record_pairs: TwinNoRecordPair[];
+  comparison: TwinComparison;
+  gaps: AnalysisGap[];
+  /** Machine codes (interaction_table_only · labs_vitals_not_used · label_passages_not_searched · unresolved_medications_not_checked). */
+  limitations: string[];
+  guardrail_violations: string[];
+  disclaimer_version: string;
+}
+
+/** One row of the what-if history of an analysis (no findings, no evidence: open the scenario for those). */
+export interface TwinScenarioSummary {
+  scenario_id: number;
+  hypothetical_drug: DrugRef;
+  created_at: string;
+  new_findings_count: number;
+  highest_severity_after: Severity | null;
+  highest_severity_changed: boolean;
+}
