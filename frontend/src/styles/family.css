@@ -1,0 +1,30 @@
+/* ===== patient card tab + family view (Day 9) =====
+   Tokens only (styles/tokens.css). Bangla text needs more leading, so the body copy uses the Bangla line height. */
+
+.pcard { display: grid; gap: var(--space-3); }
+.pcard > h2,
+.pcard > p { margin: 0; }
+
+.pcard-body { display: grid; gap: var(--space-2); font-size: var(--fs-body); line-height: var(--lh-bn); }
+.pcard-body p { margin: 0; max-width: 70ch; }
+
+/* The two safety lines: no dosing advice, and a person reads the text first. */
+.pcard-notes {
+  display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4);
+  background: var(--sev-moderate-soft); color: var(--sev-moderate-text);
+  border: 1px dashed var(--sev-moderate); border-radius: var(--radius-inner);
+}
+.pcard-notes p { margin: 0; }
+
+.family-readonly { margin: 0 0 var(--space-4); color: var(--ink-muted); }
+.family-summary { display: grid; gap: var(--space-3); }
+.family-summary > h2 { margin: 0; }
+.family-level { display: grid; gap: var(--space-1); justify-items: start; }
+.family-level p { margin: 0; }
+.family-meds { margin: 0 0 var(--space-3); padding-left: 1.2em; display: grid; gap: 4px; }
+.family-meds li { font-weight: 600; overflow-wrap: anywhere; }
+
+.family-summary + .card,
+.card + .pcard-notes,
+.card + .muted { margin-top: var(--space-4); }
+.pcard-notes + .muted { margin-top: var(--space-4); }

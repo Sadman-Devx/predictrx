@@ -69,12 +69,15 @@ export interface Patient {
   weight_kg: string | null;
   created_at: string;
   /**
-   * NOT returned by the API yet (consent and medicine counts arrive with the Day 9 backend work).
-   * The Patients screen shows the consent badge / medicine count only when the server sends these
-   * fields: nothing is guessed or faked in the UI.
+   * Day 9 backend fields. The Patients screen and the consent banner show them only when the server sends them:
+   * nothing is guessed or faked in the UI.
+   *  - consents: every consent record of the patient (active and withdrawn): the banner shows one row per type.
+   *  - consent_active: one overall flag, used when `consents` is not sent.
+   *  - medication_count: number of medicines on the record.
    */
   consent_active?: boolean;
   medication_count?: number;
+  consents?: ConsentRecord[];
 }
 
 export interface PatientInput {
@@ -209,4 +212,57 @@ export interface AgentTraceStep {
   output_summary?: string;
   /** MCP / internal tool calls. Each is an object with at least a `tool` name; the rest of its shape varies by agent. */
   tool_calls?: unknown[];
+}
+// ---------------------------------------------------------------------------------------------------------------
+// Consent (Day 9). Mirrors backend/apps/patients/models.py (Consent) and POST /api/patients/{id}/consents/.
+// ---------------------------------------------------------------------------------------------------------------
+export type ConsentScope = "analysis" | "family_view" | "retain_images";
+
+export interface ConsentRecord {
+  id: number;
+  /** One of ConsentScope; kept as a string so an unknown value from the server cannot crash the screen. */
+  scope: string;
+  /** Who gave the consent (the patient or a guardian). A role such as "Patient", not a full name. */
+  granted_by: string;
+  granted_at: string;
+  /** Set once the consent is withdrawn. A consent with `revoked_at` is no longer active. */
+  revoked_at: string | null;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Patient card (Day 9). GET /api/analysis/{id}/patient-card/ — already parsed by lib/patientCard.ts.
+// ---------------------------------------------------------------------------------------------------------------
+/** Plain-language summary for the patient or a caregiver. Never carries dosing or start/stop instructions. */
+export interface PatientCard {
+  run_id: number | null;
+  /** "" when the server did not send that language. At least one of the two is non-empty. */
+  text_bn: string;
+  text_en: string;
+  disclaimer_version: string;
+  generated_at: string | null;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Family view (Day 9, NRB). GET /api/family/patients/ and /api/family/patients/{id}/summary/ — parsed by lib/family.ts.
+// ---------------------------------------------------------------------------------------------------------------
+/** One patient shared with the signed-in family user (active family_view consent + active family link). */
+export interface FamilyPatient {
+  id: number;
+  patient_code: string;
+  relationship: string;
+}
+
+export interface FamilySummary {
+  patient_id: number;
+  patient_code: string;
+  relationship: string;
+  /** Highest severity among the findings of the latest analysis; null = no analysis has been shared yet. */
+  severity: Severity | null;
+  text_bn: string;
+  text_en: string;
+  /** Generic names only: no strength, no frequency. */
+  medicines: string[];
+  updated_at: string | null;
+  consent_granted_by: string;
+  disclaimer_version: string;
 }
