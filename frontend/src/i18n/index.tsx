@@ -1,6 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import bn from "./bn.json";
-import en from "./en.json";
+import bnBase from "./bn.json";
+import enBase from "./en.json";
+import evidenceBn from "./evidence.bn.json";
+import evidenceEn from "./evidence.en.json";
+
+// The Evidence panel strings live in their own small files (evidence.bn.json / evidence.en.json) and are merged here,
+// so every UI string still comes from i18n files and nothing is hard-coded in a component.
+const bn = { ...bnBase, ...evidenceBn };
+const en = { ...enBase, ...evidenceEn };
 
 export type Lang = "bn" | "en";
 export type MessageKey = keyof typeof bn;

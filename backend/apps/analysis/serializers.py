@@ -72,6 +72,8 @@ class DrugRefSerializer(serializers.ModelSerializer):
 
 
 class EvidenceItemSerializer(serializers.Serializer):
+    """One source behind a finding (the data of the Evidence panel on the Results screen)."""
+
     type = serializers.CharField()
     id = serializers.IntegerField(allow_null=True)
     source = serializers.CharField(allow_blank=True)
@@ -81,6 +83,11 @@ class EvidenceItemSerializer(serializers.Serializer):
     license_note = serializers.CharField(allow_blank=True)
     url = serializers.CharField(allow_blank=True)
     available = serializers.BooleanField()
+    # Evidence panel ("why are we saying this?"). See results.evidence_items.
+    source_name = serializers.CharField(allow_blank=True)  # e.g. "DDInter 2.0"
+    source_url = serializers.CharField(allow_blank=True)  # record URL, else the source's public site, else ""
+    excerpt = serializers.CharField(allow_blank=True)  # short verbatim quote; "" when none may be shown
+    confidence = serializers.FloatField(allow_null=True)  # confidence of the finding (0..1), not a per-source score
 
 
 class ConfidenceBasisSerializer(serializers.Serializer):

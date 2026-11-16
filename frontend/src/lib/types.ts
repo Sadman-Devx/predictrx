@@ -30,6 +30,14 @@ export interface EvidenceItem {
   license_note: string;
   url: string;
   available: boolean;
+  /** Human name of the source, e.g. "DDInter 2.0". */
+  source_name: string;
+  /** Link to the source ("" when none is known). Render it only through safeHttpUrl(). */
+  source_url: string;
+  /** Short verbatim quote of the stored source text. "" when none may be shown (or the record is gone). */
+  excerpt: string;
+  /** 0..1, the confidence of the finding this source belongs to (not a per-source score). null = not sent. */
+  confidence: number | null;
 }
 
 /** A confidence value never travels without its basis (rule.md §5). */
