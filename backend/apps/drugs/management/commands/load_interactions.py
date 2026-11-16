@@ -1,32 +1,34 @@
+import subprocess
+import sys
 from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from apps.drugs import services
-
-from ._reporting import print_stats
-
-DEFAULT_PATH = Path(settings.REPO_ROOT) / "data" / "processed" / "ddinter_clean.jsonl"
+DEFAULT_DIR = Path(settings.REPO_ROOT) / "data" / "processed"
+PIPELINE_LOADER = Path(settings.REPO_ROOT) / "data" / "pipeline" / "load_ddinter.py"
 
 
 class Command(BaseCommand):
-    help = "Load drug-drug interactions (idempotent). --format ddinter-csv reads raw DDInter downloads."
+    help = "Load validated DDInter drug/interactions JSONL from the processed data directory."
 
     def add_arguments(self, parser):
-        parser.add_argument("--path", type=Path, default=DEFAULT_PATH)
-        parser.add_argument("--format", choices=services.INPUT_FORMATS, default=None)
-        parser.add_argument("--dry-run", action="store_true", help="validate and count, write nothing")
+        parser.add_argument("--dir", type=Path, default=DEFAULT_DIR)
+        parser.add_argument("--replace", action="store_true", help="delete existing DDInter interactions before loading")
+        parser.add_argument("--dry-run", action="store_true", help="validate processed files without writing")
 
     def handle(self, *args, **opts):
-        path: Path = opts["path"]
-        fmt = opts["format"] or services.detect_format(path)
-        if fmt == "csv":
-            fmt = "ddinter-csv"
-        try:
-            stats = services.import_interactions(services.iter_rows(path, fmt), dry_run=opts["dry_run"])
-        except FileNotFoundError as exc:
-            raise CommandError(f"Input not found: {exc}. Run the pipeline first (data/pipeline/README.md).") from exc
-        except ValueError as exc:
-            raise CommandError(str(exc)) from exc
-        print_stats(self, stats, label="interactions")
+        path: Path = opts["dir"]
+        for name in ("ddinter_drugs.jsonl", "ddinter_pairs.jsonl"):
+            if not (path / name).is_file():
+                raise CommandError(f"Input not found: {path / name}. Run data/pipeline/parse_interactions.py first.")
+        command = [sys.executable, str(PIPELINE_LOADER), "--dir", str(path)]
+        if opts["replace"]:
+            command.append("--replace")
+        if opts["dry_run"]:
+            command.append("--dry-run")
+        result = subprocess.run(command, cwd=settings.REPO_ROOT, capture_output=True, text=True, check=False)
+        if result.stdout:
+            self.stdout.write(result.stdout, ending="")
+        if result.returncode:
+            raise CommandError(result.stderr.strip() or f"DDInter loader exited with status {result.returncode}")

@@ -17,6 +17,7 @@ from common import PROCESSED_DIR, django_setup, read_jsonl, read_seed
 SOURCE = "ddinter"
 LICENSE_DDINTER = "CC BY-NC-SA 4.0 — non-commercial (DDInter). Incomplete; no record does not mean safe."
 BATCH = 5000
+LEVELS = {"major", "moderate", "minor", "unknown"}
 
 
 def build_name_map(seed: list[dict]) -> dict[str, str]:
@@ -27,11 +28,41 @@ def build_name_map(seed: list[dict]) -> dict[str, str]:
     return name_map
 
 
+def validate_processed(drugs: list[dict], pairs: list[dict]) -> None:
+    ids = set()
+    for row in drugs:
+        if not isinstance(row, dict):
+            raise ValueError("Each DDInter drug must be an object")
+        ident, name = row.get("id"), row.get("name")
+        if not isinstance(ident, str) or not ident.strip() or not isinstance(name, str) or not name.strip():
+            raise ValueError("Each DDInter drug needs a non-empty string id and name")
+        if ident in ids:
+            raise ValueError(f"Duplicate DDInter drug id: {ident}")
+        ids.add(ident)
+
+    seen_pairs = set()
+    for row in pairs:
+        if not isinstance(row, dict):
+            raise ValueError("Each DDInter pair must be an object")
+        id_a, id_b, level = row.get("id_a"), row.get("id_b"), row.get("level")
+        if not isinstance(id_a, str) or not isinstance(id_b, str) or id_a not in ids or id_b not in ids:
+            raise ValueError(f"DDInter pair references an unknown drug id: {id_a!r}, {id_b!r}")
+        if id_a == id_b:
+            raise ValueError(f"DDInter pair references the same drug twice: {id_a}")
+        if not isinstance(level, str) or level not in LEVELS:
+            raise ValueError(f"Invalid DDInter severity: {level!r}")
+        key = tuple(sorted((id_a, id_b)))
+        if key in seen_pairs:
+            raise ValueError(f"Duplicate DDInter pair: {key[0]}, {key[1]}")
+        seen_pairs.add(key)
+
+
 def load(drugs: list[dict], pairs: list[dict], *, replace: bool = False) -> dict:
     from django.db import transaction
 
     from apps.drugs.models import Drug, Interaction
 
+    validate_processed(drugs, pairs)
     name_map = build_name_map(read_seed())
     stats = {"drugs_created": 0, "pairs_input": len(pairs), "skipped_same_drug": 0, "interactions_before": 0}
 
@@ -88,11 +119,17 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--dir", type=Path, default=PROCESSED_DIR)
     ap.add_argument("--replace", action="store_true", help="delete existing ddinter interactions first")
+    ap.add_argument("--dry-run", action="store_true", help="validate processed files without writing to the database")
     args = ap.parse_args()
 
     django_setup()
-    stats = load(read_jsonl(args.dir / "ddinter_drugs.jsonl"), read_jsonl(args.dir / "ddinter_pairs.jsonl"),
-                 replace=args.replace)
+    drugs = read_jsonl(args.dir / "ddinter_drugs.jsonl")
+    pairs = read_jsonl(args.dir / "ddinter_pairs.jsonl")
+    validate_processed(drugs, pairs)
+    if args.dry_run:
+        print(f"dry-run (nothing written): drugs={len(drugs)} pairs={len(pairs)} replace={args.replace}")
+        return
+    stats = load(drugs, pairs, replace=args.replace)
     print(f"drugs created: {stats['drugs_created']}")
     print(f"interactions: {stats['interactions_before']} -> {stats['interactions_after']} (+{stats['interactions_added']})")
     if stats["skipped_same_drug"]:

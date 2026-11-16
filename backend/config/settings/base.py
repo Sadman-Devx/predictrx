@@ -201,6 +201,7 @@ EMBEDDING_TIMEOUT = env.int("EMBEDDING_TIMEOUT", default=120)
 # How the contextual-RAG prefix of a chunk is produced: template (deterministic) | local (Ollama) | cloud
 RAG_CONTEXT_MODE = env("RAG_CONTEXT_MODE", default="template")
 MCP_SERVER_URL = env("MCP_SERVER_URL", default="http://localhost:8001/sse")
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
 OPENFDA_API_KEY = env("OPENFDA_API_KEY", default="")
 # Prescription images: deleted at `retain_until`. Short by default; longer only with an active `retain_images` consent.
 PRESCRIPTION_IMAGE_RETENTION_DAYS = env.int("PRESCRIPTION_IMAGE_RETENTION_DAYS", default=7)

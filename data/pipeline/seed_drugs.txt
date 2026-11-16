@@ -78,3 +78,52 @@ colchicine
 sildenafil
 tamsulosin
 finasteride
+
+# Additional drugs requested for openFDA label coverage (2026-11-17).
+ceftriaxone
+cefixime
+cephalexin | cefalexin
+clarithromycin
+rabeprazole
+lansoprazole
+levocetirizine
+telmisartan
+valsartan
+olmesartan
+glipizide
+glyburide | glibenclamide
+dapagliflozin
+empagliflozin
+linagliptin
+ticagrelor
+enoxaparin
+hydroxychloroquine
+ivermectin
+albendazole
+isoniazid
+ketorolac
+clonidine
+amiodarone
+nitroglycerin | glyceryl trinitrate
+isosorbide mononitrate
+folic acid | folate
+calcium carbonate
+ferrous sulfate | ferrous sulphate
+
+# Bangladesh EML candidates; openFDA availability checked (WHO-hosted 2016 list; 2026-11-17).
+# This is a historical reference list, not a claim about the current Bangladesh EML.
+acetazolamide
+acyclovir | aciclovir
+ampicillin
+gentamicin
+rifampin | rifampicin
+ethambutol
+pyrazinamide
+methyldopa
+chlorpheniramine | chlorphenamine
+lactulose
+oseltamivir
+zinc sulfate | zinc sulphate
+thiamine | vitamin B1
+ascorbic acid | vitamin C
+clotrimazole

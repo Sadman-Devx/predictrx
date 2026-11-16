@@ -162,7 +162,7 @@ export default function Login() {
   }
 
   const socialSoon = () => setNotice({ kind: "info", key: "auth.socialSoon" });
-  const forgot = () => setNotice({ kind: "info", key: "auth.forgotInfo" });
+  const forgot = () => navigate("/reset-password");
 
   const noticeEl = notice && (
     <p className={`auth-msg ${notice.kind}`} role="status">{t(notice.key)}</p>
