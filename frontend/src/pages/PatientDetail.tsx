@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ConsentPanel } from "../components/patient/ConsentPanel";
 import { MedicationForm } from "../components/patient/MedicationForm";
 import { Icon } from "../components/ui/Icon";
 import { PageHeader } from "../components/ui/PageHeader";
@@ -54,6 +55,15 @@ export default function PatientDetail() {
     void load();
   }, [load]);
 
+  // After a consent change: read the patient again WITHOUT the full-page spinner, so the panel (and its message) stays on screen.
+  const refreshPatient = useCallback(async () => {
+    try {
+      setPatient(await getPatient(patientId));
+    } catch {
+      /* the previous data stays; the panel already told the person what happened */
+    }
+  }, [patientId]);
+
   if (loading) return <p className="muted" role="status">{t("common.loading")}</p>;
 
   if (error || !patient) {
@@ -77,9 +87,14 @@ export default function PatientDetail() {
     <section>
       <Link to="/patients" className="back-link"><Icon name="arrow-left" size={18} />{t("patients.back")}</Link>
 
-      <PageHeader title={patient.patient_code} subtitle={facts.length ? facts.join(" · ") : t("patients.noDetails")} demo />
+      <PageHeader title={patient.patient_code} subtitle={facts.length ? facts.join(" · ") : t("patients.noDetails")}
+        demo
+        actions={<Link to={`/scan?patient=${patient.id}`} className="btn">{t("patients.startAnalysis")}</Link>}
+      />
 
-      <div className="card">
+      <ConsentPanel patient={patient} onChanged={refreshPatient} />
+
+      <div className="card patient-meds">
         <h2>{t("meds.title")}</h2>
 
         {meds.length === 0 ? (
