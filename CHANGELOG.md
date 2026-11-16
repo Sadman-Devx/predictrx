@@ -1,6 +1,11 @@
 # Changelog
 
 ## [Unreleased]
+- Day 10 (Lead): What-if / Digital Twin (`apps/twin`): `POST /api/twin/` adds one hypothetical drug to a completed run and
+  compares the interaction picture (before / after, added findings with evidence, no-record pairs, limitations). Computed
+  from the `Interaction` table only (no LLM), so it answers synchronously and always matches the Verifier's data. Same
+  request = same scenario (no duplicates); `GET /api/twin/{id}/`, `GET /api/analysis/{id}/twin/` (history). Owner-only,
+  audited (`twin_run`, `twin_read`), `no-store`, throttled (`twin`, `twin_read`). Labs/vitals do not change severity.
 - Day 7: Verifier agent (`ai/agents/verifier.py`): re-checks every finding through `check_interaction` + the cited
   records, labels `verified / unverified / conflict`, downgrades uncited severities, reports missing/duplicate pairs,
   enforces the summary guardrail (dosing, "safe" claims, disclaimers). Guardrails: `claims_safety`, disclaimer checks.

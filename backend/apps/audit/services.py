@@ -22,6 +22,8 @@ ANALYSIS_START = "analysis_start"
 ANALYSIS_READ = "analysis_read"
 ANALYSIS_TRACE_READ = "analysis_trace_read"
 PATIENT_CARD_READ = "patient_card_read"  # the plain-Bangla patient card of a run was read by its owner
+TWIN_RUN = "twin_run"  # a what-if scenario was requested for a completed run (meta: replay, base_run_id, counts)
+TWIN_READ = "twin_read"  # a stored what-if scenario (op=detail) or a run's scenario list (op=list) was read
 FAMILY_VIEW = "family_view"  # a family user opened a patient's summary (or saw the patient in their list)
 FAMILY_LINK = "family_link"  # a clinician listed / linked / re-linked / unlinked a family member (meta: op)
 CONSENT_LIST = "consent_list"  # a clinician opened a patient's consent list
