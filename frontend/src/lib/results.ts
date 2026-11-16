@@ -75,6 +75,30 @@ export function chipText(item: EvidenceItem): string {
   return item.id !== null && item.id !== undefined ? `${name} #${item.id}` : name;
 }
 
+/** Name shown for a source in the Evidence panel: the server's `source_name`, else the local fallback. */
+export function evidenceSourceName(item: EvidenceItem): string {
+  const name = (item.source_name ?? "").trim();
+  return name || sourceName(item.source, item.type);
+}
+
+/** Link of a source, only when it is a safe http(s) URL. */
+export function evidenceLink(item: EvidenceItem): string | null {
+  return safeHttpUrl(item.source_url) ?? safeHttpUrl(item.url);
+}
+
+/** "Record title · section" line under the source name. */
+export function evidenceMeta(item: EvidenceItem): string {
+  return [item.label, item.section]
+    .map((s) => (s ?? "").trim())
+    .filter((s) => s !== "")
+    .join(" · ");
+}
+
+/** Confidence (0..1) of one evidence entry; a source that came without one uses the finding's own value. */
+export function evidenceConfidence(item: EvidenceItem, fallback: number): number {
+  return typeof item.confidence === "number" && Number.isFinite(item.confidence) ? item.confidence : fallback;
+}
+
 /** Names the person typed that differ from the generic (the brand "as entered"). Duplicates are dropped. */
 export function enteredAs(names: string[] | undefined, generic: string): string[] {
   const seen = new Set<string>();

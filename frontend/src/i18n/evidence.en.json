@@ -1,0 +1,12 @@
+{
+  "evidence.button": "Evidence",
+  "evidence.panel.title": "Why are we saying this?",
+  "evidence.panel.label": "Evidence for this finding",
+  "evidence.count.none": "No sources",
+  "evidence.count.one": "1 source",
+  "evidence.count.many": "{{n}} sources",
+  "evidence.excerpt.label": "Excerpt from the source",
+  "evidence.excerpt.none": "No excerpt can be shown for this source.",
+  "evidence.newTab": "opens in a new tab",
+  "evidence.confidence.note": "Each bar shows the confidence of the finding above, not a separate score for that source. It reflects the kind of source behind the finding and is not a probability."
+}
