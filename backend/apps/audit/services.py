@@ -21,12 +21,20 @@ SCAN_READ = "scan_read"
 ANALYSIS_START = "analysis_start"
 ANALYSIS_READ = "analysis_read"
 ANALYSIS_TRACE_READ = "analysis_trace_read"
-FAMILY_VIEW = "family_view"
-CONSENT_CHANGE = "consent_change"
+PATIENT_CARD_READ = "patient_card_read"  # the plain-Bangla patient card of a run was read by its owner
+TWIN_RUN = "twin_run"  # a what-if scenario was requested for a completed run (meta: replay, base_run_id, counts)
+TWIN_READ = "twin_read"  # a stored what-if scenario (op=detail) or a run's scenario list (op=list) was read
+FAMILY_VIEW = "family_view"  # a family user opened a patient's summary (or saw the patient in their list)
+FAMILY_LINK = "family_link"  # a clinician listed / linked / re-linked / unlinked a family member (meta: op)
+CONSENT_LIST = "consent_list"  # a clinician opened a patient's consent list
+CONSENT_CHANGE = "consent_change"  # a consent was granted or revoked (meta: change, scope)
 IMAGE_ACCESS = "image_access"  # a prescription image was streamed to its owner
 IMAGE_DELETE = "image_delete"  # the owner deleted the image early
 IMAGE_PURGE = "image_purge"  # retention deadline passed: the system deleted the image
 EVAL_RUN = "eval_run"  # an admin started an evaluation run (no patient data involved)
+BRAND_REVIEW = "brand_review"  # an admin verified / un-verified a brand mapping (meta: change, via, reason)
+ADMIN_RECORD_READ = "admin_record_read"  # a staff user opened ONE patient-data record in the Django admin (meta: model)
+ADMIN_LIST_READ = "admin_list_read"  # a staff user opened a list of patient-data records in the Django admin (meta: model)
 
 
 def client_ip(request) -> str | None:
