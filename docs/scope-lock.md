@@ -10,7 +10,7 @@ Fill in and commit on Day 1. Changing anything here after 16 Nov needs the whole
 - [ ] PII redaction + disclaimer + output guardrail
 - [ ] Measured evaluation on an independent test set
 - [ ] Bangla UI (doctor view + patient card)
-- [ ] Custom MCP (SSE) + 1 external MCP, documented
+- [x] Custom MCP (SSE) + 1 external MCP, documented (PubMed general-topic search only; excluded from clinical analysis)
 - [ ] Live demo URL (Cloudflare Tunnel), 3-minute video, portal form
 
 ## Cuttable, in this order (see `roadmap.md` cut order)
@@ -32,6 +32,6 @@ Fill in and commit on Day 1. Changing anything here after 16 Nov needs the whole
 ## Open questions to settle on Day 1
 - [ ] Is 20 Nov the active portal deadline for our round? (KB listed 31 Oct for preliminary)
 - [ ] Who is the pharmacist/mentor who reviews the brand sheet and the eval set?
-- [ ] Which external public MCP server will we use? (decide by Day 4)
+- [x] Which external public MCP server will we use? PubMed MCP (`cyanheads/pubmed-mcp-server`); see `mcp-server/README.md`.
 - [ ] Embedding model + dimension (must match `EMBEDDING_DIM`)
 - [ ] NRB / mentor contributions — real ones only (for PRD §6 and the portal form)

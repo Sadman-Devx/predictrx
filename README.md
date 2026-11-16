@@ -13,7 +13,7 @@ International AI Builders Congress 2026 · HealthTech · standard team build · 
 ```
 backend/      Django + DRF, Celery, pgvector, LangGraph pipeline (ai/)
 frontend/     React + Vite + TypeScript, Bangla-first (i18n)
-mcp-server/   Custom MCP server (SSE) — resolve_brand, lookup_drug, check_interaction
+mcp-server/   Custom MCP server (SSE) — drug tools + allowlisted PubMed research search
 data/         Pipeline scripts + SOURCES.md (licenses)
 automation/   n8n workflow exports
 firmware/     ESP32 vitals sketch (roadmap, not in the demo)
@@ -46,16 +46,19 @@ cd ../frontend && npm install && npm run dev # http://localhost:5173
 ```
 Run tests: `cd backend && pytest`
 
-## What the scaffold already contains
-- Django project, custom email-login `User` (roles), JWT auth, audit log, consent/family models, drug/brand/interaction
-  models, RAG tables (pgvector), analysis/trace/finding models, eval models, ESP32 `vitals` app (roadmap).
-- `RiskFinding` refuses to save a severity without evidence. Output guardrails + PII redaction with tests.
-- LangGraph pipeline with five **stub** agents that keep the trace contract.
-- MCP server (SSE) with three tools returning **placeholder** data.
-- React shell: Bangla/English toggle, design tokens, severity badge (colour + shape + text), disclaimer strip, login.
+## Implementation and remaining validation
+The repository contains Django APIs and models for drugs, interactions, analysis, patients, consent and family
+sharing; RAG/indexing and evaluation code; the LangGraph analysis pipeline; a DB-backed local MCP server; and the
+React clinician/family flows, including the What-if simulation. The optional PubMed MCP utility accepts only
+fixed, general research topics and is excluded from clinical-analysis tools.
 
-## What is NOT done (by design — see roadmap)
-Agent logic, RAG ingestion/retrieval, real MCP data, OCR, API endpoints beyond auth/health, real screens, deployment.
+Code being present is not the same as clinical or production validation. In particular:
+- The committed brand-mapping sheet has pending provenance and must not be loaded until exact source references
+  and access dates are recorded; a pharmacist must review mappings in Django admin.
+- Independent pharmacist/reviewer-labeled evaluation cases and measured KPI results are not supplied. Do not
+  invent labels, review sign-off, or metrics.
+- RAG indexing needs a working PostgreSQL/pgvector database and an embedding model matching `EMBEDDING_DIM`.
+- Clinical wording, mobile/browser QA, and deployment/demo readiness require separate human verification.
 
 ## Branching
 `main` (tested) ← `dev` ← `feature/<name>`. PR + Lead review. Feature freeze: **16 Nov**.

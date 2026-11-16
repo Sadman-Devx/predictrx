@@ -43,7 +43,36 @@ def test_tools_listed_and_callable_over_mcp():
             return names, resolved, lookup, pair
 
     names, resolved, lookup, pair = asyncio.run(run())
-    assert names == {"resolve_brand", "lookup_drug", "check_interaction"}
+    assert names == {"resolve_brand", "lookup_drug", "check_interaction", "search_pubmed_literature"}
     assert resolved["status"] == "resolved" and resolved["generic"] == "acetaminophen"
     assert lookup["status"] == "found"
     assert pair["status"] == "no_record" and "not mean the combination is safe" in pair["note"]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_pubmed_mcp_tool_only_accepts_fixed_general_research_topics(monkeypatch):
+    server = _load_server()
+    calls = []
+
+    async def fake_search(topic):
+        calls.append(topic)
+        return {"topic": topic, "research_only": True, "results": {}}
+
+    monkeypatch.setattr(server, "search_literature", fake_search)
+
+    async def run():
+        async with create_connected_server_and_client_session(server.mcp._mcp_server) as session:
+            tool = next(t for t in (await session.list_tools()).tools if t.name == "search_pubmed_literature")
+            result = await session.call_tool("search_pubmed_literature", {"topic": "drug_interactions"})
+            return tool.inputSchema, _payload(result)
+
+    schema, response = asyncio.run(run())
+    assert calls == ["drug_interactions"]
+    assert response["research_only"] is True
+    assert set(schema["properties"]["topic"]["enum"]) == {
+        "drug_interactions", "medication_safety", "clinical_pharmacology",
+    }
+
+    from ai.mcp_client import TOOLS as CLINICAL_TOOLS
+
+    assert "search_pubmed_literature" not in CLINICAL_TOOLS

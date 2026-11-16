@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import PatientDetail from "./pages/PatientDetail";
 import Patients from "./pages/Patients";
 import { Placeholder } from "./pages/Placeholder";
+import ResetPassword from "./pages/ResetPassword";
 import Scan from "./pages/Scan";
 import type { Role } from "./lib/types";
 
@@ -29,6 +30,7 @@ export default function App() {
     <Routes>
       {/* Public: full-screen, no nav */}
       <Route path="login" element={<Login />} />
+      <Route path="reset-password" element={<ResetPassword />} />
 
       {/* Everything else needs a session */}
       <Route element={<ProtectedRoute />}>
