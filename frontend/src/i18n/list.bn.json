@@ -1,0 +1,14 @@
+{
+  "analysisList.empty": "এখনও কোনো বিশ্লেষণ নেই। প্রেসক্রিপশনের ছবি বা ওষুধের তালিকা থেকে একটি শুরু করুন।",
+  "analysisList.error": "বিশ্লেষণের তালিকা লোড করা যায়নি।",
+  "analysisList.patient": "রোগী",
+  "analysisList.medicines": "{{n}}টি ওষুধ",
+  "analysisList.findings": "{{n}}টি ফলাফল",
+  "analysisList.started": "শুরু",
+  "analysisList.open": "খুলুন",
+  "analysisList.filter.label": "অবস্থা অনুযায়ী ছাঁকুন",
+  "analysisList.filter.all": "সব",
+  "analysisList.prev": "আগের",
+  "analysisList.next": "পরের",
+  "analysisList.page": "পৃষ্ঠা {{page}} / {{pages}}"
+}

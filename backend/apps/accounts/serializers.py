@@ -74,6 +74,29 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return attrs
 
 
+class ChangePasswordSerializer(serializers.Serializer):
+    """Logged-in change of password. The current password must be re-entered (a stolen session alone is not enough)."""
+
+    current_password = serializers.CharField(write_only=True, trim_whitespace=False, style={"input_type": "password"})
+    new_password = serializers.CharField(write_only=True, trim_whitespace=False, style={"input_type": "password"})
+
+    def validate_current_password(self, value: str) -> str:
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("The current password is not correct.", code="wrong_password")
+        return value
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        if attrs["current_password"] == attrs["new_password"]:
+            raise serializers.ValidationError(
+                {"new_password": ["The new password must be different from the current one."]}, code="same_password"
+            )
+        problems = password_reset.validate_new_password(user, attrs["new_password"])
+        if problems:
+            raise serializers.ValidationError({"new_password": problems}, code="weak_password")
+        return attrs
+
+
 class SocialLoginSerializer(serializers.Serializer):
     id_token = serializers.CharField(required=False, allow_blank=True, max_length=4096)       # google
     access_token = serializers.CharField(required=False, allow_blank=True, max_length=4096)   # facebook

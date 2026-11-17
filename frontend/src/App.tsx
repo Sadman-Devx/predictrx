@@ -3,6 +3,7 @@ import { useAuth } from "./auth/AuthContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import ReviewConfirm from "./components/ReviewConfirm";
 import { AppShell } from "./components/layout/AppShell";
+import AnalysisList from "./pages/AnalysisList";
 import AnalysisRun from "./pages/AnalysisRun";
 import Dashboard from "./pages/Dashboard";
 import Family from "./pages/Family";
@@ -45,11 +46,8 @@ export default function App() {
             {/* Day 8: photo upload. The draft list it reads is checked on /review; manual entry stays one click away. */}
             <Route path="scan" element={<Scan />} />
             <Route path="review" element={<ReviewConfirm />} />
-            {/* The analyses list needs a list endpoint that does not exist yet; one run opens at /analysis/:runId (Day 6, results Day 7). */}
-            <Route
-              path="analysis"
-              element={<Placeholder titleKey="analysis.title" hintKey="analysis.list.hint" actionTo="/scan" actionKey="dashboard.cta" />}
-            />
+            {/* Day 6/7: one run opens at /analysis/:runId; /analysis lists the clinician's past runs (GET /api/analysis/runs/). */}
+            <Route path="analysis" element={<AnalysisList />} />
             <Route path="analysis/:runId" element={<AnalysisRun />} />
             {/* Day 10: the What-if simulation is a tab of a finished analysis (results screen). This address only explains that. */}
             <Route

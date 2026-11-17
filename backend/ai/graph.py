@@ -6,7 +6,7 @@ Each node is a plain function `run(state) -> partial state` in `ai/agents/`:
     clinical_notes    lab flags from the clinician-entered ranges, optional local-model condition phrases
     drug_interaction  `check_interaction` (MCP) + RAG label passages -> findings with evidence references
     advisory          doctor summary (EN/BN) and Bangla patient card, written from the findings only
-    verifier          re-checks every finding and enforces the output guardrail (Day 7; still a stub today)
+    verifier          re-checks every finding and enforces the output guardrail (Day 7)
 
 State rules:
   * every node returns only the keys it changes; `trace` is merged with `operator.add`, so each node appends

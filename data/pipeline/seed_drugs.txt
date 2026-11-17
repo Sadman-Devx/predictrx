@@ -127,3 +127,486 @@ zinc sulfate | zinc sulphate
 thiamine | vitamin B1
 ascorbic acid | vitamin C
 clotrimazole
+# DGDA generic candidates with openFDA label matches (DGDA CSV supplied by user; checked 2026-11-17).
+# For salt/spelling mismatches, the exact openFDA term is primary and the DGDA generic is retained as an alias.
+abiraterone acetate
+acarbose
+acetylcysteine
+acitretin
+activated charcoal
+adalimumab
+adapalene
+adefovir dipivoxil
+adenosine
+alcaftadine
+alfuzosin hcl | alfuzosin, alfuzosin hydrochloride
+aliskiren
+almotriptan
+aluminium chloride hexahydrate
+amantadine hydrochloride
+ambrisentan
+amikacin | amikacin sulfate
+aminocaproic acid
+aminophylline
+amphotericin b
+apremilast
+aprepitant
+aripiprazole
+atomoxetine | atomoxetine hydrochloride
+atracurium besylate
+azathioprine | azathioprine sodium
+azelaic acid
+azilsartan medoxomil
+aztreonam
+baclofen
+beclomethasone dipropionate
+bendamustine hydrochloride
+benzalkonium chloride | benzalkonium chloride (0.115%), benzalkonium chloride (0.13%)
+benzocaine | benzocaine hydrochloride
+benzoyl peroxide
+benzyl alcohol
+bepotastine besilate
+besifloxacin
+betaxolol | betaxolol hydrochloride
+bevacizumab
+bicalutamide
+sodium bicarbonate
+bimatoprost
+bisacodyl
+bismuth subsalicylate
+bivalirudin
+boric acid
+bosentan
+brimonidine tartrate
+brinzolamide
+bromfenac | bromfenac sodium
+bromocriptine mesylate | bromocriptine
+budesonide
+bumetanide
+bupivacaine | bupivacaine hcl, bupivacaine hydrochloride
+buprenorphine | buprenorphine hcl, buprenorphine hydrochloride
+buspirone | buspirone hcl, buspirone hydrochloride
+butenafine hydrochloride | butenafine
+cabergoline
+caffeine | caffeine citrate
+calcitriol
+calcium acetate
+canagliflozin
+candesartan cilexetil
+capecitabine
+capsaicin
+captopril
+carboplatin
+carboprost tromethamine | carboprost
+carboxymethylcellulose sodium | carboxymethylcellulose sodium(cmc)
+cefaclor
+cefadroxil
+cefdinir
+cefepime | cefepime hydrochloride
+cefotaxime
+cefoxitin | cefoxitin sodium
+cefprozil
+ceftazidime
+cefuroxime axetil
+cetuximab
+chloramphenicol sodium succinate | chloramphenicol
+chlorhexidine gluconate
+potassium chloride
+chloroquine phosphate | chloroquine
+chloroxylenol
+chlorpromazine hydrochloride
+chlorthalidone
+cholestyramine
+ciclesonide
+ciclopirox olamine
+cilostazol
+cimetidine | cimetidine hydrochloride
+cinacalcet | cinacalcet hydrochloride
+cisplatin
+citalopram hydrobromide
+clindamycin | clindamycin hcl, clindamycin hydrochloride, clindamycin phosphate
+clobazam
+clobetasol propionate
+clomiphene citrate
+clozapine
+crotamiton
+cyanocobalamin
+cyclobenzaprine hydrochloride
+cyclopentolate hydrochloride
+cyclophosphamide
+cyclosporine
+cytarabine
+dabigatran etexilate | dabigatran etexilate mesylate
+dacarbazine
+danazol
+dantrolene sodium
+dapsone
+darifenacin | darifenacin hydrobromide
+dasatinib
+daunorubicin hydrochloride | daunorubicin
+deferasirox
+deferiprone
+deflazacort
+demeclocycline hydrochloride
+denosumab
+desloratadine
+desonide
+desvenlafaxine | desvenlafaxine succinate
+dexlansoprazole
+dexmedetomidine | dexmedetomidine hcl, dexmedetomidine hydrochloride
+dextromethorphan hydrobromide
+dextrose | dextrose monohydrate
+dicloxacillin sodium | dicloxacillin
+diflorasone diacetate
+difluprednate
+dinoprostone
+diphenhydramine hydrochloride
+dipyridamole
+disopyramide phosphate | disopyramide
+dobutamine | dobutamine hydrochloride
+docetaxel | docetaxel anhydrous
+docosanol
+docusate sodium
+donepezil hydrochloride
+dopamine hydrochloride
+doxepin | doxepin hcl, doxepin hydrochloride
+doxorubicin hydrochloride | doxorubicin
+doxylamine succinate
+duloxetine | duloxetine hcl, duloxetine hydrochloride
+dutasteride
+econazole nitrate
+efavirenz
+eletriptan hydrobromide | eletriptan
+entacapone
+entecavir | entecavir anhydrous
+ephedrine hydrochloride
+epinastine hydrochloride
+epirubicin hydrochloride
+eplerenone
+epoetin alfa
+eptifibatide
+erlotinib | erlotinib hydrochloride
+ertapenem | ertapenem sodium
+erythromycin
+erythropoietin
+eslicarbazepine acetate
+estradiol | estradiol acetate
+estriol
+eszopiclone
+ethosuximide
+etodolac
+etomidate
+etonogestrel
+etoposide | etoposide phosphate
+everolimus
+ezetimibe
+febuxostat
+fenbendazole
+fenofibrate
+fentanyl | fentanyl citrate
+fexofenadine hydrochloride
+filgrastim
+flavoxate hydrochloride
+fludarabine phosphate
+flumazenil
+fluocinolone acetonide
+fluorescein sodium
+sodium fluoride
+fluorometholone | fluorometholone acetate
+fluorouracil
+fluphenazine hydrochloride
+fluphenazine decanoate
+flurazepam hydrochloride | flurazepam
+flurbiprofen | flurbiprofen sodium
+flutamide
+fluticasone furoate
+fluticasone propionate
+fluvastatin | fluvastatin sodium
+fluvoxamine maleate
+follitropin alfa
+formoterol fumarate | formoterol fumarate dihydrate
+gadodiamide
+galantamine | galantamine hydrobromide
+ganciclovir | ganciclovir sodium
+ganirelix acetate | ganirelix
+gatifloxacin
+gefitinib
+gemcitabine | gemcitabine hydrochloride
+gemfibrozil
+gentian violet
+calcium gluconate
+glycerine
+glycine
+glycopyrrolate
+granisetron | granisetron hydrochloride
+griseofulvin | griseofulvin (microsize)
+halcinonide
+halobetasol propionate
+heparin sodium
+sodium hyaluronate
+hyaluronidase
+hydrocortisone | hydrocortisone acetate, hydrocortisone sodium succinate
+calcium hydrogen phosphate dihydrate | calcium hydrogen phosphate
+hydroquinone
+magnesium hydroxide
+hydroxocobalamin
+hydroxyurea
+hydroxyzine hydrochloride
+sodium hypochlorite
+hypromellose
+ifosfamide
+iloperidone
+imatinib | imatinib mesylate
+imipramine hydrochloride
+imiquimod
+indapamide
+indomethacin
+insulin aspart
+insulin lispro
+potassium iodide
+iodine
+iodixanol
+iohexol
+iopamidol
+ipratropium bromide
+irbesartan
+irinotecan hydrochloride
+iron dextran
+isoflurane
+isosorbide dinitrate
+isotretinoin
+itraconazole
+ivabradine
+ketamine hydrochloride | ketamine
+ketoconazole
+ketoprofen
+ketotifen fumarate | ketotifen
+labetalol hydrochloride
+lacosamide
+lamivudine
+lamotrigine
+lanthanum carbonate | lanthanum
+latanoprost
+leflunomide
+lenalidomide
+letrozole
+levetiracetam
+levobunolol hydrochloride
+levocarnitine
+levodopa
+lidocaine | lidocaine hcl, lidocaine hydrochloride, lidocaine hydrochloride anhydrous
+linezolid
+lomustine
+loperamide hcl | loperamide, loperamide hydrochloride
+lorazepam
+loteprednol etabonate
+lovastatin
+lubiprostone
+lurasidone hydrochloride
+mannitol
+mebendazole
+meclizine hydrochloride | meclizine
+medroxyprogesterone acetate
+mefenamic acid
+mefloquine hydrochloride | mefloquine
+megestrol acetate
+melatonin
+meloxicam
+memantine hydrochloride
+menthol
+mercaptopurine
+meropenem
+mesalamine
+methotrexate | methotrexate sodium
+methoxsalen
+methylphenidate hydrochloride
+metolazone
+miconazole | miconazole nitrate
+midazolam | midazolam hydrochloride
+mifepristone
+miglitol
+milnacipran hydrochloride
+miltefosine
+minoxidil
+mirabegron
+mirtazapine
+misoprostol
+mitomycin
+mometasone furoate | mometasone furoate monohydrate
+moxifloxacin | moxifloxacin hydrochloride
+mupirocin | mupirocin calcium
+mycophenolate mofetil | mycophenolate mofetil hydrochloride
+nalbuphine hydrochloride
+naloxone hydrochloride
+naltrexone | naltrexone hydrochloride
+natamycin
+nateglinide
+nebivolol | nebivolol hydrochloride
+nelfinavir mesylate | nelfinavir
+nepafenac
+nevirapine
+niacin
+nicotinamide
+nicotine
+nimodipine
+nitazoxanide
+nitrofurantoin | nitrofurantoin (macrocrystals), nitrofurantoin monohydrate
+nitrous oxide
+nizatidine
+norgestrel
+nortriptyline hcl | nortriptyline, nortriptyline hydrochloride
+nystatin
+ofloxacin
+olopatadine | olopatadine hcl, olopatadine hydrochloride
+omega-3-acid ethyl esters
+orlistat
+orphenadrine citrate
+oxaliplatin
+oxaprozin
+oxazepam
+oxcarbazepine
+oxiconazole nitrate | oxiconazole
+oxygen
+oxymetazoline hydrochloride
+oxymorphone hydrochloride
+oxytocin
+paclitaxel | paclitaxel (aibumin-bound)
+palonosetron | palonosetron hydrochloride
+paricalcitol
+paromomycin sulfate | paromomycin
+paroxetine | paroxetine hydrochloride, paroxetine hydrochloride hemihydrate
+pegfilgrastim
+peginterferon alfa-2a
+pemetrexed
+pentoxifylline
+peppermint oil
+perindopril erbumine
+permethrin
+pertuzumab
+phenylephrine hydrochloride
+pilocarpine hydrochloride
+pioglitazone | pioglitazone hydrochloride
+pirfenidone
+piroxicam
+pitavastatin | pitavastatin calcium, pitavastatin magnesium
+pivmecillinam
+potassium citrate
+povidone
+povidone iodine
+pralidoxime chloride
+prasugrel | prasugrel hydrochloride
+prazosin | prazosin hcl, prazosin hydrochloride
+primaquine phosphate | primaquine
+prochlorperazine maleate
+progesterone
+promethazine hydrochloride
+propafenone hydrochloride
+proparacaine hydrochloride
+propofol
+propranolol hydrochloride
+pseudoephedrine hydrochloride
+pyrantel pamoate
+pyridostigmine bromide | pyridostigmine
+pyridoxine hydrochloride
+pyrimethamine
+quetiapine | quetiapine fumarate
+racepinephrine hydrochloride | racepinephrine
+raloxifene hydrochloride
+ramelteon
+ranitidine | ranitidine hydrochloride
+ranolazine
+repaglinide
+ribavirin
+rifaximin
+risedronate sodium
+rituximab
+rivastigmine | rivastigmine tartrate
+rizatriptan
+rocuronium bromide
+roflumilast
+ropinirole | ropinirole hydrochloride
+salicylic acid
+salsalate
+saxagliptin
+secnidazole
+selegiline hydrochloride
+sennosides | calcium sennosides
+sevelamer hydrochloride
+sevoflurane
+silodosin
+simethicone
+sodium carbonate
+sodium citrate
+sofosbuvir
+solifenacin succinate
+somatropin
+sorafenib
+sotalol hydrochloride
+streptomycin
+sucralfate
+sucrose
+sulfasalazine
+sulindac
+sumatriptan | sumatriptan succinate
+tacrolimus
+tadalafil
+tamoxifen citrate | tamoxifen
+tapentadol hydrochloride | tapentadol
+tazarotene
+temazepam
+tenofovir disoproxil fumarate
+terazosin | terazosin hydrochloride
+terbinafine | terbinafine hydrochloride
+terconazole
+testosterone
+testosterone undecanoate
+tetrabenazine
+tetracaine | tetracaine hcl, tetracaine hydrochloride
+tetracycline hydrochloride
+thalidomide
+sodium thiosulfate
+tigecycline
+timolol maleate
+tinidazole
+tioconazole
+tiotropium bromide | tiotropium
+tizanidine | tizanidine hcl, tizanidine hydrochloride
+tobramycin | tobramycin sulfate
+tofacitinib | tofacitinib citrate
+tolmetin sodium | tolmetin
+tolnaftate
+tolterodine tartrate
+topiramate
+trandolapril
+tranexamic acid
+trastuzumab
+travoprost | travoprost (isomer free)
+tretinoin
+triamcinolone acetonide
+triclabendazole
+trifluoperazine hydrochloride | trifluoperazine
+trifluridine
+trihexyphenidyl hydrochloride
+trimethoprim
+trimipramine | trimipramine maleate
+tropicamide
+trypan blue
+ulipristal acetate
+urea
+valacyclovir | valacyclovir hydrochloride
+vancomycin | vancomycin hydrochloride
+vardenafil hydrochloride
+varenicline | varenicline tartrate
+vecuronium bromide
+venlafaxine | venlafaxine hcl, venlafaxine hydrochloride
+vinorelbine
+vitamin e
+voriconazole
+xylometazoline hydrochloride
+zafirlukast
+zidovudine
+zinc oxide | zinc oxide (24.08%)
+ziprasidone | ziprasidone hcl, ziprasidone hydrochloride, ziprasidone mesylate
+zoledronic acid
+zolmitriptan
+zolpidem tartrate

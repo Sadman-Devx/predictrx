@@ -19,6 +19,13 @@ services:
     restart: unless-stopped
     ports: ["6379:6379"]
 
+  # Fake inbox for password-reset / invite emails:  docker compose up -d mailpit
+  # then set EMAIL_BACKEND=...smtp.EmailBackend, EMAIL_HOST=localhost, EMAIL_PORT=1025, EMAIL_USE_TLS=False in .env
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports: ["1025:1025", "8025:8025"]  # SMTP, web inbox
+
   ollama:
     image: ollama/ollama:latest
     ports: ["11434:11434"]

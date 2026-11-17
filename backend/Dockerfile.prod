@@ -1,0 +1,13 @@
+# Production image: gunicorn instead of runserver, no dev dependencies.
+# Build from the backend/ folder:  docker build -f Dockerfile.prod -t predictrx-api .
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 DJANGO_SETTINGS_MODULE=config.settings.production
+WORKDIR /app
+COPY requirements/ requirements/
+RUN pip install --no-cache-dir -r requirements/production.txt
+COPY . .
+RUN useradd --create-home appuser && mkdir -p /app/media /app/staticfiles && chown -R appuser /app
+USER appuser
+EXPOSE 8000
+# Run `python manage.py migrate` and `collectstatic --noinput` as a release step before starting.
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120"]

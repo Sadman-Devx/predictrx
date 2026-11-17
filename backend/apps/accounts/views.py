@@ -10,6 +10,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from . import password_reset, social
 from .serializers import (
+    ChangePasswordSerializer,
     LoginSerializer,
     MeSerializer,
     PasswordResetConfirmSerializer,
@@ -101,6 +102,25 @@ class PasswordResetConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         password_reset.set_new_password(serializer.validated_data["user"], serializer.validated_data["password"])
         return Response({"detail": "Password changed. Please log in."})
+
+
+class ChangePasswordView(APIView):
+    """POST /api/auth/change-password/ {current_password, new_password} — for a signed-in user.
+
+    Every refresh token of the user is blacklisted afterwards (same rule as the emailed reset), so the client must
+    log in again; the short-lived access token of the current tab simply expires.
+    """
+
+    permission_classes = [IsAuthenticated]
+    throttle_scope = "password_change"
+
+    @extend_schema(tags=["Auth"], summary="Change the password of the signed-in user",
+                   request=ChangePasswordSerializer, responses={200: OpenApiResponse(description="Password changed")})
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        password_reset.set_new_password(request.user, serializer.validated_data["new_password"])
+        return Response({"detail": "Password changed. Please log in again."})
 
 
 class SocialLoginView(APIView):

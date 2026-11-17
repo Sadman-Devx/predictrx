@@ -1,9 +1,11 @@
 import { api } from "./api";
 import type {
   AgentTraceStep,
+  AnalysisListItem,
   AnalysisRunStatus,
   AnalysisStartRequest,
   AnalysisStartResponse,
+  Paginated,
   PipelineAgent,
   RunStatus,
   TimelineStage,
@@ -155,3 +157,7 @@ export function deriveSteps(status: RunStatus, trace: AgentTraceStep[]): StepVie
     return { agent, state: status === "failed" ? "unrecorded" : "waiting", latencyMs: null };
   });
 }
+
+/** GET /api/analysis/runs/ — the signed-in clinician's own runs, newest first. */
+export const listAnalyses = (page = 1, status?: RunStatus) =>
+  api<Paginated<AnalysisListItem>>(`/analysis/runs/?page=${page}${status ? `&status=${status}` : ""}`);

@@ -3,11 +3,13 @@ import bnBase from "./bn.json";
 import enBase from "./en.json";
 import evidenceBn from "./evidence.bn.json";
 import evidenceEn from "./evidence.en.json";
+import listBn from "./list.bn.json";
+import listEn from "./list.en.json";
 
 // The Evidence panel strings live in their own small files (evidence.bn.json / evidence.en.json) and are merged here,
 // so every UI string still comes from i18n files and nothing is hard-coded in a component.
-const bn = { ...bnBase, ...evidenceBn };
-const en = { ...enBase, ...evidenceEn };
+const bn = { ...bnBase, ...evidenceBn, ...listBn };
+const en = { ...enBase, ...evidenceEn, ...listEn };
 
 export type Lang = "bn" | "en";
 export type MessageKey = keyof typeof bn;

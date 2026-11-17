@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from django.db.models import Count
+from rest_framework import generics, status
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,7 +13,7 @@ from core.permissions import IsDoctorOrPharmacist
 from . import patient_card, results, services
 from .models import AnalysisRun
 from .patient_card import PatientCardSerializer
-from .serializers import (AnalysisDetailSerializer, AnalysisStartResponseSerializer, AnalysisStartSerializer,
+from .serializers import (AnalysisDetailSerializer, AnalysisListItemSerializer, AnalysisStartResponseSerializer, AnalysisStartSerializer,
                           AnalysisTraceSerializer)
 
 
@@ -50,6 +51,29 @@ class AnalysisStartView(APIView):
             "disclaimer_version": settings.DISCLAIMER_VERSION,
         }
         return Response(body, status=status.HTTP_202_ACCEPTED if created else status.HTTP_200_OK)
+
+
+class AnalysisListView(generics.ListAPIView):
+    """GET /api/analysis/runs/ — the signed-in clinician's own runs, newest first (paginated).
+
+    Optional `?status=queued|running|completed|failed` and `?patient=<id>`. Metadata only, so it is not audited and
+    it has its own throttle scope (it must not eat the paid-run quota of POST /api/analysis/).
+    """
+
+    permission_classes = [IsDoctorOrPharmacist]
+    serializer_class = AnalysisListItemSerializer
+    throttle_scope = "analysis_list"
+
+    def get_queryset(self):
+        qs = (AnalysisRun.objects.filter(patient__owner=self.request.user)
+              .select_related("patient").annotate(findings_count=Count("findings")).order_by("-id"))
+        status_ = self.request.query_params.get("status")
+        if status_ in {s for s, _ in AnalysisRun.STATUS}:
+            qs = qs.filter(status=status_)
+        patient = self.request.query_params.get("patient", "")
+        if patient.isdigit():
+            qs = qs.filter(patient_id=int(patient))
+        return qs
 
 
 class AnalysisDetailView(APIView):

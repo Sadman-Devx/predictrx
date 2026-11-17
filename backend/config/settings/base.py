@@ -132,6 +132,8 @@ REST_FRAMEWORK = {
         "register": "10/hour",
         "password_reset": "5/hour",
         "password_reset_confirm": "10/hour",
+        "password_change": "5/hour",  # logged-in change of password
+        "analysis_list": "120/min",  # list of past runs (read only, no LLM)
         "social": "20/min",
         "scan": "20/hour",  # prescription upload (starts a paid vision call)
         "scan_poll": "120/min",  # scan status + image reads (the UI polls)
@@ -202,6 +204,30 @@ EMBEDDING_TIMEOUT = env.int("EMBEDDING_TIMEOUT", default=120)
 RAG_CONTEXT_MODE = env("RAG_CONTEXT_MODE", default="template")
 MCP_SERVER_URL = env("MCP_SERVER_URL", default="http://localhost:8001/sse")
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
+
+# ---------- Email (password reset + family invite) ----------
+# Default = print the email in the runserver terminal (no SMTP needed for local work).
+# Real sending: set EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend and the EMAIL_* values in .env
+# (Gmail: smtp.gmail.com / 587 / TLS + a 16-character App Password, see .env.example).
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)  # port 465 instead of TLS/587
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)  # never hang a request on a dead SMTP server
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="PredictRx <no-reply@predictrx.local>")
+# How long a reset / invite link works, in seconds (Django's own default would be 3 days).
+PASSWORD_RESET_TIMEOUT = env.int("PASSWORD_RESET_TIMEOUT", default=3600)
+
+# ---------- Social sign-in (empty = that provider is off; the endpoint answers 503 "not enabled") ----------
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")
+FACEBOOK_APP_ID = env("FACEBOOK_APP_ID", default="")
+FACEBOOK_APP_SECRET = env("FACEBOOK_APP_SECRET", default="")
+LINKEDIN_CLIENT_ID = env("LINKEDIN_CLIENT_ID", default="")
+LINKEDIN_CLIENT_SECRET = env("LINKEDIN_CLIENT_SECRET", default="")
+SOCIAL_AUTO_CREATE = env.bool("SOCIAL_AUTO_CREATE", default=True)
 OPENFDA_API_KEY = env("OPENFDA_API_KEY", default="")
 # Prescription images: deleted at `retain_until`. Short by default; longer only with an active `retain_images` consent.
 PRESCRIPTION_IMAGE_RETENTION_DAYS = env.int("PRESCRIPTION_IMAGE_RETENTION_DAYS", default=7)

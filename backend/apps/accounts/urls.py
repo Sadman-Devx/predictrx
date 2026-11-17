@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    ChangePasswordView,
     LoginView,
     LogoutView,
     MeView,
@@ -19,6 +20,7 @@ urlpatterns = [
     path("me/", MeView.as_view(), name="me"),
     path("password-reset/", PasswordResetRequestView.as_view(), name="password-reset"),
     path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
+    path("change-password/", ChangePasswordView.as_view(), name="change-password"),
     path("social/<str:provider>/", SocialLoginView.as_view(), name="social-login"),
     # Family invite: Day 9 (consent + FamilyLink flow)
 ]
