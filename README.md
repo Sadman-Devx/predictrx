@@ -20,7 +20,7 @@ firmware/     ESP32 vitals sketch (roadmap, not in the demo)
 deploy/       Run notes + Cloudflare Tunnel
 submission/   Congress pack (summary, video script, form text, checklist)
 docs/         The six design docs
-.cursor/rules AI-DLC rules for the team
+.claude/rules AI-DLC rules for the team
 ```
 
 ## Quick start

@@ -21,3 +21,15 @@ references and does not load any rows if validation fails (unless `--skip-bad` i
 
 The current sheets are drafts: no row-level supporting references or access dates have been supplied. They are
 not ready to load. Do not replace missing references with guessed URLs or a generic source label.
+
+## Review status
+
+`brand_mapping_review.csv` is a row-by-row cross-check of the draft against the user-provided DGDA generic,
+dosage-form, and strength list. That list has no brand or manufacturer field, so a match does **not** verify
+brand identity, market availability, or the brand-to-generic association. The review CSV is not a loader input;
+the original mapping remains unchanged and unverified.
+
+The review flags one discrepancy for follow-up: a secondary MedEx listing identifies Renova 500 mg tablet as
+paracetamol, while the draft says ibuprofen. This is not an official manufacturer/DGDA brand record; confirm
+using a primary product source before changing the mapping. Every mapping still needs a row-specific source,
+access date, and pharmacist/mentor review before it can be marked verified or loaded.

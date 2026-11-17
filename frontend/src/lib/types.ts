@@ -9,6 +9,8 @@ export interface User {
   role: Role;
   display_name: string;
   preferred_language: string;
+  /** False until the emailed link was opened. */
+  email_verified?: boolean;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -134,6 +136,18 @@ export type RunStatus = "queued" | "running" | "completed" | "failed";
 
 /** The five pipeline steps, in the order the LangGraph pipeline runs them (backend-design.md §6.1). */
 export type PipelineAgent = "resolver" | "clinical_notes" | "drug_interaction" | "advisory" | "verifier";
+
+/** One row of GET /api/analysis/runs/ (metadata only; the clinical result is read from /analysis/{id}/). */
+export interface AnalysisListItem {
+  run_id: number;
+  patient_id: number;
+  patient_code: string;
+  status: RunStatus;
+  medication_count: number;
+  findings_count: number;
+  started_at: string | null;
+  finished_at: string | null;
+}
 
 /** POST /api/analysis/ body. `idempotency_key` is generated once per click and re-sent on every retry of that click. */
 export interface AnalysisStartRequest {

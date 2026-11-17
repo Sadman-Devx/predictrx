@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import "../../styles/results.css";
 import { useI18n, type MessageKey } from "../../i18n";
 import { pickSummary, SEVERITIES, severityCounts, sortFindings, verificationCounts, VERIFICATIONS } from "../../lib/results";
@@ -43,7 +43,9 @@ function tabFrom(id: string): TabId {
  */
 export function AnalysisResults({ run, trace, traceKnown, timeline }: Props) {
   const { t, lang } = useI18n();
-  const [tab, setTab] = useState<TabId>("doctor");
+  const [params] = useSearchParams();
+  // /analysis/:id?tab=twin (from the What-if page) opens straight on that tab.
+  const [tab, setTab] = useState<TabId>(tabFrom(params.get("tab") ?? ""));
 
   const findings = useMemo(() => sortFindings(run.findings ?? []), [run.findings]);
   const sev = useMemo(() => severityCounts(findings), [findings]);

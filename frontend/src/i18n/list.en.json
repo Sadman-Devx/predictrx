@@ -1,0 +1,14 @@
+{
+  "analysisList.empty": "No analyses yet. Start one from a prescription photo or a medicine list.",
+  "analysisList.error": "Could not load the analyses.",
+  "analysisList.patient": "Patient",
+  "analysisList.medicines": "{{n}} medicines",
+  "analysisList.findings": "{{n}} findings",
+  "analysisList.started": "Started",
+  "analysisList.open": "Open",
+  "analysisList.filter.label": "Filter by status",
+  "analysisList.filter.all": "All",
+  "analysisList.prev": "Previous",
+  "analysisList.next": "Next",
+  "analysisList.page": "Page {{page}} of {{pages}}"
+}

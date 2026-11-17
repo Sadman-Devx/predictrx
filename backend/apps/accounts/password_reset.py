@@ -87,8 +87,14 @@ def validate_new_password(user: User, password: str) -> list[str]:
     return []
 
 
-def set_new_password(user: User, password: str) -> None:
+def set_new_password(user: User, password: str, *, proves_email: bool = False) -> None:
+    """Set the password and kill every refresh token. `proves_email` is True only for the emailed reset link: opening
+    it shows the person controls the mailbox, so the account counts as verified."""
     user.set_password(password)
-    user.save(update_fields=["password"])
+    fields = ["password"]
+    if proves_email and not user.email_verified:
+        user.email_verified = True
+        fields.append("email_verified")
+    user.save(update_fields=fields)
     for outstanding in OutstandingToken.objects.filter(user=user):
         BlacklistedToken.objects.get_or_create(token=outstanding)

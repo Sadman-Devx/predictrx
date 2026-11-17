@@ -34,6 +34,26 @@ class AnalysisStartResponseSerializer(serializers.Serializer):
     disclaimer_version = serializers.CharField()
 
 
+class AnalysisListItemSerializer(serializers.ModelSerializer):
+    """One row of GET /api/analysis/runs/. Metadata only (no findings text, no summaries): safe to list without audit."""
+
+    run_id = serializers.IntegerField(source="id", read_only=True)
+    patient_id = serializers.IntegerField(read_only=True)
+    patient_code = serializers.CharField(source="patient.patient_code", read_only=True)
+    medication_count = serializers.SerializerMethodField()
+    findings_count = serializers.IntegerField(read_only=True)  # annotated by the view; 0 until the run completes
+
+    class Meta:
+        model = AnalysisRun
+        fields = ["run_id", "patient_id", "patient_code", "status", "medication_count", "findings_count",
+                  "started_at", "finished_at"]
+        read_only_fields = fields
+
+    def get_medication_count(self, run) -> int:
+        ids = (run.input_snapshot or {}).get("medication_ids") or []
+        return len(ids)
+
+
 # ------------------------------------------------------------------------------------------------ building blocks
 class PipelineStepSerializer(serializers.Serializer):
     agent = serializers.CharField()

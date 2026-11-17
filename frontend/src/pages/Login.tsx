@@ -5,6 +5,7 @@ import { DisclaimerStrip } from "../components/ui/DisclaimerStrip";
 import { LanguageToggle } from "../components/ui/LanguageToggle";
 import { useI18n, type MessageKey } from "../i18n";
 import { api, ApiRequestError } from "../lib/api";
+import { collectReasons } from "../lib/errors";
 import "../styles/auth.css";
 
 type View = "login" | "register";
@@ -17,20 +18,13 @@ function errorKey(err: unknown): MessageKey {
   if (err instanceof ApiRequestError) {
     if (err.status === 0) return "login.network";
     if (err.status === 429) return "login.tooMany";
+    if (err.status === 403 && err.body?.error?.code === "email_not_verified") return "login.notVerified";
     if (err.status >= 500) return "login.server";
   }
   return "login.failed"; // 400/401: wrong credentials (never say which one was wrong)
 }
 
 type T = (key: MessageKey) => string;
-
-/** Flattens DRF error details ({"password": ["..."], "email": ["..."]}) into a list of readable reasons. */
-function collectReasons(details: unknown): string[] {
-  if (typeof details === "string") return [details];
-  if (Array.isArray(details)) return details.flatMap(collectReasons);
-  if (details && typeof details === "object") return Object.values(details).flatMap(collectReasons);
-  return [];
-}
 
 /** Registration error text. For a 400 the backend's own reason is shown (weak password, email already used, ...). */
 function registerErrorText(err: unknown, t: T): string {
@@ -124,6 +118,20 @@ export default function Login() {
     }
   }
 
+  async function onResendVerification() {
+    try {
+      await api("/auth/resend-verification/", {
+        method: "POST",
+        skipRefresh: true,
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      setError(null);
+      setNotice({ kind: "info", key: "login.verificationResent" });
+    } catch (err) {
+      setError(errorKey(err));
+    }
+  }
+
   async function onRegister(e: FormEvent) {
     e.preventDefault();
     if (regBusy) return;
@@ -152,7 +160,7 @@ export default function Login() {
       setRegPw2("");
       setRegBusy(false);
       switchTo("login");
-      setNotice({ kind: "ok", key: "auth.registered" });
+      setNotice({ kind: "ok", key: "auth.registeredVerify" });
     } catch (err) {
       setRegError(registerErrorText(err, t));
       setRegPw("");
@@ -271,6 +279,11 @@ export default function Login() {
               <button type="button" className="auth-forgot" onClick={forgot}>{t("auth.forgot")}</button>
 
               {error && <p className="auth-msg err" role="alert">{t(error)}</p>}
+              {error === "login.notVerified" && (
+                <button type="button" className="auth-forgot" onClick={() => void onResendVerification()}>
+                  {t("login.resendVerification")}
+                </button>
+              )}
               {view === "login" && noticeEl}
 
               <button type="submit" className="auth-submit" disabled={busy}>
