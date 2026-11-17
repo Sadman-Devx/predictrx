@@ -12,10 +12,12 @@ from pathlib import Path
 from common import LICENSE_OPENFDA, PROCESSED_DIR, read_jsonl, write_jsonl
 
 SALT_WORDS = {
-    "hydrochloride", "hcl", "sodium", "potassium", "calcium", "magnesium", "sulfate", "sulphate", "mesylate",
+    "hydrochloride", "hcl", "sodium", "potassium", "calcium",
+    "magnesium", "sulfate", "sulphate", "mesylate",
     "maleate", "tartrate", "besylate", "succinate", "phosphate", "acetate", "citrate", "hydrobromide", "bromide",
     "fumarate", "nitrate", "carbonate", "dihydrate", "monohydrate", "anhydrous", "hemihydrate",
 }
+NAME_FORM_COMPONENTS = SALT_WORDS | {"dihydrochloride", "tromethamine", "medoxomil"}
 
 
 def normalize_name(name: str) -> str:
@@ -25,9 +27,9 @@ def normalize_name(name: str) -> str:
 
 
 def strip_salt(name: str) -> str:
-    """'warfarin sodium' -> 'warfarin'. Falls back to the normalized name if everything would be stripped."""
+    """Normalize common salt/prodrug name forms to their base ingredient."""
     norm = normalize_name(name)
-    kept = [t for t in norm.split() if t not in SALT_WORDS]
+    kept = [t for t in norm.split() if t not in NAME_FORM_COMPONENTS]
     return " ".join(kept) or norm
 
 

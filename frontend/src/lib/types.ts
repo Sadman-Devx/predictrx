@@ -9,6 +9,8 @@ export interface User {
   role: Role;
   display_name: string;
   preferred_language: string;
+  /** False until the emailed link was opened. */
+  email_verified?: boolean;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -30,6 +32,14 @@ export interface EvidenceItem {
   license_note: string;
   url: string;
   available: boolean;
+  /** Human name of the source, e.g. "DDInter 2.0". */
+  source_name: string;
+  /** Link to the source ("" when none is known). Render it only through safeHttpUrl(). */
+  source_url: string;
+  /** Short verbatim quote of the stored source text. "" when none may be shown (or the record is gone). */
+  excerpt: string;
+  /** 0..1, the confidence of the finding this source belongs to (not a per-source score). null = not sent. */
+  confidence: number | null;
 }
 
 /** A confidence value never travels without its basis (rule.md §5). */
@@ -127,6 +137,18 @@ export type RunStatus = "queued" | "running" | "completed" | "failed";
 /** The five pipeline steps, in the order the LangGraph pipeline runs them (backend-design.md §6.1). */
 export type PipelineAgent = "resolver" | "clinical_notes" | "drug_interaction" | "advisory" | "verifier";
 
+/** One row of GET /api/analysis/runs/ (metadata only; the clinical result is read from /analysis/{id}/). */
+export interface AnalysisListItem {
+  run_id: number;
+  patient_id: number;
+  patient_code: string;
+  status: RunStatus;
+  medication_count: number;
+  findings_count: number;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
 /** POST /api/analysis/ body. `idempotency_key` is generated once per click and re-sent on every retry of that click. */
 export interface AnalysisStartRequest {
   patient_id: number;
@@ -212,6 +234,23 @@ export interface AgentTraceStep {
   output_summary?: string;
   /** MCP / internal tool calls. Each is an object with at least a `tool` name; the rest of its shape varies by agent. */
   tool_calls?: unknown[];
+}
+
+/** The six stories of the timeline, in order (backend/apps/analysis/results.py, trace_timeline). */
+export type TimelineStageKey = "photo_upload" | "ocr" | "resolve" | "interaction" | "guardrail" | "report";
+
+/** skipped = the stage did not apply (e.g. typed in by hand, so there was no image and no OCR). */
+export type TimelineStatus = "done" | "running" | "failed" | "pending" | "skipped";
+
+/**
+ * One stage of GET /api/analysis/{id}/trace/ (`timeline`). Statuses are live; `duration_ms` is null until the run is
+ * completed (and always null for upload / OCR, which are not timed). `meta` holds counts only — the UI words them.
+ */
+export interface TimelineStage {
+  key: TimelineStageKey;
+  status: TimelineStatus;
+  duration_ms: number | null;
+  meta: Record<string, number>;
 }
 // ---------------------------------------------------------------------------------------------------------------
 // Consent (Day 9). Mirrors backend/apps/patients/models.py (Consent) and POST /api/patients/{id}/consents/.

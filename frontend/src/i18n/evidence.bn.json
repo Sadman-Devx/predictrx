@@ -1,0 +1,12 @@
+{
+  "evidence.button": "প্রমাণ",
+  "evidence.panel.title": "কেন এটি বলা হচ্ছে?",
+  "evidence.panel.label": "এই ফলাফলের প্রমাণ",
+  "evidence.count.none": "কোনো উৎস নেই",
+  "evidence.count.one": "1টি উৎস",
+  "evidence.count.many": "{{n}}টি উৎস",
+  "evidence.excerpt.label": "উৎস থেকে উদ্ধৃতি",
+  "evidence.excerpt.none": "এই উৎস থেকে কোনো উদ্ধৃতি দেখানো যাচ্ছে না।",
+  "evidence.newTab": "নতুন ট্যাবে খুলবে",
+  "evidence.confidence.note": "প্রতিটি বার ওপরের ফলাফলের আস্থার মাত্রা দেখায়, ওই উৎসের আলাদা কোনো স্কোর নয়। এটি ফলাফলের পেছনের উৎস কী ধরনের তা বোঝায়; এটি কোনো সম্ভাবনা (probability) নয়।"
+}

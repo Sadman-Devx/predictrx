@@ -14,11 +14,11 @@ class CustomUserAdmin(DjangoUserAdmin, BaseModelAdmin):
     change_password_form = USER_ADMIN_FORMS.get("change_password_form", DjangoUserAdmin.change_password_form)
 
     ordering = ("email",)
-    list_display = ("email", "role_badge", "display_name", "is_active")
-    list_filter = ("role", "is_active")
+    list_display = ("email", "role_badge", "display_name", "email_verified", "is_active")
+    list_filter = ("role", "is_active", "email_verified")
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("Profile", {"fields": ("display_name", "role", "preferred_language")}),
+        ("Profile", {"fields": ("display_name", "role", "preferred_language", "email_verified")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
     )
     add_fieldsets = ((None, {"classes": ("wide",), "fields": ("email", "role", "password1", "password2")}),)

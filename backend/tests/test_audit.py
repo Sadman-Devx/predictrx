@@ -102,6 +102,7 @@ class TestAuditLogItself:
         user = make_user("pharmacist")
         class R:  # minimal request stand-in
             META = {"REMOTE_ADDR": "198.51.100.1"}
+            headers: dict = {}  # DRF's get_ident() reads request.headers
             def __init__(self, u): self.user = u
         log = audit.record(R(user), audit.PATIENT_LIST, count=0)
         user.delete()

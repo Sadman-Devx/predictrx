@@ -34,6 +34,26 @@ class AnalysisStartResponseSerializer(serializers.Serializer):
     disclaimer_version = serializers.CharField()
 
 
+class AnalysisListItemSerializer(serializers.ModelSerializer):
+    """One row of GET /api/analysis/runs/. Metadata only (no findings text, no summaries): safe to list without audit."""
+
+    run_id = serializers.IntegerField(source="id", read_only=True)
+    patient_id = serializers.IntegerField(read_only=True)
+    patient_code = serializers.CharField(source="patient.patient_code", read_only=True)
+    medication_count = serializers.SerializerMethodField()
+    findings_count = serializers.IntegerField(read_only=True)  # annotated by the view; 0 until the run completes
+
+    class Meta:
+        model = AnalysisRun
+        fields = ["run_id", "patient_id", "patient_code", "status", "medication_count", "findings_count",
+                  "started_at", "finished_at"]
+        read_only_fields = fields
+
+    def get_medication_count(self, run) -> int:
+        ids = (run.input_snapshot or {}).get("medication_ids") or []
+        return len(ids)
+
+
 # ------------------------------------------------------------------------------------------------ building blocks
 class PipelineStepSerializer(serializers.Serializer):
     agent = serializers.CharField()
@@ -72,6 +92,8 @@ class DrugRefSerializer(serializers.ModelSerializer):
 
 
 class EvidenceItemSerializer(serializers.Serializer):
+    """One source behind a finding (the data of the Evidence panel on the Results screen)."""
+
     type = serializers.CharField()
     id = serializers.IntegerField(allow_null=True)
     source = serializers.CharField(allow_blank=True)
@@ -81,6 +103,11 @@ class EvidenceItemSerializer(serializers.Serializer):
     license_note = serializers.CharField(allow_blank=True)
     url = serializers.CharField(allow_blank=True)
     available = serializers.BooleanField()
+    # Evidence panel ("why are we saying this?"). See results.evidence_items.
+    source_name = serializers.CharField(allow_blank=True)  # e.g. "DDInter 2.0"
+    source_url = serializers.CharField(allow_blank=True)  # record URL, else the source's public site, else ""
+    excerpt = serializers.CharField(allow_blank=True)  # short verbatim quote; "" when none may be shown
+    confidence = serializers.FloatField(allow_null=True)  # confidence of the finding (0..1), not a per-source score
 
 
 class ConfidenceBasisSerializer(serializers.Serializer):
@@ -227,9 +254,23 @@ class AnalysisDetailSerializer(serializers.ModelSerializer):
 
 
 # ------------------------------------------------------------------------------------------------ trace
+class TimelineStageSerializer(serializers.Serializer):
+    """One row of the judge-facing timeline (results.trace_timeline). `meta` holds counts only; the UI words them."""
+
+    key = serializers.ChoiceField(choices=["photo_upload", "ocr", "resolve", "interaction", "guardrail", "report"])
+    status = serializers.ChoiceField(choices=["done", "running", "failed", "pending", "skipped"])
+    duration_ms = serializers.IntegerField(allow_null=True)
+    meta = serializers.DictField(child=serializers.IntegerField())
+
+
 class AnalysisTraceSerializer(serializers.Serializer):
     """GET /api/analysis/{id}/trace/ — which agent did what. Step contents exist only for completed runs
-    (traces are written together with the findings, never half-way)."""
+    (traces are written together with the findings, never half-way).
+
+    `timeline` is the same information as a six-stage story (upload → OCR → brand→generic → interactions → guardrail →
+    report). Its statuses are live while the run works; durations and result counts appear once the run is completed.
+    The view computes it (so this serializer never runs hidden queries) and passes it in the context.
+    """
 
     run_id = serializers.IntegerField(source="id", read_only=True)
     status = serializers.CharField(read_only=True)
@@ -237,9 +278,14 @@ class AnalysisTraceSerializer(serializers.Serializer):
     steps = serializers.SerializerMethodField()
     total_latency_ms = serializers.SerializerMethodField()
     traces = serializers.SerializerMethodField()
+    timeline = serializers.SerializerMethodField()
 
     def _traces(self) -> list:
         return self.context.get("traces", [])
+
+    @extend_schema_field(TimelineStageSerializer(many=True))
+    def get_timeline(self, obj) -> list[dict]:
+        return TimelineStageSerializer(self.context.get("timeline", []), many=True).data
 
     def get_available(self, obj) -> bool:
         return obj.status == "completed"

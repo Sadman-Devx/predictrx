@@ -27,7 +27,8 @@ class TestPasswordResetRequest:
         r = api_client.post(REQUEST, {"email": "dr.a@example.test"}, format="json")
         assert r.status_code == 202
         assert len(mail.outbox) == 1 and mail.outbox[0].to == ["dr.a@example.test"]
-        _link_parts()
+        uid, token = _link_parts()
+        assert f"http://localhost:5173/reset-password?uid={uid}&token={token}" in mail.outbox[0].body
 
     def test_email_match_is_case_insensitive(self, api_client, make_user):
         make_user(email="dr.a@example.test")

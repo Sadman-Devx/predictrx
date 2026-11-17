@@ -117,12 +117,49 @@ def _local_vision(prompt: str, image: bytes, system: str, max_tokens: int) -> st
     r = httpx.post(
         f"{str(settings.OLLAMA_BASE_URL).rstrip('/')}/api/generate",
         json={"model": settings.LOCAL_LLM_MODEL, "prompt": prompt, "system": system, "stream": False,
+              "think": False,  # thinking models would spend the whole token budget before writing the JSON
               "images": [base64.b64encode(image).decode("ascii")],
               "options": {"temperature": 0, "num_predict": int(max_tokens)}},
         timeout=float(setting("LOCAL_LLM_TIMEOUT", 120.0)),
     )
     r.raise_for_status()
     return r.json().get("response", "")
+
+def _gemini_vision(prompt: str, image: bytes, media_type: str, system: str, max_tokens: int) -> str:
+    """Google AI Studio (Gemini API). Key and model come from env (GEMINI_API_KEY, GEMINI_MODEL)."""
+    import time
+
+    import httpx
+
+    model = setting("GEMINI_MODEL", "")
+    body = {
+        "systemInstruction": {"parts": [{"text": system}]},
+        "contents": [{"role": "user", "parts": [
+            {"inline_data": {"mime_type": media_type, "data": base64.b64encode(image).decode("ascii")}},
+            {"text": prompt},
+        ]}],
+        "generationConfig": {"temperature": 0, "maxOutputTokens": int(max_tokens)},
+    }
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    headers = {"x-goog-api-key": setting("GEMINI_API_KEY", "")}  # header, not URL: keeps the key out of error logs
+
+    delays = (3, 8, 15)  # seconds to wait before retry 1, 2, 3 (well inside the task's 200 s soft limit)
+    for attempt in range(len(delays) + 1):
+        try:
+            r = httpx.post(url, headers=headers, json=body, timeout=float(setting("CLOUD_LLM_TIMEOUT", 60.0)))
+            if r.status_code in (429, 500, 503, 504) and attempt < len(delays):
+                logger.warning("gemini returned %s, retrying in %ss", r.status_code, delays[attempt])
+                time.sleep(delays[attempt])
+                continue
+            r.raise_for_status()
+            break
+        except httpx.TransportError:  # timeout / connection reset: also worth a retry
+            if attempt >= len(delays):
+                raise
+            time.sleep(delays[attempt])
+
+    parts = (r.json().get("candidates") or [{}])[0].get("content", {}).get("parts", [])
+    return "".join(p.get("text", "") for p in parts)
 
 
 def vision_complete(prompt: str, *, image: bytes, media_type: str, system: str = "", max_tokens: int = 1500) -> VisionReply:
@@ -136,6 +173,10 @@ def vision_complete(prompt: str, *, image: bytes, media_type: str, system: str =
         if not is_local_configured():
             raise LLMNotConfigured("SCAN_VISION_LOCAL is on but LOCAL_LLM_MODEL is not set")
         return VisionReply(_local_vision(prompt, image, system, max_tokens), "local", settings.LOCAL_LLM_MODEL)
+
+    if setting("GEMINI_API_KEY", "") and setting("GEMINI_MODEL", ""):
+        return VisionReply(_gemini_vision(prompt, image, media_type, system, max_tokens), "cloud", setting("GEMINI_MODEL", ""))
+    
     if is_cloud_configured():
         return VisionReply(_cloud_vision(prompt, image, media_type, system, max_tokens), "cloud", settings.CLOUD_LLM_MODEL)
     if setting("LLM_FALLBACK_TO_LOCAL", True) and is_local_configured():

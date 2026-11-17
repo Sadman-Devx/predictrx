@@ -1,16 +1,17 @@
-import { useId, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import "../../styles/results.css";
 import { useI18n } from "../../i18n";
 import { enteredAs, normalizeVerification } from "../../lib/results";
 import type { FindingView } from "../../lib/types";
 import { SeverityBadge } from "../ui/SeverityBadge";
 import { ConfidenceMeter } from "./ConfidenceMeter";
-import { EvidenceChip, EvidenceDetail } from "./EvidenceChip";
+import { EvidenceCountBadge, EvidencePanel } from "./EvidencePanel";
 import { VerificationBadge } from "./VerificationBadge";
 
 /**
- * One finding card (design.md §1.4): drug pair (generic + the name as entered), severity, rationale, confidence WITH its
- * basis, evidence chips and the verification badge.
+ * One finding card (design.md §1.4): drug pair (generic + the name as entered), severity with its evidence count,
+ * rationale, confidence WITH its basis, an "Evidence" button that expands to the sources (name + link, short quote,
+ * confidence bar) and the verification badge.
  *
  * Honest states, never hidden:
  *  - "unknown" with no source  -> "No interaction record found. This does not mean the combination is safe."
@@ -23,8 +24,6 @@ import { VerificationBadge } from "./VerificationBadge";
  */
 export function FindingCard({ finding, extra }: { finding: FindingView; extra?: ReactNode }) {
   const { t } = useI18n();
-  const uid = useId();
-  const [open, setOpen] = useState<number | null>(null);
 
   const status = normalizeVerification(finding.verification_status);
   const evidence = finding.evidence ?? [];
@@ -36,7 +35,6 @@ export function FindingCard({ finding, extra }: { finding: FindingView; extra?: 
     ...enteredAs(finding.entered_names_b, b).map((n) => `${n} (${b})`),
   ];
 
-  const detailId = `${uid}-evidence`;
   const classes = ["finding", `sev-${finding.severity}`];
   if (status === "unverified") classes.push("is-unverified");
   if (status === "conflict") classes.push("is-conflict");
@@ -52,6 +50,7 @@ export function FindingCard({ finding, extra }: { finding: FindingView; extra?: 
         </h3>
         <div className="finding-badges">
           <SeverityBadge severity={finding.severity} />
+          <EvidenceCountBadge count={evidence.length} />
           <VerificationBadge status={status} />
         </div>
       </div>
@@ -69,31 +68,13 @@ export function FindingCard({ finding, extra }: { finding: FindingView; extra?: 
 
       <ConfidenceMeter value={finding.confidence} basis={finding.confidence_basis} />
 
-      <div className="ev">
-        <p className="ev-title">{t("evidence.title")}</p>
-
-        {evidence.length > 0 ? (
-          <>
-            <ul className="ev-chips">
-              {evidence.map((item, i) => (
-                <li key={`${item.type}-${item.id ?? "x"}-${i}`}>
-                  <EvidenceChip
-                    item={item}
-                    expanded={open === i}
-                    controls={detailId}
-                    onToggle={() => setOpen((cur) => (cur === i ? null : i))}
-                  />
-                </li>
-              ))}
-            </ul>
-            {open !== null && evidence[open] && <EvidenceDetail item={evidence[open]} id={detailId} />}
-          </>
-        ) : finding.severity === "unknown" ? (
-          <p className="finding-note" role="note">{t("finding.unknown.note")}</p>
-        ) : (
-          <p className="finding-note note-warn" role="alert">{t("finding.noSource")}</p>
-        )}
-      </div>
+      {evidence.length > 0 ? (
+        <EvidencePanel evidence={evidence} confidence={finding.confidence} basis={finding.confidence_basis} />
+      ) : finding.severity === "unknown" ? (
+        <p className="finding-note" role="note">{t("finding.unknown.note")}</p>
+      ) : (
+        <p className="finding-note note-warn" role="alert">{t("finding.noSource")}</p>
+      )}
 
       {extra}
     </li>

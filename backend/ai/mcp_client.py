@@ -22,6 +22,7 @@ from .config import setting
 
 logger = logging.getLogger(__name__)
 
+# PubMed research is exposed only as a stand-alone MCP utility, never to clinical-analysis agents.
 TOOLS = ("resolve_brand", "lookup_drug", "check_interaction")
 
 # Circuit breaker: when the MCP server is unreachable, the next nodes of the same run (and the next runs) must not

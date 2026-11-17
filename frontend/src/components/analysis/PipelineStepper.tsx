@@ -20,7 +20,7 @@ const STATE_TEXT: Record<StepState, MessageKey> = {
 };
 
 /** Every state has its own shape AND a text label: status is never shown by colour alone (design.md §2.2). */
-function StepGlyph({ state }: { state: StepState }) {
+export function StepGlyph({ state }: { state: StepState }) {
   const common = {
     width: 24,
     height: 24,

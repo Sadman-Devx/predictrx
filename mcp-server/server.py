@@ -5,7 +5,7 @@ Tools (deterministic, backed by the Django tables through apps.drugs.services �
   lookup_drug(generic_name)        -> basic record + source list, or {"status": "not_found"}
   check_interaction(drug_a, drug_b)-> severity/mechanism/management/source, or {"status": "no_record"}
 
-The Verifier agent calls the SAME tools, so a finding can be checked independently of the LLM's wording.
+The Verifier agent calls the SAME deterministic drug tools, so a finding can be checked independently of the LLM's wording.
 "no_record" means "no evidence found" — never "safe".
 
 Run (SSE):   python server.py            -> http://localhost:8001/sse
@@ -15,11 +15,15 @@ Needs: the repo's backend/ code, the same .env (DATABASE_URL, REDIS_URL) as the 
 import os
 import sys
 from pathlib import Path
+from typing import Literal
 
 # ---- Django bootstrap (the server reads the same tables as the API) ----
 BACKEND_DIR = Path(__file__).resolve().parents[1] / "backend"
+MCP_SERVER_DIR = Path(__file__).resolve().parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
+if str(MCP_SERVER_DIR) not in sys.path:
+    sys.path.insert(0, str(MCP_SERVER_DIR))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
 
 import django  # noqa: E402
@@ -31,6 +35,7 @@ from django.db import close_old_connections  # noqa: E402
 from mcp.server.fastmcp import FastMCP  # noqa: E402
 
 from apps.drugs import services  # noqa: E402
+from pubmed_client import search_literature  # noqa: E402
 
 mcp = FastMCP(
     "predictrx-drug-tools",
@@ -70,6 +75,14 @@ async def lookup_drug(generic_name: str) -> dict:
 async def check_interaction(drug_a: str, drug_b: str) -> dict:
     """Interaction record for a pair of GENERIC names. 'no_record' means no evidence found — NOT that the pair is safe."""
     return await _call(services.check_interaction, drug_a, drug_b)
+
+
+@mcp.tool()
+async def search_pubmed_literature(
+    topic: Literal["drug_interactions", "medication_safety", "clinical_pharmacology"],
+) -> dict:
+    """Search general PubMed literature using a fixed topic query; never accepts patient-specific text."""
+    return await search_literature(topic)
 
 
 if __name__ == "__main__":

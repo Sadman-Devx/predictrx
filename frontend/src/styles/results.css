@@ -97,9 +97,45 @@
 .confidence-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
 .confidence .confidence-basis { overflow-wrap: anywhere; }
 
-/* ---- evidence chips + source detail ---- */
+/* ---- evidence count (next to the severity badge) ---- */
+.ev-count {
+  display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink);
+  font-size: var(--fs-badge); font-weight: 600; line-height: 1.5; white-space: nowrap;
+}
+.ev-count.is-empty { border-style: dashed; background: var(--bg); color: var(--ink-muted); }
+
+/* ---- evidence panel: "Evidence" button -> sources (name + link, short quote, confidence bar) ---- */
 .ev { display: grid; gap: var(--space-2); }
 .ev-title { color: var(--ink-muted); font-size: var(--fs-small); font-weight: 600; }
+.ev-toggle {
+  display: inline-flex; align-items: center; gap: 8px; justify-self: start; min-height: var(--tap); padding: 0 16px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary);
+  font: inherit; font-size: var(--fs-small); font-weight: 600; cursor: pointer;
+}
+.ev-toggle:hover, .ev-toggle[aria-expanded="true"] { background: var(--primary-soft); border-color: var(--primary); }
+.ev-panel { display: grid; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--radius-inner); }
+.ev-panel-title { margin: 0; font-weight: 600; }
+.ev-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.ev-item { display: grid; gap: var(--space-2); min-width: 0; padding: var(--space-3); background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-control); }
+.ev-item.is-missing { border-style: dashed; }
+.ev-item-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
+.ev-src { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+a.ev-src { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.ev-meta { margin: 0; overflow-wrap: anywhere; }
+.ev-excerpt {
+  margin: 0; padding: var(--space-1) var(--space-3); border-left: 3px solid var(--primary);
+  color: var(--ink); font-size: var(--fs-small); overflow-wrap: anywhere;
+}
+.ev-excerpt::before { content: "\201C"; }
+.ev-excerpt::after { content: "\201D"; }
+.ev-conf { display: grid; gap: 4px; }
+.ev-conf-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
+.ev-foot { margin: 0; overflow-wrap: anywhere; }
+.ev-chevron { flex: none; }
+.ev-toggle[aria-expanded="true"] .ev-chevron { transform: rotate(180deg); }
+
+/* ---- evidence chips + source detail (EvidenceChip.tsx: no longer used by the finding card) ---- */
 .ev-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .ev-chip {
   display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 14px;
@@ -134,7 +170,8 @@
 
 /* ---- motion: only when the user has not asked for less ---- */
 @media (prefers-reduced-motion: no-preference) {
-  .tab, .ev-chip { transition: background-color var(--dur) ease, color var(--dur) ease, border-color var(--dur) ease; }
+  .tab, .ev-chip, .ev-toggle { transition: background-color var(--dur) ease, color var(--dur) ease, border-color var(--dur) ease; }
+  .ev-chevron { transition: transform var(--dur) ease; }
 }
 
 /* ---- responsive ---- */
@@ -144,6 +181,8 @@
 }
 @media (max-width: 560px) {
   .finding { padding: var(--space-4); }
+  .ev-toggle { justify-self: stretch; justify-content: center; }
+  .ev-panel { padding: var(--space-3); }
   .ev-detail dl { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .ev-detail dd { margin-bottom: var(--space-2); }
   /* Four tabs now (Doctor view, Patient card, Agent trace, What-if): two per row on a phone, labels may wrap, none is cut off. */

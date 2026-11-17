@@ -38,11 +38,21 @@ def test_parse_keeps_named_sections_and_skips_missing_fields():
 
 
 def test_salt_stripping_and_single_ingredient_rule():
+    from apps.drugs import names
+
     assert clean.strip_salt("WARFARIN SODIUM") == "warfarin"
     assert clean.is_single_ingredient_for("warfarin", [], ["WARFARIN SODIUM"])
     assert not clean.is_single_ingredient_for("warfarin", [], ["WARFARIN SODIUM", "SOMETHING ELSE"])
     assert clean.is_single_ingredient_for("acetaminophen", ["paracetamol"], ["PARACETAMOL"])
     assert not clean.is_single_ingredient_for("warfarin", [], [])
+    for sample in ["levocetirizine dihydrochloride", "ketorolac tromethamine", "olmesartan medoxomil"]:
+        assert clean.strip_salt(sample) == names.strip_salt(sample)
+    assert clean.is_single_ingredient_for("levocetirizine", [], ["LEVOCETIRIZINE DIHYDROCHLORIDE"])
+    assert clean.is_single_ingredient_for("ketorolac", [], ["KETOROLAC TROMETHAMINE"])
+    assert clean.is_single_ingredient_for("olmesartan", [], ["OLMESARTAN MEDOXOMIL"])
+    assert not clean.is_single_ingredient_for(
+        "olmesartan", [], ["OLMESARTAN MEDOXOMIL AND HYDROCHLOROTHIAZIDE"]
+    )
 
 
 def test_clean_drops_combo_empty_and_duplicate_and_adds_licence():
@@ -134,3 +144,13 @@ def test_ddinter_load_merges_aliases_keeps_variants_and_is_idempotent():
     assert again["interactions_added"] == 0 and Interaction.objects.count() == 4
     replaced = load_ddinter.load(drugs, pairs, replace=True)
     assert replaced["interactions_after"] == 4
+
+
+def test_ddinter_loader_rejects_unknown_pair_references():
+    import load_ddinter
+
+    with pytest.raises(ValueError, match="unknown drug id"):
+        load_ddinter.validate_processed(
+            [{"id": "A", "name": "Examplol"}],
+            [{"id_a": "A", "id_b": "missing", "level": "major"}],
+        )

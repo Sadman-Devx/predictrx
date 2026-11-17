@@ -1,11 +1,16 @@
 import { api } from "./api";
 import type {
   AgentTraceStep,
+  AnalysisListItem,
   AnalysisRunStatus,
   AnalysisStartRequest,
   AnalysisStartResponse,
+  Paginated,
   PipelineAgent,
   RunStatus,
+  TimelineStage,
+  TimelineStageKey,
+  TimelineStatus,
 } from "./types";
 
 /** Pipeline order (backend-design.md §6.1): Resolver → Clinical Notes → Drug Interaction → Advisory → Verifier. */
@@ -67,6 +72,49 @@ export async function getAnalysisTrace(runId: number, signal?: AbortSignal): Pro
   return parseTrace(await api<unknown>(`/analysis/${runId}/trace/`, { signal }));
 }
 
+const TIMELINE_KEYS: ReadonlySet<string> = new Set(["photo_upload", "ocr", "resolve", "interaction", "guardrail", "report"]);
+const TIMELINE_STATUSES: ReadonlySet<string> = new Set(["done", "running", "failed", "pending", "skipped"]);
+
+/**
+ * Reads the `timeline` of the trace endpoint. A stage with an unknown key or status is dropped, and `meta` keeps only
+ * finite numbers, so a server change cannot crash the screen. An older server without `timeline` gives an empty list
+ * (the run page then falls back to the five-step stepper).
+ */
+export function parseTimeline(body: unknown): TimelineStage[] {
+  if (!body || typeof body !== "object") return [];
+  const raw = (body as { timeline?: unknown }).timeline;
+  if (!Array.isArray(raw)) return [];
+
+  const stages: TimelineStage[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const r = item as Record<string, unknown>;
+    if (typeof r.key !== "string" || !TIMELINE_KEYS.has(r.key)) continue;
+    if (typeof r.status !== "string" || !TIMELINE_STATUSES.has(r.status)) continue;
+
+    const meta: Record<string, number> = {};
+    if (r.meta && typeof r.meta === "object") {
+      for (const [k, v] of Object.entries(r.meta as Record<string, unknown>)) {
+        if (typeof v === "number" && Number.isFinite(v)) meta[k] = v;
+      }
+    }
+    const ms = typeof r.duration_ms === "number" && Number.isFinite(r.duration_ms) && r.duration_ms >= 0 ? r.duration_ms : null;
+    stages.push({ key: r.key as TimelineStageKey, status: r.status as TimelineStatus, duration_ms: ms, meta });
+  }
+  return stages;
+}
+
+export interface TraceBundle {
+  steps: AgentTraceStep[];
+  timeline: TimelineStage[];
+}
+
+/** One request, both views of the trace: the agent rows (Agent trace tab) and the timeline stages. */
+export async function getTraceBundle(runId: number, signal?: AbortSignal): Promise<TraceBundle> {
+  const body = await api<unknown>(`/analysis/${runId}/trace/`, { signal });
+  return { steps: parseTrace(body), timeline: parseTimeline(body) };
+}
+
 export const isTerminal = (status: RunStatus) => status === "completed" || status === "failed";
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -109,3 +157,7 @@ export function deriveSteps(status: RunStatus, trace: AgentTraceStep[]): StepVie
     return { agent, state: status === "failed" ? "unrecorded" : "waiting", latencyMs: null };
   });
 }
+
+/** GET /api/analysis/runs/ — the signed-in clinician's own runs, newest first. */
+export const listAnalyses = (page = 1, status?: RunStatus) =>
+  api<Paginated<AnalysisListItem>>(`/analysis/runs/?page=${page}${status ? `&status=${status}` : ""}`);

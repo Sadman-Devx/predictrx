@@ -67,6 +67,11 @@ function evidenceItem(value: unknown): EvidenceItem {
     url: str(o.url),
     // Only an explicit `false` means "the record was removed by a data reload". A missing field is not treated as removed.
     available: o.available !== false,
+    // Evidence panel fields (same names as the main analysis). A what-if source may come without a confidence.
+    source_name: str(o.source_name),
+    source_url: str(o.source_url),
+    excerpt: str(o.excerpt),
+    confidence: typeof o.confidence === "number" && Number.isFinite(o.confidence) ? o.confidence : null,
   };
 }
 
