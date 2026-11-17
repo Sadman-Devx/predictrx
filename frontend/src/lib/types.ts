@@ -221,6 +221,23 @@ export interface AgentTraceStep {
   /** MCP / internal tool calls. Each is an object with at least a `tool` name; the rest of its shape varies by agent. */
   tool_calls?: unknown[];
 }
+
+/** The six stories of the timeline, in order (backend/apps/analysis/results.py, trace_timeline). */
+export type TimelineStageKey = "photo_upload" | "ocr" | "resolve" | "interaction" | "guardrail" | "report";
+
+/** skipped = the stage did not apply (e.g. typed in by hand, so there was no image and no OCR). */
+export type TimelineStatus = "done" | "running" | "failed" | "pending" | "skipped";
+
+/**
+ * One stage of GET /api/analysis/{id}/trace/ (`timeline`). Statuses are live; `duration_ms` is null until the run is
+ * completed (and always null for upload / OCR, which are not timed). `meta` holds counts only — the UI words them.
+ */
+export interface TimelineStage {
+  key: TimelineStageKey;
+  status: TimelineStatus;
+  duration_ms: number | null;
+  meta: Record<string, number>;
+}
 // ---------------------------------------------------------------------------------------------------------------
 // Consent (Day 9). Mirrors backend/apps/patients/models.py (Consent) and POST /api/patients/{id}/consents/.
 // ---------------------------------------------------------------------------------------------------------------

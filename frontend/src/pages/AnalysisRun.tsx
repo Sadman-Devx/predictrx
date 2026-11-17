@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { AnalysisResults } from "../components/analysis/AnalysisResults";
 import { PipelineStepper } from "../components/analysis/PipelineStepper";
+import { TraceTimeline } from "../components/analysis/TraceTimeline";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatusPill, type Tone } from "../components/ui/StatusPill";
 import { useAnalysisRun, type PollIssue } from "../hooks/useAnalysisRun";
@@ -46,7 +47,7 @@ export default function AnalysisRun() {
 
 function RunView({ runId }: { runId: number }) {
   const { t } = useI18n();
-  const { run, trace, traceKnown, issue, loading, retry } = useAnalysisRun(runId);
+  const { run, trace, timeline, traceKnown, issue, loading, retry } = useAnalysisRun(runId);
 
   if (issue === "not_found") {
     return (
@@ -96,7 +97,7 @@ function RunView({ runId }: { runId: number }) {
         </div>
       )}
 
-      {run && completed && <AnalysisResults run={run} trace={trace} traceKnown={traceKnown} />}
+      {run && completed && <AnalysisResults run={run} trace={trace} traceKnown={traceKnown} timeline={timeline} />}
 
       {run && !completed && (
         <>
@@ -135,9 +136,14 @@ function RunView({ runId }: { runId: number }) {
             )}
           </div>
 
-          <div className="card">
-            <PipelineStepper steps={steps} />
-          </div>
+          {/* The six-stage timeline when the server sends it; the five-agent stepper stays as the fallback. */}
+          {timeline.length > 0 ? (
+            <TraceTimeline stages={timeline} />
+          ) : (
+            <div className="card">
+              <PipelineStepper steps={steps} />
+            </div>
+          )}
         </>
       )}
     </section>

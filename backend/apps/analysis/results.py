@@ -75,6 +75,95 @@ def current_step(run) -> str | None:
     return None
 
 
+# ------------------------------------------------------------------------------------------------ timeline
+# The judge-facing view of a run: Photo upload -> OCR -> Brand->Generic -> Interaction check -> Guardrail -> Final report.
+# Only the agent-backed stages come from AgentTrace; upload / OCR happen before the run exists and are read from the
+# frozen snapshot (a medication with source "scan" can only be analysed after the person confirmed the OCR draft).
+TIMELINE_AGENT_STAGES: list[tuple[str, tuple[str, ...]]] = [
+    ("resolve", ("resolver",)),
+    ("interaction", ("clinical_notes", "drug_interaction")),
+    ("guardrail", ("verifier",)),
+]
+REPORT_AGENT = "advisory"
+
+
+def _timeline_stage(key: str, status: str, duration_ms: int | None = None, meta: dict | None = None) -> dict:
+    """status: done | running | failed | pending | skipped. `meta` holds counts only (the UI words them, in Bangla/English)."""
+    return {"key": key, "status": status, "duration_ms": duration_ms, "meta": meta or {}}
+
+
+def _agent_status(agents: tuple[str, ...], steps: dict[str, str], run_status: str) -> str:
+    states = [steps.get(a, "pending") for a in agents]
+    if "failed" in states:
+        return "failed"
+    if all(s == "done" for s in states):
+        return "done"
+    if "running" in states or "done" in states:
+        # A half-finished stage only counts as "running" while the run is. A stopped run never shows a spinner.
+        return "running" if run_status == "running" else "pending"
+    return "pending"
+
+
+def trace_timeline(run, traces: list) -> list[dict]:
+    """Six stages for the Agent trace timeline: [{key, status, duration_ms, meta}].
+
+    * Statuses are always available (they carry no clinical content) so a polling UI can show live progress.
+    * `duration_ms` comes from the stored AgentTrace rows and exists only once the run is completed (the same moment
+      the trace rows exist). Upload / OCR have no recorded duration: it is `None`, never estimated.
+    * `meta` holds counts only. Resolve counts come from the frozen snapshot; interaction / guardrail counts from the
+      stored findings and only for a completed run, so a partial run never looks final.
+    * Nothing here says a combination is safe: the guardrail stage reports verification counts, nothing more.
+    """
+    final = run.status == "completed"
+    snapshot_meds = (run.input_snapshot or {}).get("medications", [])
+    scan_count = sum(1 for m in snapshot_meds if m.get("source") == "scan")
+    steps = {s["agent"]: s["status"] for s in progress_steps(run)}
+
+    latency: dict[str, int] = {}
+    for trace in traces:
+        latency[trace.agent_name] = latency.get(trace.agent_name, 0) + max(0, trace.latency_ms)
+
+    def took(agents: tuple[str, ...]) -> int | None:
+        return sum(latency[a] for a in agents if a in latency) if any(a in latency for a in agents) else None
+
+    counts = {"pairs": 0, "verified": 0, "unverified": 0, "conflict": 0}
+    if final:
+        for _severity, verification in run.findings.values_list("severity", "verification_status"):
+            counts["pairs"] += 1
+            if verification in counts:
+                counts[verification] += 1
+    violations = len(guardrail_violations(run)) if final else 0
+
+    if scan_count:
+        stages = [_timeline_stage("photo_upload", "done"),
+                  _timeline_stage("ocr", "done", meta={"medicines": scan_count})]
+    else:  # typed in by hand: there was no image and no OCR
+        stages = [_timeline_stage("photo_upload", "skipped"), _timeline_stage("ocr", "skipped")]
+
+    for key, agents in TIMELINE_AGENT_STAGES:
+        status = _agent_status(agents, steps, run.status)
+        meta: dict = {}
+        if status == "done" and key == "resolve" and snapshot_meds:
+            matched = sum(1 for m in snapshot_meds if m.get("drug_id"))
+            meta = {"resolved": matched, "total": len(snapshot_meds)}
+        elif status == "done" and final and key == "interaction":
+            meta = {"pairs": counts["pairs"]}
+        elif status == "done" and final and key == "guardrail":
+            meta = {"verified": counts["verified"], "unverified": counts["unverified"],
+                    "conflict": counts["conflict"], "violations": violations}
+        stages.append(_timeline_stage(key, status, took(agents) if status == "done" else None, meta))
+
+    # The final report is final only after the guardrail ran, so it follows the run, not the (earlier) advisory agent.
+    if final:
+        report = _timeline_stage("report", "done", took((REPORT_AGENT,)))
+    elif all(s["status"] in ("done", "skipped") for s in stages):
+        report = _timeline_stage("report", {"failed": "failed", "running": "running"}.get(run.status, "pending"))
+    else:
+        report = _timeline_stage("report", "pending")
+    stages.append(report)
+    return stages
+
+
 # ------------------------------------------------------------------------------------------------ frozen input
 def snapshot_medications(run) -> list[dict]:
     """What was analysed, exactly as frozen at run time (already PII-redacted). Frequency is left out on purpose."""

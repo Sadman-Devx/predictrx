@@ -77,8 +77,10 @@ class AnalysisDetailView(APIView):
 class AnalysisTraceView(APIView):
     """GET /api/analysis/{id}/trace/ — agent trace for the UI (which agent ran, tools called, latency).
 
-    Before the run completes only the step list (`steps`, names + status) is returned; `traces` is empty and
-    `available` is false. Trace rows are redacted summaries; reading them is audited.
+    Before the run completes only the step list (`steps`, names + status) and the `timeline` stage statuses are
+    returned; `traces` is empty and `available` is false. Trace rows are redacted summaries; reading them is audited.
+    The timeline carries stage names, statuses, durations and counts only (no clinical text), so a status poll is
+    not audited, exactly like the detail endpoint.
     """
 
     permission_classes = [IsDoctorOrPharmacist]
@@ -89,7 +91,8 @@ class AnalysisTraceView(APIView):
         traces = list(run.traces.order_by("step_order", "id")) if run.status == "completed" else []
         if traces:
             audit.record(request, audit.ANALYSIS_TRACE_READ, patient=run.patient, obj=run, steps=len(traces))
-        return Response(AnalysisTraceSerializer(run, context={"traces": traces}).data)
+        context = {"traces": traces, "timeline": results.trace_timeline(run, traces)}
+        return Response(AnalysisTraceSerializer(run, context=context).data)
 
 
 class AnalysisPatientCardView(APIView):
