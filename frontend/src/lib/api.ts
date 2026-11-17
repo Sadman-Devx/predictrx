@@ -133,6 +133,21 @@ export async function login(email: string, password: string): Promise<User> {
   return api<User>("/auth/me/");
 }
 
+export async function loginWithGoogle(idToken: string, preferredLanguage: string): Promise<User> {
+  const data = await api<{ access: string }>("/auth/social/google/", {
+    method: "POST",
+    body: JSON.stringify({ id_token: idToken, preferred_language: preferredLanguage }),
+    skipRefresh: true,
+  });
+  setTokens(data.access);
+  try {
+    return await api<User>("/auth/me/", { skipRefresh: true });
+  } catch (error) {
+    setTokens(null);
+    throw error;
+  }
+}
+
 /** Called once when the app starts: if the httpOnly session cookie is still valid, sign the user in again. */
 export async function restoreSession(): Promise<User | null> {
   try {
