@@ -34,6 +34,7 @@
 .step-body { min-width: 0; }
 .step-title { margin: 0; font-weight: 600; }
 .step-hint { margin: 2px 0 0; }
+.step-summary { margin: 2px 0 0; overflow-wrap: anywhere; }
 .step-state { padding-top: 3px; font-size: var(--fs-badge); font-weight: 600; color: var(--ink-muted); text-align: right; }
 
 .step-running .step-glyph,

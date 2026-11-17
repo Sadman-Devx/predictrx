@@ -234,9 +234,23 @@ class AnalysisDetailSerializer(serializers.ModelSerializer):
 
 
 # ------------------------------------------------------------------------------------------------ trace
+class TimelineStageSerializer(serializers.Serializer):
+    """One row of the judge-facing timeline (results.trace_timeline). `meta` holds counts only; the UI words them."""
+
+    key = serializers.ChoiceField(choices=["photo_upload", "ocr", "resolve", "interaction", "guardrail", "report"])
+    status = serializers.ChoiceField(choices=["done", "running", "failed", "pending", "skipped"])
+    duration_ms = serializers.IntegerField(allow_null=True)
+    meta = serializers.DictField(child=serializers.IntegerField())
+
+
 class AnalysisTraceSerializer(serializers.Serializer):
     """GET /api/analysis/{id}/trace/ — which agent did what. Step contents exist only for completed runs
-    (traces are written together with the findings, never half-way)."""
+    (traces are written together with the findings, never half-way).
+
+    `timeline` is the same information as a six-stage story (upload → OCR → brand→generic → interactions → guardrail →
+    report). Its statuses are live while the run works; durations and result counts appear once the run is completed.
+    The view computes it (so this serializer never runs hidden queries) and passes it in the context.
+    """
 
     run_id = serializers.IntegerField(source="id", read_only=True)
     status = serializers.CharField(read_only=True)
@@ -244,9 +258,14 @@ class AnalysisTraceSerializer(serializers.Serializer):
     steps = serializers.SerializerMethodField()
     total_latency_ms = serializers.SerializerMethodField()
     traces = serializers.SerializerMethodField()
+    timeline = serializers.SerializerMethodField()
 
     def _traces(self) -> list:
         return self.context.get("traces", [])
+
+    @extend_schema_field(TimelineStageSerializer(many=True))
+    def get_timeline(self, obj) -> list[dict]:
+        return TimelineStageSerializer(self.context.get("timeline", []), many=True).data
 
     def get_available(self, obj) -> bool:
         return obj.status == "completed"

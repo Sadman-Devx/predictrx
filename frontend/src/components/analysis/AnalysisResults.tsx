@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import "../../styles/results.css";
 import { useI18n, type MessageKey } from "../../i18n";
 import { pickSummary, SEVERITIES, severityCounts, sortFindings, verificationCounts, VERIFICATIONS } from "../../lib/results";
-import type { AgentTraceStep, AnalysisRunStatus } from "../../lib/types";
+import type { AgentTraceStep, AnalysisRunStatus, TimelineStage } from "../../lib/types";
 import { SeverityBadge } from "../ui/SeverityBadge";
 import { StatusPill } from "../ui/StatusPill";
 import { Tabs } from "../ui/Tabs";
 import { FindingCard } from "./FindingCard";
 import { PatientCardView } from "./PatientCardView";
+import { TraceTimeline } from "./TraceTimeline";
 import { TraceView } from "./TraceView";
 import { TwinView } from "./TwinView";
 import { VerificationBadge } from "./VerificationBadge";
@@ -18,6 +19,8 @@ interface Props {
   run: AnalysisRunStatus;
   trace: AgentTraceStep[];
   traceKnown: boolean;
+  /** Six-stage story of the run (upload → … → final report). Empty on an older server: only the agent list is shown then. */
+  timeline: TimelineStage[];
 }
 
 const GAP_REASON: Record<string, MessageKey> = {
@@ -38,7 +41,7 @@ function tabFrom(id: string): TabId {
  * sorted by severity next to the medicines that were analysed. Nothing is hidden: "unknown", "unverified" and "conflict"
  * findings, medicines that could not be matched and guardrail changes are all shown.
  */
-export function AnalysisResults({ run, trace, traceKnown }: Props) {
+export function AnalysisResults({ run, trace, traceKnown, timeline }: Props) {
   const { t, lang } = useI18n();
   const [tab, setTab] = useState<TabId>("doctor");
 
@@ -209,7 +212,16 @@ export function AnalysisResults({ run, trace, traceKnown }: Props) {
       tabs={[
         { id: "doctor", label: t("results.tab.doctor"), panel: doctor },
         { id: "card", label: t("results.tab.card"), panel: <PatientCardView runId={run.run_id} active={tab === "card"} /> },
-        { id: "trace", label: t("results.tab.trace"), panel: <TraceView trace={trace} traceKnown={traceKnown} /> },
+        {
+          id: "trace",
+          label: t("results.tab.trace"),
+          panel: (
+            <>
+              {timeline.length > 0 && <TraceTimeline stages={timeline} />}
+              <TraceView trace={trace} traceKnown={traceKnown} />
+            </>
+          ),
+        },
         {
           id: "twin",
           label: t("results.tab.twin"),

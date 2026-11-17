@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { getAnalysis, getAnalysisTrace } from "../lib/analysis";
+import { getAnalysis, getTraceBundle } from "../lib/analysis";
 import { ApiRequestError } from "../lib/api";
-import type { AgentTraceStep, AnalysisRunStatus } from "../lib/types";
+import type { AgentTraceStep, AnalysisRunStatus, TimelineStage } from "../lib/types";
 
 const POLL_MS = 1500; // normal polling interval while a run is queued / running
 const MAX_BACKOFF_MS = 8000; // ceiling for the retry delay after failed requests
@@ -22,6 +22,8 @@ export interface AnalysisRunWatch {
   run: AnalysisRunStatus | null;
   /** Trace rows recorded so far (empty until the server has any). */
   trace: AgentTraceStep[];
+  /** The six-stage timeline (upload → OCR → brand→generic → interactions → guardrail → report). Empty on an older server. */
+  timeline: TimelineStage[];
   /** True once the trace endpoint has answered at least once. */
   traceKnown: boolean;
   issue: PollIssue | null;
@@ -38,11 +40,13 @@ export interface AnalysisRunWatch {
  *  - Pauses while the tab is hidden and checks again the moment it is visible.
  *  - Every request is abortable; answers that arrive after unmount are ignored.
  *  - The trace endpoint is optional: a 404 turns trace polling off for this watch, other trace errors are non-fatal.
+ *    It feeds both the Agent trace tab (`trace`) and the live timeline (`timeline`) from one request.
  */
 export function useAnalysisRun(runId: number): AnalysisRunWatch {
   const valid = Number.isInteger(runId) && runId > 0;
   const [run, setRun] = useState<AnalysisRunStatus | null>(null);
   const [trace, setTrace] = useState<AgentTraceStep[]>([]);
+  const [timeline, setTimeline] = useState<TimelineStage[]>([]);
   const [traceKnown, setTraceKnown] = useState(false);
   const [issue, setIssue] = useState<PollIssue | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -84,11 +88,14 @@ export function useAnalysisRun(runId: number): AnalysisRunWatch {
         setRun(status);
         setIssue(null);
 
-        if (status.status !== "queued" && traceSupported) {
+        // The trace endpoint is polled together with the status, also while the run is still queued: the timeline
+        // already knows about the upload / OCR stages then, and the later stages simply read "waiting".
+        if (traceSupported) {
           try {
-            const steps = await getAnalysisTrace(runId, signal);
+            const bundle = await getTraceBundle(runId, signal);
             if (cancelled) return;
-            setTrace(steps);
+            setTrace(bundle.steps);
+            setTimeline(bundle.timeline);
             setTraceKnown(true);
           } catch (err) {
             if (cancelled) return;
@@ -147,6 +154,7 @@ export function useAnalysisRun(runId: number): AnalysisRunWatch {
   return {
     run,
     trace,
+    timeline,
     traceKnown,
     issue: valid ? issue : "not_found",
     loading: valid && run === null && issue === null,
