@@ -44,6 +44,11 @@ cd ../mcp-server && pip install -r requirements.txt && python server.py
 # 4) frontend (separate terminal)
 cd ../frontend && npm install && npm run dev # http://localhost:5173
 ```
+To enable Google sign-in, set the same Google Web client ID as `GOOGLE_CLIENT_ID` in the repository `.env` and
+`VITE_GOOGLE_CLIENT_ID` in `frontend/.env` (see `frontend/.env.example`). Add each frontend origin, such as
+`http://localhost:5173`, to the Google OAuth client's authorized JavaScript origins, then restart Django and Vite.
+The Google ID-token flow does not need a client secret.
+
 Run tests: `cd backend && pytest`
 
 ## Implementation and remaining validation

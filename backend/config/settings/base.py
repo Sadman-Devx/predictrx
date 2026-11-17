@@ -132,8 +132,8 @@ REST_FRAMEWORK = {
         "register": "10/hour",
         "password_reset": "5/hour",
         "password_reset_confirm": "10/hour",
-        "email_verify": "20/hour",  # open the emailed verification link
-        "email_verify_resend": "5/hour",  # ask for a new verification email
+        "email_verify": "20/hour",  # submit an emailed verification code
+        "email_verify_resend": "5/hour",  # ask for a new verification code
         "password_change": "5/hour",  # logged-in change of password
         "analysis_list": "120/min",  # list of past runs (read only, no LLM)
         "social": "20/min",
@@ -225,10 +225,10 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="PredictRx <no-reply@pred
 PASSWORD_RESET_TIMEOUT = env.int("PASSWORD_RESET_TIMEOUT", default=3600)
 
 # ---------- Email verification ----------
-# Register always sends a verification link. True = a doctor/pharmacist cannot log in until the link was opened
-# (admin and invited family accounts are exempt: the invite link already proves their mailbox).
-REQUIRE_EMAIL_VERIFICATION = env.bool("REQUIRE_EMAIL_VERIFICATION", default=False)
-EMAIL_VERIFICATION_TIMEOUT = env.int("EMAIL_VERIFICATION_TIMEOUT", default=48 * 3600)  # seconds
+# Registration sends a 60-second OTP; True = a doctor/pharmacist cannot log in until verified.
+# Admin and invited family accounts are exempt.
+REQUIRE_EMAIL_VERIFICATION = env.bool("REQUIRE_EMAIL_VERIFICATION", default=True)
+EMAIL_VERIFICATION_TIMEOUT = env.int("EMAIL_VERIFICATION_TIMEOUT", default=48 * 3600)  # legacy signed-link timeout
 
 # ---------- Session cookie ----------
 # The refresh token lives in an httpOnly cookie (JavaScript cannot read it), so a page reload keeps the user signed in

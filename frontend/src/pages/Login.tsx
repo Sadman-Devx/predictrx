@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { DisclaimerStrip } from "../components/ui/DisclaimerStrip";
 import { LanguageToggle } from "../components/ui/LanguageToggle";
 import { useI18n, type MessageKey } from "../i18n";
-import { api, ApiRequestError } from "../lib/api";
+import { api, ApiRequestError, loginWithGoogle } from "../lib/api";
 import { collectReasons } from "../lib/errors";
+import { loadGoogleIdentityClient } from "../lib/googleIdentity";
 import "../styles/auth.css";
 
 type View = "login" | "register";
@@ -13,6 +14,7 @@ type Anim = "to-login" | "to-register" | null;
 type Notice = { kind: "ok" | "info"; key: MessageKey } | null;
 
 const ANIM_MS = 1100; // keep in sync with --auth-dur in styles/auth.css
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? "";
 
 function errorKey(err: unknown): MessageKey {
   if (err instanceof ApiRequestError) {
@@ -38,6 +40,30 @@ function registerErrorText(err: unknown, t: T): string {
   return t("auth.registerFailed");
 }
 
+function googleErrorKey(err: unknown): MessageKey {
+  if (!(err instanceof ApiRequestError)) return "auth.googleFailed";
+  if (err.status === 0) return "login.network";
+
+  switch (err.body?.error?.code) {
+    case "provider_not_configured":
+      return "auth.googleNotConfigured";
+    case "provider_unreachable":
+      return "auth.googleUnavailable";
+    case "invalid_credential":
+      return "auth.googleInvalidCredential";
+    case "email_not_verified":
+      return "auth.googleEmailNotVerified";
+    case "account_not_found":
+      return "auth.googleAccountNotFound";
+    case "account_disabled":
+      return "auth.googleAccountDisabled";
+    case "social_not_allowed":
+      return "auth.googlePasswordOnly";
+    default:
+      return err.status >= 500 ? "auth.googleUnavailable" : "auth.googleFailed";
+  }
+}
+
 const prefersReducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
@@ -47,7 +73,7 @@ const inertIf = (on: boolean) => (on ? ({ inert: "" } as Record<string, unknown>
 
 export default function Login() {
   const { t, lang } = useI18n();
-  const { user, login } = useAuth();
+  const { user, login, updateUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? "/";
@@ -75,11 +101,85 @@ export default function Login() {
   const [regBusy, setRegBusy] = useState(false);
 
   const [notice, setNotice] = useState<Notice>(null);
+  const [socialError, setSocialError] = useState<MessageKey | null>(null);
+  const [googleSetup, setGoogleSetup] = useState<"loading" | "ready" | "failed" | "unconfigured">(
+    GOOGLE_CLIENT_ID ? "loading" : "unconfigured",
+  );
+  const registerGoogleButton = useRef<HTMLDivElement>(null);
+  const loginGoogleButton = useRef<HTMLDivElement>(null);
+  const googleInitialized = useRef(false);
+  const googleLoginInFlight = useRef(false);
+
+  const handleGoogleCredential = useCallback(async (idToken: string) => {
+    if (googleLoginInFlight.current) return;
+    googleLoginInFlight.current = true;
+    setSocialError(null);
+    setNotice(null);
+    try {
+      const me = await loginWithGoogle(idToken, lang);
+      updateUser(me);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setSocialError(googleErrorKey(err));
+    } finally {
+      googleLoginInFlight.current = false;
+    }
+  }, [from, lang, navigate, updateUser]);
+  const googleCredentialHandler = useRef(handleGoogleCredential);
+  googleCredentialHandler.current = handleGoogleCredential;
 
   useEffect(() => {
     const list = timers.current;
     return () => list.forEach((id) => window.clearTimeout(id));
   }, []);
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) {
+      setSocialError("auth.googleNotConfigured");
+      return;
+    }
+
+    let cancelled = false;
+    void loadGoogleIdentityClient().then((client) => {
+      if (cancelled) return;
+      if (!googleInitialized.current) {
+        client.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: (response) => {
+            if (response.credential) void googleCredentialHandler.current(response.credential);
+            else setSocialError("auth.googleInvalidCredential");
+          },
+        });
+        googleInitialized.current = true;
+      }
+
+      const targets = [registerGoogleButton.current, loginGoogleButton.current].filter(
+        (target): target is HTMLDivElement => target !== null,
+      );
+      for (const target of targets) {
+        target.replaceChildren();
+        client.renderButton(target, {
+          type: "icon",
+          theme: "outline",
+          size: "large",
+          shape: "square",
+          locale: lang,
+        });
+      }
+      if (targets.length === 2) {
+        setGoogleSetup("ready");
+        setSocialError(null);
+      }
+    }).catch(() => {
+      if (cancelled) return;
+      setGoogleSetup("failed");
+      setSocialError("auth.googleScriptFailed");
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lang]);
 
   if (user) return <Navigate to={from} replace />;
 
@@ -88,6 +188,7 @@ export default function Login() {
     setError(null);
     setRegError(null);
     setNotice(null);
+    setSocialError(null);
     if (prefersReducedMotion()) {
       setView(next);
       setTone(next === "login" ? "light" : "dark");
@@ -125,8 +226,9 @@ export default function Login() {
         skipRefresh: true,
         body: JSON.stringify({ email: email.trim() }),
       });
-      setError(null);
-      setNotice({ kind: "info", key: "login.verificationResent" });
+      navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`, {
+        state: { resendRequested: true },
+      });
     } catch (err) {
       setError(errorKey(err));
     }
@@ -142,7 +244,7 @@ export default function Login() {
     }
     setRegBusy(true);
     try {
-      await api("/auth/register/", {
+      const registration = await api<{ verification_email_sent: boolean }>("/auth/register/", {
         method: "POST",
         skipRefresh: true,
         body: JSON.stringify({
@@ -152,15 +254,17 @@ export default function Login() {
           preferred_language: lang,
         }),
       });
-      setEmail(regEmail.trim());
+      const registeredEmail = regEmail.trim();
+      setEmail(registeredEmail);
       setPassword("");
       setRegName("");
       setRegEmail("");
       setRegPw("");
       setRegPw2("");
       setRegBusy(false);
-      switchTo("login");
-      setNotice({ kind: "ok", key: "auth.registeredVerify" });
+      navigate(`/verify-email?email=${encodeURIComponent(registeredEmail)}`, {
+        state: { emailSent: registration.verification_email_sent },
+      });
     } catch (err) {
       setRegError(registerErrorText(err, t));
       setRegPw("");
@@ -170,6 +274,9 @@ export default function Login() {
   }
 
   const socialSoon = () => setNotice({ kind: "info", key: "auth.socialSoon" });
+  const googleButtonUnavailable = () => {
+    setSocialError(googleSetup === "unconfigured" ? "auth.googleNotConfigured" : "auth.googleScriptFailed");
+  };
   const forgot = () => navigate("/reset-password");
 
   const noticeEl = notice && (
@@ -238,6 +345,7 @@ export default function Login() {
               </div>
 
               {regError && <p className="auth-msg err" role="alert">{regError}</p>}
+              {socialError && <p className="auth-msg err" role="alert">{t(socialError)}</p>}
               {view === "register" && noticeEl}
 
               <button type="submit" className="auth-submit" disabled={regBusy}>
@@ -245,7 +353,13 @@ export default function Login() {
               </button>
 
               <p className="auth-or">{t("auth.orRegisterSocial")}</p>
-              <SocialRow onClick={socialSoon} />
+              <SocialRow
+                googleButtonRef={registerGoogleButton}
+                googleReady={googleSetup === "ready"}
+                googleDisabled={googleSetup === "loading"}
+                onGoogleUnavailable={googleButtonUnavailable}
+                onOtherClick={socialSoon}
+              />
             </form>
           </section>
 
@@ -279,6 +393,7 @@ export default function Login() {
               <button type="button" className="auth-forgot" onClick={forgot}>{t("auth.forgot")}</button>
 
               {error && <p className="auth-msg err" role="alert">{t(error)}</p>}
+              {socialError && <p className="auth-msg err" role="alert">{t(socialError)}</p>}
               {error === "login.notVerified" && (
                 <button type="button" className="auth-forgot" onClick={() => void onResendVerification()}>
                   {t("login.resendVerification")}
@@ -291,7 +406,13 @@ export default function Login() {
               </button>
 
               <p className="auth-or">{t("auth.orLoginSocial")}</p>
-              <SocialRow onClick={socialSoon} />
+              <SocialRow
+                googleButtonRef={loginGoogleButton}
+                googleReady={googleSetup === "ready"}
+                googleDisabled={googleSetup === "loading"}
+                onGoogleUnavailable={googleButtonUnavailable}
+                onOtherClick={socialSoon}
+              />
             </form>
           </section>
 
@@ -320,12 +441,31 @@ export default function Login() {
   );
 }
 
-function SocialRow({ onClick }: { onClick: () => void }) {
+function SocialRow({
+  googleButtonRef,
+  googleReady,
+  googleDisabled,
+  onGoogleUnavailable,
+  onOtherClick,
+}: {
+  googleButtonRef: { current: HTMLDivElement | null };
+  googleReady: boolean;
+  googleDisabled: boolean;
+  onGoogleUnavailable: () => void;
+  onOtherClick: () => void;
+}) {
   return (
     <div className="auth-social">
-      <button type="button" onClick={onClick} aria-label="Google">G</button>
-      <button type="button" onClick={onClick} aria-label="Facebook">f</button>
-      <button type="button" onClick={onClick} aria-label="LinkedIn">in</button>
+      <div className="auth-google-wrap">
+        <div className="auth-google-widget" ref={googleButtonRef} />
+        {googleReady ? (
+          <span className="auth-google-mark" aria-hidden="true">G</span>
+        ) : (
+          <button type="button" onClick={onGoogleUnavailable} disabled={googleDisabled} aria-label="Google">G</button>
+        )}
+      </div>
+      <button type="button" onClick={onOtherClick} aria-label="Facebook">f</button>
+      <button type="button" onClick={onOtherClick} aria-label="LinkedIn">in</button>
     </div>
   );
 }

@@ -54,9 +54,9 @@ def auth_client(api_client):
 
 @pytest.fixture
 def doctor(make_user):
-    return make_user("doctor")
+    return make_user("doctor", email_verified=True)
 
 
 @pytest.fixture
 def other_doctor(make_user):
-    return make_user("doctor")
+    return make_user("doctor", email_verified=True)

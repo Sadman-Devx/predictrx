@@ -1,6 +1,8 @@
 import secrets
+import re
 
 import pytest
+from django.core import mail
 from rest_framework.test import APIClient
 
 from apps.accounts.models import User
@@ -9,12 +11,19 @@ from tests.conftest import TEST_PASSWORD
 REGISTER = "/api/auth/register/"
 LOGIN = "/api/auth/login/"
 ME = "/api/auth/me/"
+VERIFY = "/api/auth/verify-email/"
 
 
 def payload(**over):
     base = {"email": "dr.new@example.test", "password": TEST_PASSWORD, "display_name": "Dr New"}
     base.update(over)
     return base
+
+
+def verify_registered_email(client, email="dr.new@example.test"):
+    codes = re.findall(r"\b\d{6}\b", mail.outbox[-1].body)
+    assert len(codes) == 1
+    return client.post(VERIFY, {"email": email, "code": codes[0]}, format="json")
 
 
 @pytest.mark.django_db
@@ -87,6 +96,7 @@ class TestRegister:
 class TestLoginAndMe:
     def test_register_login_me_journey(self, api_client):
         api_client.post(REGISTER, payload(), format="json")
+        assert verify_registered_email(api_client).status_code == 200
         r = api_client.post(LOGIN, {"email": "dr.new@example.test", "password": TEST_PASSWORD}, format="json")
         assert r.status_code == 200 and {"access", "refresh"} <= set(r.json())
         client = APIClient()
@@ -96,6 +106,7 @@ class TestLoginAndMe:
 
     def test_login_is_case_insensitive_on_email(self, api_client):
         api_client.post(REGISTER, payload(), format="json")
+        assert verify_registered_email(api_client).status_code == 200
         r = api_client.post(LOGIN, {"email": "  Dr.New@Example.test ", "password": TEST_PASSWORD}, format="json")
         assert r.status_code == 200
 

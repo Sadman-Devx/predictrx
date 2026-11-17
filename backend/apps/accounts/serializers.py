@@ -80,14 +80,23 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 
 class VerifyEmailSerializer(serializers.Serializer):
-    token = serializers.CharField(max_length=512)
+    token = serializers.CharField(max_length=512, required=False)
+    email = serializers.EmailField(max_length=254, required=False)
+    code = serializers.RegexField(r"^\d{6}$", min_length=6, max_length=6, required=False)
 
     def validate(self, attrs):
-        user = email_verification.user_from_token(attrs["token"])
+        if attrs.get("token"):
+            user = email_verification.user_from_token(attrs["token"])
+        elif attrs.get("email") and attrs.get("code"):
+            user = email_verification.verify_code(attrs["email"].strip().lower(), attrs["code"])
+        else:
+            raise serializers.ValidationError(
+                {"code": ["Provide the verification code and email address."]}, code="verification_code_required"
+            )
         if user is None:
             raise serializers.ValidationError(
-                {"token": ["This verification link is invalid or has expired. Please request a new one."]},
-                code="invalid_verification_link",
+                {"code": ["This verification code or link is invalid or has expired. Request a new code."]},
+                code="invalid_verification_code",
             )
         attrs["user"] = user
         return attrs
