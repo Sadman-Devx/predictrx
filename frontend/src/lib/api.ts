@@ -2,17 +2,15 @@ import type { ApiError, User } from "./types";
 
 const BASE = import.meta.env.VITE_API_URL ?? "/api";
 
-// Tokens live in memory only (rule.md §5: never localStorage). A page reload therefore logs the user out.
-// TODO: move to httpOnly cookies when the backend supports it.
+// The short-lived access token lives in memory only (rule.md §5: never localStorage). The long-lived refresh token is
+// an httpOnly cookie set by the server: JavaScript never sees it, and it is what keeps you signed in after a reload
+// (see restoreSession). `credentials: "include"` makes the browser send that cookie even if VITE_API_URL is another origin.
 let accessToken: string | null = null;
-let refreshToken: string | null = null;
 let onSessionExpired: (() => void) | null = null;
 
-export function setTokens(access: string | null, refresh: string | null) {
+export function setTokens(access: string | null) {
   accessToken = access;
-  refreshToken = refresh;
 }
-export const getRefreshToken = () => refreshToken;
 export function setSessionExpiredHandler(fn: (() => void) | null) {
   onSessionExpired = fn;
 }
@@ -28,17 +26,18 @@ export class ApiRequestError extends Error {
 // (refresh tokens rotate and are blacklisted, so parallel refreshes would invalidate each other).
 let refreshing: Promise<boolean> | null = null;
 function refreshAccess(): Promise<boolean> {
-  if (!refreshToken) return Promise.resolve(false);
   refreshing ??= (async () => {
     try {
+      // No token in the body: the server reads the httpOnly cookie and rotates it.
       const res = await fetch(`${BASE}/auth/token/refresh/`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh: refreshToken }),
+        body: "{}",
       });
       if (!res.ok) return false;
-      const data = (await res.json()) as { access: string; refresh?: string };
-      setTokens(data.access, data.refresh ?? refreshToken);
+      const data = (await res.json()) as { access: string };
+      setTokens(data.access);
       return true;
     } catch {
       return false;
@@ -61,14 +60,14 @@ export async function api<T>(path: string, { skipRefresh, ...init }: Options = {
 
   let res: Response;
   try {
-    res = await fetch(`${BASE}${path}`, { ...init, headers });
+    res = await fetch(`${BASE}${path}`, { credentials: "include", ...init, headers });
   } catch {
     throw new ApiRequestError(0, null);
   }
 
-  if (res.status === 401 && !skipRefresh && refreshToken) {
+  if (res.status === 401 && !skipRefresh) {
     if (await refreshAccess()) return api<T>(path, { ...init, skipRefresh: true }); // retry once, new token
-    setTokens(null, null);
+    setTokens(null);
     onSessionExpired?.();
   }
 
@@ -105,9 +104,9 @@ export async function apiBlob(path: string, { signal, skipRefresh }: BlobOptions
     throw new ApiRequestError(0, null);
   }
 
-  if (res.status === 401 && !skipRefresh && refreshToken) {
+  if (res.status === 401 && !skipRefresh) {
     if (await refreshAccess()) return apiBlob(path, { signal, skipRefresh: true });
-    setTokens(null, null);
+    setTokens(null);
     onSessionExpired?.();
   }
 
@@ -124,22 +123,34 @@ export async function apiBlob(path: string, { signal, skipRefresh }: BlobOptions
 }
 
 export async function login(email: string, password: string): Promise<User> {
-  const data = await api<{ access: string; refresh: string }>("/auth/login/", {
+  // The response also carries the refresh token in development; it is ignored on purpose: the cookie is what counts.
+  const data = await api<{ access: string }>("/auth/login/", {
     method: "POST",
     body: JSON.stringify({ email, password }),
     skipRefresh: true,
   });
-  setTokens(data.access, data.refresh);
+  setTokens(data.access);
   return api<User>("/auth/me/");
 }
 
-export async function logout(): Promise<void> {
-  const refresh = refreshToken;
+/** Called once when the app starts: if the httpOnly session cookie is still valid, sign the user in again. */
+export async function restoreSession(): Promise<User | null> {
   try {
-    if (refresh) await api("/auth/logout/", { method: "POST", body: JSON.stringify({ refresh }), skipRefresh: true });
+    if (!(await refreshAccess())) return null;
+    return await api<User>("/auth/me/", { skipRefresh: true });
   } catch {
-    /* server-side blacklist is best effort; we still drop the tokens locally */
+    setTokens(null);
+    return null;
+  }
+}
+
+export async function logout(): Promise<void> {
+  try {
+    // The server blacklists the refresh token from the cookie and clears it.
+    await api("/auth/logout/", { method: "POST", body: "{}", skipRefresh: true });
+  } catch {
+    /* the server-side blacklist is best effort; we still drop the access token locally */
   } finally {
-    setTokens(null, null);
+    setTokens(null);
   }
 }

@@ -1,0 +1,15 @@
+/* ---- Profile (/profile) ---- */
+.boot { min-height: 100vh; display: grid; place-items: center; color: var(--muted, #5b6b7a); }
+.profile { display: grid; gap: 16px; max-width: 640px; }
+.profile-card { display: grid; gap: 12px; }
+.profile-h { margin: 0; font-size: 1.05rem; }
+.profile-facts { display: grid; gap: 10px; margin: 0; }
+.profile-facts > div { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+.profile-facts dt { color: var(--muted, #5b6b7a); }
+.profile-facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.profile-field { display: grid; gap: 4px; }
+.profile-field input { padding: 10px 12px; border: 1px solid var(--border, #cfd8dc); border-radius: 8px; font: inherit; }
+.profile-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.profile-msg { margin: 0; font-size: 0.92rem; }
+.profile-msg.ok { color: #1b6b45; }
+.profile-msg.error { color: #a12a2a; }

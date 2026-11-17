@@ -113,15 +113,21 @@ def login_with_provider(provider: str, data: dict, preferred_language: str = "bn
     """Verify the credential and return the matching user (creating a doctor account on first sign-in)."""
     profile = _VERIFIERS[provider](data)
     email = profile.email.strip().lower()
+    # Google and LinkedIn only return emails the provider itself verified (checked above); Facebook's are not trusted.
+    verified = provider in ("google", "linkedin")
     user = User.objects.filter(email__iexact=email).first()
     if user is not None:
         if not user.is_active:
             raise SocialAuthError("account_disabled", "This account is disabled.", 403)
         if user.role == "admin" or user.is_staff:  # privileged accounts must use a password
             raise SocialAuthError("social_not_allowed", "This account must sign in with a password.", 403)
+        if verified and not user.email_verified:
+            user.email_verified = True
+            user.save(update_fields=["email_verified"])
         return user
     if not settings.SOCIAL_AUTO_CREATE:
         raise SocialAuthError("account_not_found", "No account exists for this email. Please register first.", 403)
     lang = preferred_language if preferred_language in LANGUAGES else "bn"
     return User.objects.create_user(email=email, password=None, role="doctor",  # unusable password
-                                    display_name=profile.name[:150], preferred_language=lang)
+                                    display_name=profile.name[:150], preferred_language=lang,
+                                    email_verified=verified)

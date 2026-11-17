@@ -52,7 +52,12 @@ export default function AnalysisList() {
     <section>
       <PageHeader
         title={t("analysis.title")}
-        actions={<Link to="/scan" className="btn">{t("dashboard.cta")}</Link>}
+        actions={(
+          <>
+            <Link to="/twin" className="btn secondary">{t("nav.twin")}</Link>{" "}
+            <Link to="/scan" className="btn">{t("dashboard.cta")}</Link>
+          </>
+        )}
       />
 
       <div className="card toolbar">

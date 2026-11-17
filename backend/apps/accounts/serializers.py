@@ -1,9 +1,10 @@
+from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.db import IntegrityError
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from . import password_reset, services
+from . import email_verification, password_reset, services
 from .models import User
 
 
@@ -12,8 +13,8 @@ class MeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "role", "display_name", "preferred_language"]
-        read_only_fields = ["id", "email", "role"]
+        fields = ["id", "email", "role", "display_name", "preferred_language", "email_verified"]
+        read_only_fields = ["id", "email", "role", "email_verified"]
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -48,7 +49,11 @@ class LoginSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         attrs[self.username_field] = str(attrs.get(self.username_field, "")).strip().lower()
-        return super().validate(attrs)
+        data = super().validate(attrs)  # wrong credentials already failed here: nothing below reveals an account
+        user = self.user
+        if settings.REQUIRE_EMAIL_VERIFICATION and user.role in ("doctor", "pharmacist") and not user.email_verified:
+            raise exceptions.PermissionDenied(detail="Please verify your email address first.", code="email_not_verified")
+        return data
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -72,6 +77,24 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             raise serializers.ValidationError({"password": problems}, code="weak_password")
         attrs["user"] = user
         return attrs
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=512)
+
+    def validate(self, attrs):
+        user = email_verification.user_from_token(attrs["token"])
+        if user is None:
+            raise serializers.ValidationError(
+                {"token": ["This verification link is invalid or has expired. Please request a new one."]},
+                code="invalid_verification_link",
+            )
+        attrs["user"] = user
+        return attrs
+
+
+class ResendVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
 
 
 class ChangePasswordSerializer(serializers.Serializer):

@@ -35,6 +35,8 @@ class User(AbstractUser):
     role = models.CharField(max_length=12, choices=ROLES, default="doctor")
     display_name = models.CharField(max_length=150, blank=True)
     preferred_language = models.CharField(max_length=5, default="bn")
+    # True once the owner opened the emailed link (or the mailbox was proven another way: reset link, Google/LinkedIn).
+    email_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS: list[str] = []

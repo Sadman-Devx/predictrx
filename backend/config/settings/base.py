@@ -132,6 +132,8 @@ REST_FRAMEWORK = {
         "register": "10/hour",
         "password_reset": "5/hour",
         "password_reset_confirm": "10/hour",
+        "email_verify": "20/hour",  # open the emailed verification link
+        "email_verify_resend": "5/hour",  # ask for a new verification email
         "password_change": "5/hour",  # logged-in change of password
         "analysis_list": "120/min",  # list of past runs (read only, no LLM)
         "social": "20/min",
@@ -164,6 +166,7 @@ SPECTACULAR_SETTINGS = {
 
 # ---------- CORS ----------
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:5173"])
+CORS_ALLOW_CREDENTIALS = True  # the browser must be allowed to send the refresh cookie
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=["http://localhost:5173"])
 
 # ---------- Celery / Redis ----------
@@ -220,6 +223,24 @@ EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)  # never hang a request on 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="PredictRx <no-reply@predictrx.local>")
 # How long a reset / invite link works, in seconds (Django's own default would be 3 days).
 PASSWORD_RESET_TIMEOUT = env.int("PASSWORD_RESET_TIMEOUT", default=3600)
+
+# ---------- Email verification ----------
+# Register always sends a verification link. True = a doctor/pharmacist cannot log in until the link was opened
+# (admin and invited family accounts are exempt: the invite link already proves their mailbox).
+REQUIRE_EMAIL_VERIFICATION = env.bool("REQUIRE_EMAIL_VERIFICATION", default=False)
+EMAIL_VERIFICATION_TIMEOUT = env.int("EMAIL_VERIFICATION_TIMEOUT", default=48 * 3600)  # seconds
+
+# ---------- Session cookie ----------
+# The refresh token lives in an httpOnly cookie (JavaScript cannot read it), so a page reload keeps the user signed in
+# without putting any token in localStorage. The access token (30 min) stays in memory only.
+AUTH_REFRESH_COOKIE = env("AUTH_REFRESH_COOKIE", default="predictrx_refresh")
+AUTH_REFRESH_COOKIE_SECURE = env.bool("AUTH_REFRESH_COOKIE_SECURE", default=False)  # production.py: True
+# Lax is right when the web app and the API share one site (Vite proxy, or one domain). If they are on different
+# sites (e.g. two different trycloudflare.com hosts) use None, which REQUIRES the Secure flag (https).
+AUTH_REFRESH_COOKIE_SAMESITE = env("AUTH_REFRESH_COOKIE_SAMESITE", default="Lax")
+# True = login/refresh also return the refresh token in the JSON body (older API clients, tests).
+# production.py turns it off so the token is only ever in the httpOnly cookie.
+AUTH_REFRESH_IN_BODY = env.bool("AUTH_REFRESH_IN_BODY", default=True)
 
 # ---------- Social sign-in (empty = that provider is off; the endpoint answers 503 "not enabled") ----------
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")

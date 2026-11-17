@@ -9,6 +9,8 @@ export interface User {
   role: Role;
   display_name: string;
   preferred_language: string;
+  /** False until the emailed link was opened. */
+  email_verified?: boolean;
 }
 
 // ---------------------------------------------------------------------------------------------------------------

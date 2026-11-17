@@ -141,6 +141,7 @@ export function AppShell() {
                 <div id="account-menu" className="menu-pop">
                   <p className="menu-name">{displayName}</p>
                   {user?.display_name && user.email && <p className="menu-email muted small">{user.email}</p>}
+                  <Link to="/profile" className="btn secondary block">{t("nav.profile")}</Link>
                   <button type="button" className="btn secondary block" onClick={onLogout}>
                     <Icon name="log-out" size={18} />
                     {t("nav.logout")}

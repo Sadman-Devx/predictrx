@@ -19,6 +19,10 @@ if EMAIL_BACKEND.endswith("console.EmailBackend"):  # noqa: F405
         "EMAIL_BACKEND is the console backend: password-reset and invite emails are printed, not sent."
     )
 
+# Session cookie: https only, and the refresh token is kept out of JSON responses.
+AUTH_REFRESH_COOKIE_SECURE = _env.bool("AUTH_REFRESH_COOKIE_SECURE", default=True)
+AUTH_REFRESH_IN_BODY = _env.bool("AUTH_REFRESH_IN_BODY", default=False)
+
 # Behind the Cloudflare Tunnel there is exactly one proxy. Without this every visitor shares the tunnel's IP, so the
 # 5/min login throttle would be one bucket for the whole internet. Set NUM_PROXIES=0 if you run without a proxy.
 REST_FRAMEWORK = {**REST_FRAMEWORK, "NUM_PROXIES": _env.int("NUM_PROXIES", default=1)}  # noqa: F405

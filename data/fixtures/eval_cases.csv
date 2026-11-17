@@ -1,1 +1,8 @@
 drug_a,drug_b,expected_severity,rationale_ref,reviewed_by,split
+warfarin,aspirin,major,"PMID:38263263; systematic review/meta-analysis reports bleeding risk with oral anticoagulant plus aspirin; provisional severity, pharmacist review required.",,dev
+clarithromycin,simvastatin,major,"PMID:31628882; systematic review of clarithromycin-statins; provisional severity for simvastatin pair, pharmacist review required.",,dev
+digoxin,amiodarone,major,"PMID:6736437; clinical study of amiodarone-digoxin interaction; provisional severity, pharmacist review required.",,dev
+sertraline,ibuprofen,moderate,"PMID:36002638; meta-analysis reports upper-GI bleeding risk with SSRI plus NSAID; provisional severity, pharmacist review required.",,dev
+spironolactone,lisinopril,moderate,"PMID:25683504; cohort examines hyperkalemia with spironolactone plus long-term ACEI/ARB; provisional severity, pharmacist review required.",,dev
+acetaminophen,warfarin,moderate,"PMID:21191575; randomized trial evaluates acetaminophen with long-term warfarin and INR effects; provisional severity, pharmacist review required.",,dev
+fluconazole,warfarin,major,"PMID:33181661; clinical analysis of azole antifungals and warfarin anticoagulation; provisional severity, pharmacist review required.",,dev
