@@ -9,7 +9,9 @@ import { StatusPill } from "../ui/StatusPill";
 import { Tabs } from "../ui/Tabs";
 import { FindingCard } from "./FindingCard";
 import { InteractionNetworkMap } from "./InteractionNetworkMap";
+import { ClinicalReviewChecklist } from "./ClinicalReviewChecklist";
 import { PatientCardView } from "./PatientCardView";
+import { SafetyBrief } from "./SafetyBrief";
 import { TraceTimeline } from "./TraceTimeline";
 import { TraceView } from "./TraceView";
 import { TwinView } from "./TwinView";
@@ -129,6 +131,7 @@ export function AnalysisResults({ run, trace, traceKnown, timeline }: Props) {
       </div>
 
       {run.interaction_map && <InteractionNetworkMap map={run.interaction_map} />}
+      <ClinicalReviewChecklist key={run.run_id} findings={findings} />
 
       {gaps.length > 0 && (
         <div className="card notice" role="note">
@@ -210,29 +213,32 @@ export function AnalysisResults({ run, trace, traceKnown, timeline }: Props) {
   );
 
   return (
-    <Tabs
-      label={t("results.tabs.label")}
-      active={tab}
-      onChange={(id) => setTab(tabFrom(id))}
-      tabs={[
-        { id: "doctor", label: t("results.tab.doctor"), panel: doctor },
-        { id: "card", label: t("results.tab.card"), panel: <PatientCardView runId={run.run_id} active={tab === "card"} /> },
-        {
-          id: "trace",
-          label: t("results.tab.trace"),
-          panel: (
-            <>
-              {timeline.length > 0 && <TraceTimeline stages={timeline} />}
-              <TraceView trace={trace} traceKnown={traceKnown} />
-            </>
-          ),
-        },
-        {
-          id: "twin",
-          label: t("results.tab.twin"),
-          panel: <TwinView runId={run.run_id} active={tab === "twin"} baseGenerics={baseGenerics} />,
-        },
-      ]}
-    />
+    <>
+      <SafetyBrief run={run} findings={findings} />
+      <Tabs
+        label={t("results.tabs.label")}
+        active={tab}
+        onChange={(id) => setTab(tabFrom(id))}
+        tabs={[
+          { id: "doctor", label: t("results.tab.doctor"), panel: doctor },
+          { id: "card", label: t("results.tab.card"), panel: <PatientCardView runId={run.run_id} active={tab === "card"} /> },
+          {
+            id: "trace",
+            label: t("results.tab.trace"),
+            panel: (
+              <>
+                {timeline.length > 0 && <TraceTimeline stages={timeline} />}
+                <TraceView trace={trace} traceKnown={traceKnown} />
+              </>
+            ),
+          },
+          {
+            id: "twin",
+            label: t("results.tab.twin"),
+            panel: <TwinView runId={run.run_id} active={tab === "twin"} baseGenerics={baseGenerics} />,
+          },
+        ]}
+      />
+    </>
   );
 }

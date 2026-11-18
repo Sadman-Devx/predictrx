@@ -1,0 +1,109 @@
+# PredictRx production stack (single VM).  Run from the deploy/ folder:
+#
+#   docker compose --env-file ../.env -f docker-compose.prod.yml up -d
+#
+# Differences from backend/docker-compose.yml (dev):
+#   * only Caddy publishes ports (80/443); Postgres, Redis, Ollama and the MCP server are internal;
+#   * gunicorn (Dockerfile.prod) instead of runserver;
+#   * Celery worker AND Celery beat (beat runs the hourly image purge and the stuck-scan check);
+#   * `media` is a shared volume: the API stores prescription images, the worker reads them;
+#   * the database password comes from POSTGRES_PASSWORD in ../.env (never the dev default).
+#
+# Not tested by the author on a real VM: follow deploy/README.md section 9 (verification) before relying on it.
+
+x-app-env: &app-env
+  # Wins over env_file, so a leftover DJANGO_SETTINGS_MODULE=config.settings.local in ../.env cannot weaken production.
+  DJANGO_SETTINGS_MODULE: config.settings.production
+  DATABASE_URL: postgres://predictrx:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in ../.env}@db:5432/predictrx
+  REDIS_URL: redis://redis:6379/0
+  OLLAMA_BASE_URL: http://ollama:11434
+  MCP_SERVER_URL: http://mcp:8001/sse
+
+x-app: &app
+  build:
+    context: ../backend
+    dockerfile: Dockerfile.prod
+  image: predictrx-api
+  env_file: ../.env
+  environment: *app-env
+  restart: unless-stopped
+  depends_on:
+    db: { condition: service_healthy }
+    redis: { condition: service_started }
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: predictrx
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in ../.env}
+      POSTGRES_DB: predictrx
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U predictrx"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  # Only used for query/chunk embeddings (EMBEDDING_MODEL). Models live in the `ollama` volume: pull them once.
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    environment:
+      OLLAMA_KEEP_ALIVE: 24h   # keep bge-m3 loaded; the default unloads it after 5 idle minutes
+    volumes: [ollama:/root/.ollama]
+
+  api:
+    <<: *app
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
+    volumes:
+      - media:/app/media
+      - static:/app/staticfiles
+
+  worker:
+    <<: *app
+    command: celery -A config worker -l info
+    volumes:
+      - media:/app/media
+
+  beat:
+    <<: *app
+    command: celery -A config beat -l info --schedule /tmp/celerybeat-schedule
+
+  # Custom MCP server (SSE). Reuses the backend image; the server file is mounted read-only.
+  mcp:
+    <<: *app
+    command: python /mcp-server/server.py
+    environment:
+      <<: *app-env
+      PYTHONPATH: /app:/mcp-server
+      MCP_SERVER_HOST: 0.0.0.0
+      MCP_SERVER_PORT: "8001"
+    volumes:
+      - ../mcp-server:/mcp-server:ro
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS in ../.env (your DNS name, or :80 for a plain-HTTP test)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../frontend/dist:/srv:ro
+      - static:/static:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api]
+
+volumes:
+  pgdata:
+  ollama:
+  media:
+  static:
+  caddy_data:
+  caddy_config:
