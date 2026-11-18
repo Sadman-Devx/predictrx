@@ -1,21 +1,25 @@
-"""Run the evaluation and print n, recall and precision (with 95% confidence intervals).
+"""Run the evaluation and print n, recall, precision, severity match and the guardrail pass rate (with 95% intervals).
 
-    python manage.py run_eval --split dev                      # while tuning
+    python manage.py run_eval                                  # = --split dev (safe default while you work)
+    python manage.py run_eval --split dev --cases              # + every case with PASS / FAIL
     python manage.py run_eval --split test                     # the number you report (once)
     python manage.py run_eval --brands data/eval/eval_brands.csv --show-errors
     python manage.py run_eval --split test --json data/processed/eval_test.json
 
-Runs inline (no Celery needed) through the same code the API task uses, and records an EvalRun either way.
+Runs inline (no Celery needed) through the same code the API task uses, and records an EvalRun either way; the
+dashboard page (/admin/evaluation) shows the latest completed run of each split.
 Brand CSV columns: brand_name, expected_generic (a generic name, or "unresolved" / empty for a brand that is NOT in
 the mapping), optionally strength, reviewed_by. Use brands that are NOT in the mapping you loaded, otherwise the
 answer is a lookup of our own data (the report shows `exact_lookup_share` for that reason).
+
+The default is `dev`, never `test`: the test split is meant to be reported once, so it is only run when you ask for it.
 """
 import json
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
-from apps.evaluation import metrics, runner, services
+from apps.evaluation import dashboard, metrics, runner, services
 from apps.evaluation.models import EvalRun
 
 fmt = metrics.format_rate
@@ -25,17 +29,19 @@ class Command(BaseCommand):
     help = "Evaluate detection on the dev/test split and/or brand resolution on a held-out CSV. Prints the numbers."
 
     def add_arguments(self, parser):
-        parser.add_argument("--split", choices=list(services.SPLITS))
+        parser.add_argument("--split", choices=list(services.SPLITS),
+                            help="Default: dev (when neither --split nor --brands is given).")
         parser.add_argument("--brands", type=Path, help="Held-out brand CSV (see --help of this command).")
         parser.add_argument("--json", type=Path, dest="json_path", help="Also write the run(s) to this JSON file.")
         parser.add_argument("--show-errors", action="store_true", help="Brand run only: print wrong rows (never stored).")
+        parser.add_argument("--cases", action="store_true",
+                            help="Dev split only: print every case with PASS / FAIL (the test split never stores them).")
 
     def handle(self, *args, **opts):
-        if not opts["split"] and not opts["brands"]:
-            raise CommandError("Give --split dev|test and/or --brands PATH.")
+        split = opts["split"] or (None if opts["brands"] else "dev")
         runs = []
-        if opts["split"]:
-            runs.append(self._pairs(opts["split"]))
+        if split:
+            runs.append(self._pairs(split, opts["cases"]))
         if opts["brands"]:
             runs.append(self._brands(opts["brands"], opts["show_errors"]))
         if opts["json_path"]:
@@ -46,7 +52,7 @@ class Command(BaseCommand):
             self.stdout.write(f"written: {opts['json_path']}")
 
     # ---------------------------------------------------------------------------------------- pairs
-    def _pairs(self, split: str) -> EvalRun:
+    def _pairs(self, split: str, show_cases: bool) -> EvalRun:
         try:
             run = services.start_run(split=split)
         except services.EvalRequestError as exc:
@@ -63,10 +69,15 @@ class Command(BaseCommand):
         m, out = run.metrics, self.stdout
         out.write(self.style.MIGRATE_HEADING(f"\nDETECTION  split={split}  n={m['n']}  (positives={m['positives']}, negatives={m['negatives']})"))
         out.write(f"  recall     : {fmt(m['recall'])}")
-        out.write(f"  precision  : {fmt(m['precision'])}")
+        if m["negatives"] == 0:
+            out.write(self.style.WARNING(
+                "  precision  : not measurable (no reviewer-labelled negatives: with none, a false alarm cannot occur, "
+                "so a bare 100% would be meaningless)"))
+        else:
+            out.write(f"  precision  : {fmt(m['precision'])}")
         out.write(f"  specificity: {fmt(m['specificity'])}")
         out.write(f"  F1         : {m['f1'] if m['f1'] is not None else 'not measurable'}")
-        out.write(f"  severity agreement among detected: {fmt(m['severity_agreement'])}")
+        out.write(f"  severity match among detected: {fmt(m['severity_agreement'])}")
         out.write(f"  under-called: {m['undercalled']}   over-called: {m['overcalled']}   "
                   f"major not called major: {fmt(m['major_not_called_major'])}")
         out.write("  per severity (reviewer label):")
@@ -77,18 +88,41 @@ class Command(BaseCommand):
         for e in metrics.EXPECTED:
             out.write(f"  {e:>9}" + "".join(f"{m['confusion'][e][p]:>10}" for p in metrics.PREDICTED))
         out.write(f"  missed positives, by reason: {m['missed_by_reason'] or 'none'}")
+
+        # Guardrail: "no finding with a severity is saved without evidence".
         integrity = m["integrity"]
-        flag = self.style.SUCCESS("OK") if integrity["severity_without_citation"] == 0 else self.style.ERROR("VIOLATION")
-        out.write(f"  integrity: severity without citation = {integrity['severity_without_citation']} (must be 0) {flag}; "
-                  f"no-record pairs = {integrity['pairs_with_no_record']}, reported unknown = {integrity['no_record_reported_unknown']}")
+        violations = integrity["severity_without_citation"]
+        flag = self.style.SUCCESS("OK") if violations == 0 else self.style.ERROR("VIOLATION")
+        out.write(f"  guardrail (this run): {fmt(metrics.rate(m['n'] - violations, m['n']))} of predictions obey "
+                  f"'no severity without citation'; violations = {violations} (must be 0) {flag}")
+        out.write(f"    no-record pairs = {integrity['pairs_with_no_record']}, reported unknown = {integrity['no_record_reported_unknown']}")
+        audit = dashboard.guardrail_audit()
+        audit_flag = self.style.SUCCESS("OK") if audit["severity_without_evidence"] == 0 else self.style.ERROR("VIOLATION")
+        out.write(f"  guardrail (saved findings): {audit['severity_without_evidence']} of {audit['findings_with_severity']} "
+                  f"findings with a severity have no evidence (must be 0) {audit_flag}")
+
         for caveat in m["caveats"]:
             out.write(self.style.WARNING(f"  caveat: {caveat}"))
+        n_circular = run.config.get("n_circular_reference", 0)
+        if n_circular:
+            out.write(self.style.WARNING(
+                f"  caveat: {n_circular} of {m['n']} labels come from DDInter/openFDA (the system's own sources). These numbers "
+                "show fidelity to the source, not clinical accuracy."))
         if run.config.get("test_note"):
             out.write(self.style.WARNING(f"  {run.config['test_note']}"))
-        if split == "dev" and m.get("case_details"):
-            out.write("  dev disagreements:")
-            for d in m["case_details"]:
-                out.write(f"    {d['drug_a']} + {d['drug_b']}: reviewer={d['expected']} system={d['predicted']} ({d['pair_status']})")
+
+        if split == "dev":
+            results = m.get("case_results") or []
+            if show_cases and results:
+                out.write("  cases:")
+                for r in results:
+                    mark = self.style.SUCCESS("PASS") if r["passed"] else self.style.ERROR("FAIL")
+                    out.write(f"    {mark}  {r['drug_a']} + {r['drug_b']}: reviewer={r['expected']} "
+                              f"system={r['predicted']} ({r['outcome']})")
+            elif m.get("case_details"):
+                out.write("  dev disagreements:")
+                for d in m["case_details"]:
+                    out.write(f"    {d['drug_a']} + {d['drug_b']}: reviewer={d['expected']} system={d['predicted']} ({d['pair_status']})")
         out.write(f"  transport: {', '.join(run.config.get('transports', [])) or 'n/a'}   fingerprint: {run.fingerprint[:12]}")
         return run
 
