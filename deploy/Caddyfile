@@ -1,0 +1,30 @@
+# SITE_ADDRESS comes from ../.env through docker-compose.prod.yml.
+#   * a DNS name (e.g. predictrx-demo.<region>.cloudapp.azure.com): Caddy gets and renews a certificate by itself
+#     (ports 80 and 443 must be reachable from the internet);
+#   * ":80": plain HTTP, for a first test by IP address only. Do not use for the judges: the refresh cookie is
+#     Secure-only in production, so login needs HTTPS.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# One proxy sits in front of Django, so keep NUM_PROXIES=1 in ../.env (login throttles see the real client IP).
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle /admin/* {
+		reverse_proxy api:8000
+	}
+
+	# Django admin CSS/JS (collected by `manage.py collectstatic` into the shared `static` volume).
+	handle_path /static/* {
+		root * /static
+		file_server
+	}
+
+	# React single-page app (frontend/dist built in step 6 of deploy/README.md).
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

@@ -1,5 +1,10 @@
 {
   "evidence.button": "প্রমাণ",
+  "evidence.compareButton": "উৎস তুলনা করুন",
+  "evidence.conflictTitle": "উৎসের অমিল তুলনা",
+  "evidence.conflictCompareNote": "এই ফলাফলটি অমিল হিসেবে চিহ্নিত। যুক্ত উৎস-রেকর্ড ও থাকা উদ্ধৃতিগুলো তুলনা করুন; এখানে কোনো উৎসকে বেশি নির্ভরযোগ্য বলা হচ্ছে না।",
+  "evidence.conflictSingleNote": "এখানে একটি মাত্র উৎস-রেকর্ড যুক্ত আছে, তাই পাশাপাশি তুলনা করা সম্ভব নয়।",
+  "evidence.conflictUnavailable": "তুলনা করার মতো কোনো উৎস-রেকর্ড এখানে নেই। উৎস যাচাই না করে এই ফলাফলের ওপর নির্ভর করবেন না।",
   "evidence.panel.title": "কেন এটি বলা হচ্ছে?",
   "evidence.panel.label": "এই ফলাফলের প্রমাণ",
   "evidence.count.none": "কোনো উৎস নেই",

@@ -27,6 +27,57 @@
 .count-item { display: inline-flex; align-items: center; gap: var(--space-2); }
 .summary-text { white-space: pre-line; overflow-wrap: anywhere; margin-bottom: var(--space-2); }
 
+/* ---- source-linked clinical review prompts ---- */
+.clinical-review {
+  display: grid;
+  gap: var(--space-4);
+  border-color: var(--primary);
+  background: linear-gradient(125deg, var(--surface), var(--primary-soft));
+}
+.clinical-review-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.clinical-review-mark {
+  display: grid; place-items: center; flex: none; width: 40px; height: 40px;
+  border-radius: var(--radius-control); background: var(--primary-soft); color: var(--primary);
+}
+.clinical-review-copy { flex: 1; min-width: 0; }
+.clinical-review-copy h2 { margin: 0 0 var(--space-1); }
+.clinical-review-copy p { margin: 0; }
+.clinical-review-eyebrow {
+  color: var(--primary); font-size: var(--fs-small); font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+}
+.clinical-review-progress-wrap { display: grid; justify-items: center; gap: 2px; flex: none; }
+.clinical-review-progress {
+  position: relative; display: grid; place-items: center; width: 58px; height: 58px;
+  color: var(--primary); font-size: var(--fs-small); font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.clinical-review-progress svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.clinical-review-progress circle { fill: none; stroke-width: 4; }
+.clinical-review-progress-track { stroke: var(--track); }
+.clinical-review-progress-value {
+  stroke: var(--primary); stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%;
+}
+.clinical-review-progress-caption { color: var(--ink-muted); font-size: var(--fs-small); }
+.clinical-review-list { display: grid; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+.clinical-review-item {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--space-3);
+  padding: var(--space-3); border: 1px solid var(--border-soft); border-radius: var(--radius-inner); background: var(--surface);
+}
+.clinical-review-item.is-reviewed { border-color: var(--primary); }
+.clinical-review-number {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--radius-pill);
+  background: var(--primary-soft); color: var(--primary); font-size: var(--fs-small); font-weight: 700;
+}
+.clinical-review-content { display: grid; gap: var(--space-2); min-width: 0; }
+.clinical-review-content > p { margin: 0; overflow-wrap: anywhere; }
+.clinical-review-item-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.clinical-review-item-head h3 { margin: 0; font-size: var(--fs-body); overflow-wrap: anywhere; }
+.clinical-review-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.clinical-review-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.clinical-review-link { justify-self: start; font-size: var(--fs-small); font-weight: 600; }
+.clinical-review-toggle { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--tap); cursor: pointer; font-size: var(--fs-small); }
+.clinical-review-toggle input { width: 18px; height: 18px; margin: 0; accent-color: var(--primary); }
+.clinical-review-toggle input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
 /* ---- notices (medicines not checked, guardrail changes): never hidden ----
    `.card.notice` (not `.notice`): app.css loads after this file and its `.card` rule would otherwise win. */
 .card.notice { background: var(--sev-moderate-soft); border-color: var(--sev-moderate); color: var(--ink); }
@@ -117,6 +168,9 @@
 .ev-panel { display: grid; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--radius-inner); }
 .ev-panel-title { margin: 0; font-weight: 600; }
 .ev-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.ev-list-compare { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); align-items: stretch; }
+.ev-list-compare .ev-item { border-color: var(--border-strong); }
+.ev-compare-note { margin: 0; padding: var(--space-2) var(--space-3); border-left: 3px solid var(--conflict); border-radius: var(--radius-control); background: var(--conflict-soft); }
 .ev-item { display: grid; gap: var(--space-2); min-width: 0; padding: var(--space-3); background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-control); }
 .ev-item.is-missing { border-style: dashed; }
 .ev-item-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
@@ -172,6 +226,7 @@ a.ev-src { color: var(--primary); text-decoration: underline; text-underline-off
 @media (prefers-reduced-motion: no-preference) {
   .tab, .ev-chip, .ev-toggle { transition: background-color var(--dur) ease, color var(--dur) ease, border-color var(--dur) ease; }
   .ev-chevron { transition: transform var(--dur) ease; }
+  .clinical-review-progress-value { transition: stroke-dashoffset var(--dur) ease; }
 }
 
 /* ---- responsive ---- */
