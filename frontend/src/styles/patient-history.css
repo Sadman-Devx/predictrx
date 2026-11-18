@@ -1,0 +1,217 @@
+.patient-history {
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+.patient-history-header,
+.patient-history-run-heading,
+.patient-history-run-meta,
+.patient-history-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.patient-history-header h2 {
+  margin: 0;
+}
+
+.patient-history-eyebrow {
+  margin: 0 0 4px;
+  color: var(--primary);
+  font-size: var(--fs-badge);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.patient-history-count {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+}
+
+.patient-history-note {
+  margin: 12px 0 16px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  background: var(--primary-soft);
+  color: var(--ink);
+  font-size: var(--fs-small);
+  line-height: 1.55;
+}
+
+.patient-history-range,
+.patient-history-empty {
+  margin: 0 0 12px;
+}
+
+.patient-history-legend {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.patient-history-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-muted);
+  font-size: var(--fs-badge);
+}
+
+.patient-history-legend-item i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.patient-history-segment-major {
+  background: var(--sev-major);
+}
+
+.patient-history-segment-moderate {
+  background: var(--sev-moderate);
+}
+
+.patient-history-segment-minor {
+  background: var(--sev-minor);
+}
+
+.patient-history-segment-unknown {
+  background: var(--sev-unknown);
+}
+
+.patient-history-list {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.patient-history-list::before {
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 7px;
+  width: 2px;
+  background: var(--border);
+  content: "";
+}
+
+.patient-history-item {
+  position: relative;
+  min-width: 0;
+}
+
+.patient-history-run {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 12px;
+  min-height: 84px;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-inner);
+  color: inherit;
+  text-decoration: none;
+  transition: background var(--dur), border-color var(--dur), transform var(--dur);
+}
+
+.patient-history-run:hover,
+.patient-history-run:focus-visible {
+  border-color: var(--border);
+  background: var(--surface);
+  outline: none;
+  transform: translateX(2px);
+}
+
+.patient-history-marker {
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.patient-history-run-main {
+  min-width: 0;
+}
+
+.patient-history-run-heading time {
+  font-weight: 700;
+}
+
+.patient-history-run-link,
+.patient-history-arrow {
+  color: var(--primary);
+  font-size: var(--fs-small);
+}
+
+.patient-history-run-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin: 3px 0 8px;
+  color: var(--ink-muted);
+  font-size: var(--fs-badge);
+}
+
+.patient-history-bar {
+  display: flex;
+  gap: 2px;
+  height: 9px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--track);
+}
+
+.patient-history-bar > span {
+  min-width: 3px;
+  border-radius: var(--radius-pill);
+  transition: width 240ms ease;
+}
+
+.patient-history-verification {
+  margin: 5px 0 0;
+  color: var(--ink-muted);
+  font-size: var(--fs-badge);
+}
+
+.patient-history-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--sev-major);
+}
+
+@media (max-width: 600px) {
+  .patient-history-header {
+    align-items: flex-start;
+  }
+
+  .patient-history-run {
+    gap: 8px;
+    padding: 10px 4px;
+  }
+
+  .patient-history-run-link {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patient-history-run,
+  .patient-history-bar > span {
+    transition: none;
+  }
+}

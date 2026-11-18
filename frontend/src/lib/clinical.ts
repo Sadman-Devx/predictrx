@@ -1,5 +1,13 @@
 import { api } from "./api";
-import type { DrugRecord, Medication, MedicationInput, Paginated, Patient, PatientInput } from "./types";
+import type {
+  DrugRecord,
+  Medication,
+  MedicationInput,
+  Paginated,
+  Patient,
+  PatientAnalysisHistory,
+  PatientInput,
+} from "./types";
 
 export const listPatients = (page = 1) => api<Paginated<Patient>>(`/patients/?page=${page}`);
 
@@ -19,6 +27,9 @@ export async function listPatientOptions(): Promise<Patient[]> {
 }
 
 export const getPatient = (id: number) => api<Patient>(`/patients/${id}/`);
+
+export const getPatientAnalysisHistory = (id: number) =>
+  api<PatientAnalysisHistory>(`/patients/${id}/analysis-history/`);
 
 export const createPatient = (data: PatientInput) =>
   api<Patient>("/patients/", { method: "POST", body: JSON.stringify(data) });

@@ -2,12 +2,17 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from apps.dashboard import DashboardSummaryView
+
 # JSON (not HTML) 404 / 500 for anything under /api/  -> same error shape everywhere. See core/views.py.
 handler404 = "core.views.api_not_found"
 handler500 = "core.views.api_server_error"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/dashboard/summary/", DashboardSummaryView.as_view(), name="dashboard-summary"),
+    path("api/", include("apps.notifications.urls")),
+    path("api/", include("apps.followups.urls")),
     path("api/", include("core.urls")),
     path("api/auth/", include("apps.accounts.urls")),
     path("api/", include("apps.patients.urls")),

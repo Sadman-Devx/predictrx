@@ -7,9 +7,17 @@ runner can still mark the run `failed` with error 'timeout'.
 """
 from celery import shared_task
 
+from apps.notifications.services import record_analysis_notification
+
 from . import runner
+from .models import AnalysisRun
 
 
 @shared_task(soft_time_limit=270)
 def run_analysis(run_id: int) -> str:
-    return runner.execute_run(run_id)
+    """Run the analysis and create an owner notification once its status is terminal."""
+    result = runner.execute_run(run_id)
+    run = AnalysisRun.objects.select_related("patient").filter(pk=run_id).first()
+    if run is not None:
+        record_analysis_notification(run)
+    return result

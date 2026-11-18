@@ -8,6 +8,7 @@ import { SeverityBadge } from "../ui/SeverityBadge";
 import { StatusPill } from "../ui/StatusPill";
 import { Tabs } from "../ui/Tabs";
 import { FindingCard } from "./FindingCard";
+import { InteractionNetworkMap } from "./InteractionNetworkMap";
 import { PatientCardView } from "./PatientCardView";
 import { TraceTimeline } from "./TraceTimeline";
 import { TraceView } from "./TraceView";
@@ -127,6 +128,8 @@ export function AnalysisResults({ run, trace, traceKnown, timeline }: Props) {
         <p className="muted small">{t("results.disclaimerVersion", { v: run.disclaimer_version })}</p>
       </div>
 
+      {run.interaction_map && <InteractionNetworkMap map={run.interaction_map} />}
+
       {gaps.length > 0 && (
         <div className="card notice" role="note">
           <h2>{t("results.gaps.title")}</h2>
@@ -164,7 +167,7 @@ export function AnalysisResults({ run, trace, traceKnown, timeline }: Props) {
           ) : (
             <ol className="finding-list">
               {findings.map((f) => (
-                <FindingCard key={f.id} finding={f} />
+                <FindingCard key={f.id} id={`finding-${f.id}`} finding={f} />
               ))}
             </ol>
           )}
