@@ -57,6 +57,20 @@ class PatientSerializer(serializers.ModelSerializer):
         return services.medication_count(obj)
 
 
+class PatientAnalysisHistoryRunSerializer(serializers.Serializer):
+    run_id = serializers.IntegerField()
+    occurred_at = serializers.DateTimeField(allow_null=True)
+    medication_count = serializers.IntegerField(min_value=0)
+    findings_count = serializers.IntegerField(min_value=0)
+    severity_counts = serializers.DictField(child=serializers.IntegerField(min_value=0))
+    verification_counts = serializers.DictField(child=serializers.IntegerField(min_value=0))
+
+
+class PatientAnalysisHistorySerializer(serializers.Serializer):
+    total_count = serializers.IntegerField(min_value=0)
+    results = PatientAnalysisHistoryRunSerializer(many=True)
+
+
 class MedicationSerializer(serializers.ModelSerializer):
     drug_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
     generic_name = serializers.SerializerMethodField()

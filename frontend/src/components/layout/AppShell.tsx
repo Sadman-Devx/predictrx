@@ -9,6 +9,7 @@ import { DisclaimerStrip } from "../ui/DisclaimerStrip";
 import { ErrorBoundary } from "../ui/ErrorBoundary";
 import { Icon, type IconName } from "../ui/Icon";
 import { LanguageToggle } from "../ui/LanguageToggle";
+import { NotificationBell } from "./NotificationBell";
 
 interface NavItem {
   to: string;
@@ -24,12 +25,13 @@ interface NavItem {
 
 const STAFF: Role[] = ["doctor", "pharmacist", "admin"];
 
-// Main navigation as in the design: Dashboard · Patients · New analysis · Analyses. A family member (Day 9) sees only "Family".
+// Main navigation for clinicians; a family member (Day 9) sees only "Family".
 const NAV: NavItem[] = [
   { to: "/", key: "nav.dashboard", icon: "dashboard", end: true, roles: STAFF },
   { to: "/patients", key: "nav.patients", icon: "patients", roles: STAFF },
   { to: "/scan", key: "nav.scan", icon: "scan", also: ["/medications", "/review"], roles: STAFF },
   { to: "/analysis", key: "nav.analysis", icon: "analyses", roles: STAFF },
+  { to: "/follow-ups", key: "nav.followups", icon: "shield-check", roles: ["doctor", "pharmacist"] },
   { to: "/evaluation", key: "nav.evaluation", icon: "analyses", roles: ["admin"] },
   { to: "/family", key: "nav.family", icon: "heart", roles: ["family"] },
 ];
@@ -123,10 +125,7 @@ export function AppShell() {
           <DemoBadge />
           <div className="topbar-right">
             <LanguageToggle />
-            {/* Notifications are not built yet: shown disabled, as in the design, never as a working control. */}
-            <button type="button" className="icon-btn" disabled aria-label={t("shell.notifications")}>
-              <Icon name="bell" />
-            </button>
+            <NotificationBell />
             <div className="user-menu" ref={menuRef}>
               <button
                 type="button"

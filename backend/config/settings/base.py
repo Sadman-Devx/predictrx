@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     "apps.drugs",
     "apps.knowledge",
     "apps.analysis",
+    "apps.notifications",
+    "apps.followups",
     "apps.twin",
     "apps.evaluation",
     "apps.audit",

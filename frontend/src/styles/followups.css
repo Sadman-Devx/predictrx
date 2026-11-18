@@ -1,0 +1,229 @@
+.followups-page {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.followups-create {
+  min-width: 0;
+}
+
+.followups-section-heading,
+.followups-column-header,
+.followups-task-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.followups-section-heading h2,
+.followups-section-heading p {
+  margin: 0;
+}
+
+.followups-section-heading p {
+  margin-top: 4px;
+}
+
+.followups-count,
+.followups-column-header > span {
+  display: inline-grid;
+  min-width: 32px;
+  min-height: 32px;
+  place-items: center;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+
+.followups-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.followups-form .field {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.followups-submit {
+  white-space: nowrap;
+}
+
+.followups-inline-error {
+  margin: 12px 0 0;
+  color: var(--sev-major);
+  font-size: var(--fs-small);
+}
+
+.followups-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-3);
+}
+
+.followups-column {
+  min-width: 0;
+  min-height: 260px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.followups-column-header {
+  padding: 4px 2px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.followups-column-header h2 {
+  margin: 0;
+  font-size: var(--fs-body);
+}
+
+.followups-column-to_review .followups-column-header h2 {
+  color: var(--sev-moderate-text);
+}
+
+.followups-column-in_progress .followups-column-header h2 {
+  color: var(--primary);
+}
+
+.followups-column-done .followups-column-header h2 {
+  color: var(--sev-minor-text);
+}
+
+.followups-column-empty {
+  margin: 16px 4px;
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+}
+
+.followups-card-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.followups-task {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.followups-task.is-overdue {
+  border-color: var(--sev-major);
+  box-shadow: inset 3px 0 var(--sev-major), var(--shadow-card);
+}
+
+.followups-type {
+  color: var(--ink-muted);
+  font-size: var(--fs-badge);
+  font-weight: 600;
+}
+
+.followups-overdue {
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--sev-major-soft);
+  color: var(--sev-major);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.followups-patient {
+  width: fit-content;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.followups-analysis {
+  width: fit-content;
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+}
+
+.followups-status-control,
+.followups-date-control {
+  display: grid;
+  grid-template-columns: minmax(60px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-muted);
+  font-size: var(--fs-badge);
+}
+
+.followups-status-control select,
+.followups-date-control input,
+.followups-form select,
+.followups-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.followups-status-control select:focus-visible,
+.followups-date-control input:focus-visible,
+.followups-form select:focus-visible,
+.followups-form input:focus-visible {
+  border-color: var(--primary);
+}
+
+.followups-status-control select:disabled,
+.followups-date-control input:disabled {
+  opacity: 0.6;
+}
+
+.followups-more {
+  justify-self: center;
+}
+
+@media (max-width: 1000px) {
+  .followups-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .followups-submit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .followups-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .followups-column {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .followups-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .followups-section-heading {
+    align-items: flex-start;
+  }
+}

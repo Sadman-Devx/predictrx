@@ -3,6 +3,78 @@ export type Severity = "major" | "moderate" | "minor" | "unknown";
 export type VerificationStatus = "verified" | "unverified" | "conflict";
 export type Role = "doctor" | "pharmacist" | "family" | "admin";
 
+export type DashboardActivityType =
+  | "analysis_run"
+  | "patient_opened"
+  | "family_viewed"
+  | "consent_granted"
+  | "consent_revoked"
+  | "consent_changed";
+
+export interface DashboardSummary {
+  total_patients: number;
+  total_analyses: number;
+  pending_reviews: number;
+  pending_followups: number;
+  overdue_followups: number;
+  recent_patients: Array<{
+    id: number;
+    patient_code: string;
+    medication_count: number;
+  }>;
+  recent_activity: Array<{
+    id: number;
+    event: DashboardActivityType;
+    patient_code: string;
+    at: string;
+  }>;
+}
+
+export type FollowUpTaskType =
+  | "review_analysis"
+  | "patient_contact"
+  | "medication_reconciliation"
+  | "follow_up_visit";
+export type FollowUpTaskStatus = "to_review" | "in_progress" | "done";
+
+export interface FollowUpTask {
+  id: number;
+  patient_id: number;
+  patient_code: string;
+  analysis_run_id: number | null;
+  task_type: FollowUpTaskType;
+  status: FollowUpTaskStatus;
+  due_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FollowUpTaskCreate {
+  patient_id: number;
+  analysis_run_id: number | null;
+  task_type: FollowUpTaskType;
+  due_date: string | null;
+}
+
+export type FollowUpTaskUpdate = Partial<Pick<FollowUpTask, "status" | "due_date">>;
+
+export type NotificationEvent = "scan_ready" | "scan_failed" | "analysis_ready" | "analysis_failed";
+
+export interface NotificationItem {
+  id: number;
+  event: NotificationEvent;
+  scan_id: number | null;
+  analysis_run_id: number | null;
+  patient_id: number | null;
+  created_at: string;
+  read_at: string | null;
+}
+
+export interface NotificationList {
+  unread_count: number;
+  results: NotificationItem[];
+}
+
 export interface User {
   id: number;
   email: string;
@@ -88,6 +160,20 @@ export interface Patient {
   consent_active?: boolean;
   medication_count?: number;
   consents?: ConsentRecord[];
+}
+
+export interface PatientAnalysisHistoryRun {
+  run_id: number;
+  occurred_at: string | null;
+  medication_count: number;
+  findings_count: number;
+  severity_counts: Record<Severity, number>;
+  verification_counts: Record<VerificationStatus, number>;
+}
+
+export interface PatientAnalysisHistory {
+  total_count: number;
+  results: PatientAnalysisHistoryRun[];
 }
 
 export interface PatientInput {
@@ -183,6 +269,27 @@ export interface AnalysisGap {
   reason: string; // "needs_user_selection"
 }
 
+export interface InteractionMapNode {
+  id: string;
+  label: string;
+  state: "matched" | "not_checked";
+  medication_count: number;
+}
+
+export interface InteractionMapEdge {
+  finding_id: number;
+  source_node_id: string;
+  target_node_id: string;
+  severity: Severity;
+  verification_status: VerificationStatus;
+  evidence_count: number;
+}
+
+export interface InteractionMap {
+  nodes: InteractionMapNode[];
+  edges: InteractionMapEdge[];
+}
+
 export interface DoctorSummary {
   doctor_summary_en: string;
   doctor_summary_bn: string;
@@ -218,6 +325,7 @@ export interface AnalysisRunStatus {
   findings?: RiskFinding[] | null;
   summary?: DoctorSummary | null;
   gaps?: AnalysisGap[] | null;
+  interaction_map?: InteractionMap | null;
   /** Names of guardrail checks that replaced or changed some text. Shown to the doctor, never hidden. */
   guardrail_violations?: string[] | null;
 }

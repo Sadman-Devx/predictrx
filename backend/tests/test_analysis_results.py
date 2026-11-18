@@ -78,7 +78,8 @@ class TestDetail:
         got = auth_client(doctor).get(f"{URL}{run.id}/").json()
         assert got["status"] == "running" and got["is_final"] is False and got["current_step"] == "drug_interaction"
         assert [s["status"] for s in got["progress"]] == ["done", "done", "running", "pending", "pending"]
-        for key in ("findings", "findings_count", "summary", "medications", "gaps", "guardrail_violations"):
+        for key in ("findings", "findings_count", "summary", "medications", "gaps", "interaction_map",
+                    "guardrail_violations"):
             assert got[key] is None
         assert got["disclaimer"]["text_en"] and got["disclaimer"]["text_bn"]
         assert not AuditLog.objects.filter(action="analysis_read").exists()  # polls carry no clinical content
@@ -113,10 +114,46 @@ class TestDetail:
         assert found["interaction"]["available"] is True and found["interaction"]["id"] == ix_major.id
         assert found["interaction"]["license_note"] == "synthetic test data"
         assert found["chunk"]["available"] is False  # record no longer exists: shown honestly, not dropped
+        interaction_map = got["interaction_map"]
+        assert len(interaction_map["nodes"]) == 3
+        assert len(interaction_map["edges"]) == 3
+        major_edge = next(edge for edge in interaction_map["edges"] if edge["finding_id"] == major["id"])
+        assert major_edge["severity"] == "major"
+        assert major_edge["verification_status"] == "conflict"
+        assert major_edge["evidence_count"] == 2
 
         unknown = got["findings"][2]
         assert unknown["evidence"] == [] and unknown["confidence_basis"]["sources"] == []
         assert AuditLog.objects.filter(action="analysis_read", patient=patient).count() == 1
+
+    def test_interaction_map_keeps_unresolved_medicine_visible_as_not_checked(
+        self, doctor, auth_client, patient, meds
+    ):
+        unresolved = Medication.objects.create(patient=patient, raw_text="unresolved test", drug=None)
+        run = make_run(patient, meds, "running")
+        snapshot = run.input_snapshot
+        snapshot["medication_ids"].append(unresolved.id)
+        snapshot["medications"].append({
+            "medication_id": unresolved.id,
+            "raw_text": unresolved.raw_text,
+            "brand_name": "",
+            "strength": "",
+            "frequency": "",
+            "drug_id": None,
+            "generic_name": None,
+            "resolution_status": "unresolved",
+            "source": "manual",
+        })
+        run.input_snapshot = snapshot
+        run.save(update_fields=["input_snapshot"])
+        complete(run, meds)
+
+        graph = auth_client(doctor).get(f"{URL}{run.id}/").json()["interaction_map"]
+        node = next(node for node in graph["nodes"] if node["id"] == f"medication-{unresolved.id}")
+        assert node["label"] == unresolved.raw_text
+        assert node["state"] == "not_checked"
+        assert node["medication_count"] == 1
+        assert all(node["id"] not in (edge["source_node_id"], edge["target_node_id"]) for edge in graph["edges"])
 
     def test_completed_detail_has_constant_query_count(self, doctor, auth_client, patient, meds, django_assert_max_num_queries):
         run = make_run(patient, meds, "running")

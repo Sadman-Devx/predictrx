@@ -22,7 +22,7 @@ import { VerificationBadge } from "./VerificationBadge";
  * both fit `FindingView`. `extra` is an optional block shown at the bottom of the card (the What-if tab puts the source's
  * management note there).
  */
-export function FindingCard({ finding, extra }: { finding: FindingView; extra?: ReactNode }) {
+export function FindingCard({ finding, extra, id }: { finding: FindingView; extra?: ReactNode; id?: string }) {
   const { t } = useI18n();
 
   const status = normalizeVerification(finding.verification_status);
@@ -40,7 +40,7 @@ export function FindingCard({ finding, extra }: { finding: FindingView; extra?: 
   if (status === "conflict") classes.push("is-conflict");
 
   return (
-    <li className={classes.join(" ")}>
+    <li id={id} className={classes.join(" ")}>
       <div className="finding-head">
         <h3 className="finding-pair">
           <span>{a}</span>

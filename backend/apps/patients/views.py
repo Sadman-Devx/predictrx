@@ -1,6 +1,9 @@
 from django.db import transaction
+from django.db.models import Count, Q
+from django.db.models.functions import Coalesce
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
@@ -23,8 +26,10 @@ from .serializers import (
     FamilyLinkListSerializer,
     FamilyLinkSerializer,
     MedicationSerializer,
+    PatientAnalysisHistorySerializer,
     PatientSerializer,
 )
+from apps.analysis.models import AnalysisRun
 
 
 def envelope(items) -> dict:
@@ -71,6 +76,51 @@ class PatientViewSet(
         patient = self.get_object()
         audit.record(request, audit.PATIENT_READ, patient=patient, obj=patient)
         return Response(self.get_serializer(patient).data)
+
+    @action(detail=True, methods=["get"], url_path="analysis-history")
+    @extend_schema(responses=PatientAnalysisHistorySerializer)
+    @transaction.atomic
+    def analysis_history(self, request, *args, **kwargs):
+        patient = self.get_object()
+        runs = AnalysisRun.objects.filter(patient=patient, status="completed").annotate(
+            occurred_at=Coalesce("finished_at", "started_at"),
+            findings_count=Count("findings"),
+            major_count=Count("findings", filter=Q(findings__severity="major")),
+            moderate_count=Count("findings", filter=Q(findings__severity="moderate")),
+            minor_count=Count("findings", filter=Q(findings__severity="minor")),
+            unknown_count=Count("findings", filter=Q(findings__severity="unknown")),
+            verified_count=Count("findings", filter=Q(findings__verification_status="verified")),
+            unverified_count=Count("findings", filter=Q(findings__verification_status="unverified")),
+            conflict_count=Count("findings", filter=Q(findings__verification_status="conflict")),
+        )
+        total_count = runs.count()
+        latest_runs = list(runs.order_by("-occurred_at", "-pk")[:12])
+        latest_runs.reverse()
+
+        results = [
+            {
+                "run_id": run.pk,
+                "occurred_at": run.occurred_at,
+                "medication_count": len((run.input_snapshot or {}).get("medication_ids") or []),
+                "findings_count": run.findings_count,
+                "severity_counts": {
+                    "major": run.major_count,
+                    "moderate": run.moderate_count,
+                    "minor": run.minor_count,
+                    "unknown": run.unknown_count,
+                },
+                "verification_counts": {
+                    "verified": run.verified_count,
+                    "unverified": run.unverified_count,
+                    "conflict": run.conflict_count,
+                },
+            }
+            for run in latest_runs
+        ]
+        body = PatientAnalysisHistorySerializer({"total_count": total_count, "results": results}).data
+        audit.record(request, audit.PATIENT_ANALYSIS_HISTORY_READ, patient=patient, obj=patient,
+                     analyses=len(results))
+        return Response(body)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):

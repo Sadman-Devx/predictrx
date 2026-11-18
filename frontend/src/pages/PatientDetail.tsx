@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ConsentPanel } from "../components/patient/ConsentPanel";
 import { MedicationForm } from "../components/patient/MedicationForm";
+import { PatientSafetyHistory } from "../components/patient/PatientSafetyHistory";
 import { Icon } from "../components/ui/Icon";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatusPill, type Tone } from "../components/ui/StatusPill";
@@ -93,6 +94,8 @@ export default function PatientDetail() {
       />
 
       <ConsentPanel patient={patient} onChanged={refreshPatient} />
+
+      <PatientSafetyHistory patientId={patient.id} />
 
       <div className="card patient-meds">
         <h2>{t("meds.title")}</h2>

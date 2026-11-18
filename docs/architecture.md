@@ -150,6 +150,7 @@ predictrx/
 │   │   ├── drugs/                       # Drug, BrandMapping, Interaction
 │   │   ├── knowledge/                   # KnowledgeDocument, Chunk (pgvector), GraphEdge
 │   │   ├── analysis/                    # AnalysisRun, AgentTrace, RiskFinding, RiskSummary
+│   │   ├── followups/                   # clinician-owned, audited follow-up tasks
 │   │   ├── twin/                        # TwinScenario (what-if simulation)
 │   │   ├── evaluation/                  # EvalCase, EvalRun
 │   │   ├── vitals/                      # ESP32 ingest (roadmap, code ready)
@@ -170,7 +171,7 @@ predictrx/
 │   └── README.md                        # transport, client/host, tools
 ├── frontend/                            # React + Vite
 │   ├── src/
-│   │   ├── pages/                       # Login, Dashboard, Patients, Scan, Review, Analysis, Twin, Family
+│   │   ├── pages/                       # Login, Dashboard, Patients, Scan, Review, Analysis, Follow-ups, Twin, Family
 │   │   ├── components/{ui,patient,analysis,twin,layout}/
 │   │   ├── i18n/{bn.json,en.json}
 │   │   ├── lib/{api.ts,types.ts}

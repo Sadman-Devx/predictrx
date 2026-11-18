@@ -157,6 +157,27 @@ class RiskSummarySerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class InteractionMapNodeSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    label = serializers.CharField(allow_blank=True)
+    state = serializers.ChoiceField(choices=["matched", "not_checked"])
+    medication_count = serializers.IntegerField(min_value=0)
+
+
+class InteractionMapEdgeSerializer(serializers.Serializer):
+    finding_id = serializers.IntegerField()
+    source_node_id = serializers.CharField()
+    target_node_id = serializers.CharField()
+    severity = serializers.CharField()
+    verification_status = serializers.CharField()
+    evidence_count = serializers.IntegerField(min_value=0)
+
+
+class InteractionMapSerializer(serializers.Serializer):
+    nodes = InteractionMapNodeSerializer(many=True)
+    edges = InteractionMapEdgeSerializer(many=True)
+
+
 class AgentTraceSerializer(serializers.ModelSerializer):
     class Meta:
         model = AgentTrace
@@ -169,8 +190,8 @@ class AnalysisDetailSerializer(serializers.ModelSerializer):
     """GET /api/analysis/{id}/ — one shape for polling AND for the finished result.
 
     While the run is queued / running / failed, every clinical field is `null`: a partial run must never look final.
-    `findings`, `summary`, `medications`, `gaps` and `guardrail_violations` are filled only when `status == completed`,
-    and only when the view supplied a `result_context` (so the serializer can never trigger hidden queries).
+    `findings`, `summary`, `medications`, `gaps`, `interaction_map` and `guardrail_violations` are filled only when
+    `status == completed`, and only when the view supplied a `result_context` (so the serializer can never trigger hidden queries).
     """
 
     run_id = serializers.IntegerField(source="id", read_only=True)
@@ -187,13 +208,14 @@ class AnalysisDetailSerializer(serializers.ModelSerializer):
     findings = serializers.SerializerMethodField()
     summary = serializers.SerializerMethodField()
     gaps = serializers.SerializerMethodField()
+    interaction_map = serializers.SerializerMethodField()
     guardrail_violations = serializers.SerializerMethodField()
 
     class Meta:
         model = AnalysisRun
         fields = ["run_id", "patient_id", "status", "is_final", "started_at", "finished_at", "medication_count",
                   "findings_count", "error_code", "progress", "current_step", "disclaimer_version", "disclaimer",
-                  "medications", "findings", "summary", "gaps", "guardrail_violations"]
+                  "medications", "findings", "summary", "gaps", "interaction_map", "guardrail_violations"]
         read_only_fields = fields
 
     # ---- helpers
@@ -247,6 +269,12 @@ class AnalysisDetailSerializer(serializers.ModelSerializer):
     @extend_schema_field(GapSerializer(many=True, allow_null=True))
     def get_gaps(self, obj):
         return results.gap_list(obj) if self._ready(obj) else None
+
+    @extend_schema_field(InteractionMapSerializer(allow_null=True))
+    def get_interaction_map(self, obj):
+        if not self._ready(obj):
+            return None
+        return InteractionMapSerializer(results.interaction_map(obj, self.context["findings"])).data
 
     @extend_schema_field(serializers.ListField(child=serializers.CharField(), allow_null=True))
     def get_guardrail_violations(self, obj):

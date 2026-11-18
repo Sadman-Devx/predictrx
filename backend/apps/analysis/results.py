@@ -209,6 +209,49 @@ def gap_list(run) -> list[dict]:
     ]
 
 
+def interaction_map(run, findings: list[RiskFinding]) -> dict:
+    """Build graph nodes from the frozen medication snapshot and edges from stored findings only."""
+    nodes: dict[str, dict] = {}
+    for index, medication in enumerate((run.input_snapshot or {}).get("medications", [])):
+        drug_id = _int_or_none(medication.get("drug_id"))
+        medication_id = _int_or_none(medication.get("medication_id"))
+        if drug_id is not None:
+            node_id = f"drug-{drug_id}"
+            label = _clean(medication.get("generic_name") or medication.get("brand_name") or medication.get("raw_text"))
+            state = "matched"
+        else:
+            node_id = f"medication-{medication_id}" if medication_id is not None else f"unresolved-{index}"
+            label = _clean(medication.get("brand_name") or medication.get("raw_text"))
+            state = "not_checked"
+        node = nodes.setdefault(
+            node_id,
+            {"id": node_id, "label": label, "state": state, "medication_count": 0},
+        )
+        node["medication_count"] += 1
+
+    edges = []
+    for finding in findings:
+        source_id = f"drug-{finding.drug_a_id}"
+        target_id = f"drug-{finding.drug_b_id}"
+        for node_id, drug in ((source_id, finding.drug_a), (target_id, finding.drug_b)):
+            nodes.setdefault(
+                node_id,
+                {"id": node_id, "label": drug.generic_name, "state": "matched", "medication_count": 0},
+            )
+        edges.append(
+            {
+                "finding_id": finding.id,
+                "source_node_id": source_id,
+                "target_node_id": target_id,
+                "severity": finding.severity,
+                "verification_status": finding.verification_status,
+                "evidence_count": len(finding.evidence or []),
+            }
+        )
+
+    return {"nodes": list(nodes.values()), "edges": edges}
+
+
 def guardrail_violations(run) -> list[str]:
     meta = (run.model_info or {}).get("result_meta") or {}
     return [str(v) for v in meta.get("violations") or []]

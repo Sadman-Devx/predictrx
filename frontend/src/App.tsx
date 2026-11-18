@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Evaluation from "./pages/Evaluation";
 import Family from "./pages/Family";
 import FamilyPatient from "./pages/FamilyPatient";
+import FollowUps from "./pages/FollowUps";
 import Login from "./pages/Login";
 import MedicationEntry from "./pages/MedicationEntry";
 import NotFound from "./pages/NotFound";
@@ -55,6 +56,9 @@ export default function App() {
             {/* Day 6/7: one run opens at /analysis/:runId; /analysis lists the clinician's past runs (GET /api/analysis/runs/). */}
             <Route path="analysis" element={<AnalysisList />} />
             <Route path="analysis/:runId" element={<AnalysisRun />} />
+            <Route element={<ProtectedRoute roles={["doctor", "pharmacist"]} />}>
+              <Route path="follow-ups" element={<FollowUps />} />
+            </Route>
             {/* Day 10: the What-if simulation is a tab of a finished analysis; /twin lists the finished ones and opens that tab. */}
             <Route path="twin" element={<TwinHome />} />
           </Route>
