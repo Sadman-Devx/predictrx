@@ -9,6 +9,8 @@ import { Tabs } from "../ui/Tabs";
 import { FindingCard } from "./FindingCard";
 import { InteractionNetworkMap } from "./InteractionNetworkMap";
 import { PatientCardView } from "./PatientCardView";
+import { SafetyBrief } from "./SafetyBrief";
+import { SeverityBreakdownChart } from "./SeverityBreakdownChart";
 import { TraceTimeline } from "./TraceTimeline";
 import { TraceView } from "./TraceView";
 import { TwinView } from "./TwinView";
