@@ -41,6 +41,15 @@
 .reset-card .auth-form { max-width: none; }
 .reset-description { margin: 0 0 20px; font-size: 13px; line-height: 1.6; text-align: center; }
 .reset-link { display: block; width: fit-content; margin: 14px auto 0; text-decoration: none; }
+.otp-form { gap: 2px; }
+.otp-label { margin: 0 0 6px; font-size: 12px; font-weight: 500; }
+.otp-input input { padding: 0 16px; text-align: center; letter-spacing: 0.35em; font-size: 18px; }
+.auth-resend {
+  align-self: center; margin: 10px 0 0; border: 0; background: none; padding: 6px 8px;
+  color: var(--auth-btn); font: 500 13px/1.3 var(--auth-font); cursor: pointer;
+}
+.auth-resend:hover:not(:disabled) { text-decoration: underline; }
+.auth-resend:disabled { color: var(--auth-text-2); cursor: not-allowed; }
 
 /* ---------- card ---------- */
 .auth-card2 {
@@ -139,11 +148,20 @@
 
 .auth-or { margin: 18px 0 12px; text-align: center; font-size: 12px; color: var(--auth-text); }
 .auth-social { display: flex; justify-content: center; gap: 14px; }
+.auth-google-wrap {
+  position: relative; display: flex; align-items: center; justify-content: center; width: 42px; height: 42px;
+}
+.auth-google-widget:empty { display: none; }
+.auth-google-mark {
+  position: absolute; inset: 0; z-index: 1; display: grid; place-items: center;
+  color: var(--auth-text); font: 600 16px/1 var(--auth-font); pointer-events: none;
+}
 .auth-social button {
   width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--auth-border); background: transparent;
   font: 600 14px/1 var(--auth-font); color: var(--auth-text); cursor: pointer;
 }
 .auth-social button:hover { background: var(--auth-input); }
+.auth-social button:disabled { opacity: 0.6; cursor: wait; }
 
 .auth-msg {
   margin: 0 0 12px; padding: 9px 12px; border-radius: 10px; font-size: 12px; line-height: 1.5; max-width: none;

@@ -37,6 +37,9 @@ class User(AbstractUser):
     preferred_language = models.CharField(max_length=5, default="bn")
     # True once the owner opened the emailed link (or the mailbox was proven another way: reset link, Google/LinkedIn).
     email_verified = models.BooleanField(default=False)
+    email_otp_hash = models.CharField(max_length=64, blank=True, default="")
+    email_otp_expires_at = models.DateTimeField(blank=True, null=True)
+    email_otp_attempts = models.PositiveSmallIntegerField(default=0)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS: list[str] = []

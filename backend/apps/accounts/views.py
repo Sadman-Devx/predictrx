@@ -27,7 +27,7 @@ from .serializers import (
 
 
 class RegisterView(CreateAPIView):
-    """POST /api/auth/register/ — create a doctor/pharmacist account and email a verification link.
+    """POST /api/auth/register/ — create an unverified clinical account and email an OTP.
 
     Returns the profile, not tokens. A mail problem never fails the registration (the user can ask for a new link).
     """
@@ -41,8 +41,10 @@ class RegisterView(CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        email_verification.send_verification_email(user)
-        return Response(MeSerializer(user).data, status=status.HTTP_201_CREATED)
+        email_sent = email_verification.send_verification_code(user)
+        data = dict(MeSerializer(user).data)
+        data["verification_email_sent"] = email_sent
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 class LoginView(TokenObtainPairView):
@@ -128,35 +130,37 @@ class MeView(RetrieveUpdateAPIView):
 
 
 class VerifyEmailView(APIView):
-    """POST /api/auth/verify-email/ {token} — confirm the address from the emailed link."""
+    """POST /api/auth/verify-email/ {email, code} or legacy {token} — confirm the mailbox."""
 
     permission_classes = [AllowAny]
     authentication_classes: list = []
     throttle_scope = "email_verify"
 
-    @extend_schema(tags=["Auth"], summary="Verify the email address from the emailed link",
+    @extend_schema(tags=["Auth"], summary="Verify the email address with an OTP or legacy link",
                    request=VerifyEmailSerializer, responses={200: OpenApiResponse(description="Email verified")})
     def post(self, request):
         serializer = VerifyEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email_verification.mark_verified(serializer.validated_data["user"])
+        user = serializer.validated_data["user"]
+        if not user.email_verified:
+            email_verification.mark_verified(user)
         return Response({"detail": "Email verified. You can log in now."})
 
 
 class ResendVerificationView(APIView):
-    """POST /api/auth/resend-verification/ {email} — new link. Always 202: never reveals whether an account exists."""
+    """POST /api/auth/resend-verification/ {email} — new OTP. Always 202 to avoid account enumeration."""
 
     permission_classes = [AllowAny]
     authentication_classes: list = []
     throttle_scope = "email_verify_resend"
 
-    @extend_schema(tags=["Auth"], summary="Request a new verification email",
+    @extend_schema(tags=["Auth"], summary="Request a new verification code",
                    request=ResendVerificationSerializer, responses={202: OpenApiResponse(description="Accepted")})
     def post(self, request):
         serializer = ResendVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email_verification.resend(serializer.validated_data["email"])
-        return Response({"detail": "If this account still needs verification, a new link has been sent."},
+        return Response({"detail": "If this account still needs verification, a new code has been sent."},
                         status=status.HTTP_202_ACCEPTED)
 
 

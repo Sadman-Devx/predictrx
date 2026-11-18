@@ -51,8 +51,11 @@ export default function Profile() {
   async function resendVerification() {
     setVerifyStatus(null);
     try {
-      await api("/auth/resend-verification/", { method: "POST", body: JSON.stringify({ email: user!.email }) });
-      setVerifyStatus({ kind: "ok", text: t("profile.resendSent") });
+      const email = user!.email;
+      await api("/auth/resend-verification/", { method: "POST", body: JSON.stringify({ email }) });
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`, {
+        state: { resendRequested: true },
+      });
     } catch (err) {
       setVerifyStatus({ kind: "error", text: failureText(err) });
     }

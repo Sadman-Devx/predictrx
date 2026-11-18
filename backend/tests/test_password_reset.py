@@ -58,7 +58,7 @@ class TestPasswordResetRequest:
 @pytest.mark.django_db
 class TestPasswordResetConfirm:
     def _start(self, api_client, make_user):
-        user = make_user(email="dr.a@example.test")
+        user = make_user(email="dr.a@example.test", email_verified=True)
         api_client.post(REQUEST, {"email": user.email}, format="json")
         uid, token = _link_parts()
         return user, uid, token
