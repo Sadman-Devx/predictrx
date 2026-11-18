@@ -7,11 +7,8 @@ import type { AgentTraceStep, AnalysisRunStatus, TimelineStage } from "../../lib
 import { StatusPill } from "../ui/StatusPill";
 import { Tabs } from "../ui/Tabs";
 import { FindingCard } from "./FindingCard";
-import { InteractionViews } from "./InteractionViews";
-import { ClinicalReviewChecklist } from "./ClinicalReviewChecklist";
+import { InteractionNetworkMap } from "./InteractionNetworkMap";
 import { PatientCardView } from "./PatientCardView";
-import { SafetyBrief } from "./SafetyBrief";
-import { SeverityBreakdownChart } from "./SeverityBreakdownChart";
 import { TraceTimeline } from "./TraceTimeline";
 import { TraceView } from "./TraceView";
 import { TwinView } from "./TwinView";
@@ -111,8 +108,7 @@ export function AnalysisResults({ run, trace, traceKnown, timeline }: Props) {
         <p className="muted small">{t("results.disclaimerVersion", { v: run.disclaimer_version })}</p>
       </div>
 
-      {run.interaction_map && <InteractionViews map={run.interaction_map} findings={findings} />}
-      <ClinicalReviewChecklist key={run.run_id} findings={findings} />
+      {run.interaction_map && <InteractionNetworkMap map={run.interaction_map} />}
 
       {gaps.length > 0 && (
         <div className="card notice" role="note">

@@ -70,10 +70,17 @@ export function FindingCard({ finding, extra, id }: { finding: FindingView; extr
 
       {evidence.length > 0 ? (
         <EvidencePanel evidence={evidence} confidence={finding.confidence} basis={finding.confidence_basis} />
-      ) : finding.severity === "unknown" ? (
-        <p className="finding-note" role="note">{t("finding.unknown.note")}</p>
       ) : (
-        <p className="finding-note note-warn" role="alert">{t("finding.noSource")}</p>
+        <>
+          {status === "conflict" && (
+            <EvidencePanel evidence={evidence} confidence={finding.confidence} basis={finding.confidence_basis} />
+          )}
+          {finding.severity === "unknown" ? (
+            <p className="finding-note" role="note">{t("finding.unknown.note")}</p>
+          ) : (
+            <p className="finding-note note-warn" role="alert">{t("finding.noSource")}</p>
+          )}
+        </>
       )}
 
       {extra}

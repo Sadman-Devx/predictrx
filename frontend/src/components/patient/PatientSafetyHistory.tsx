@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useI18n, type MessageKey } from "../../i18n";
 import { getPatientAnalysisHistory } from "../../lib/clinical";
+import { TherapyEvolution } from "./TherapyEvolution";
 import type { PatientAnalysisHistoryRun, Severity } from "../../lib/types";
 import "../../styles/patient-history.css";
 
@@ -35,6 +36,8 @@ export function PatientSafetyHistory({ patientId }: { patientId: number }) {
     let active = true;
     setLoading(true);
     setError(false);
+    setRuns([]);
+    setTotalCount(0);
     getPatientAnalysisHistory(patientId)
       .then((history) => {
         if (!active) return;
@@ -142,6 +145,14 @@ export function PatientSafetyHistory({ patientId }: { patientId: number }) {
               );
             })}
           </ol>
+          {runs.length >= 2 && (
+            <TherapyEvolution
+              key={`${patientId}-${runs[runs.length - 2].run_id}-${runs[runs.length - 1].run_id}`}
+              patientId={patientId}
+              previous={runs[runs.length - 2]}
+              latest={runs[runs.length - 1]}
+            />
+          )}
         </>
       )}
     </section>

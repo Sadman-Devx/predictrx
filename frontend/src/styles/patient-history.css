@@ -194,6 +194,234 @@
   color: var(--sev-major);
 }
 
+.therapy-evolution {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: linear-gradient(135deg, var(--surface), var(--primary-soft));
+}
+
+.therapy-evolution-header,
+.therapy-evolution-finding-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.therapy-evolution-header h3,
+.therapy-evolution-section h4 {
+  margin: 0;
+}
+
+.therapy-evolution-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.therapy-evolution-note,
+.therapy-evolution-no-changes {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+  line-height: 1.55;
+}
+
+.therapy-evolution-snapshots {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.therapy-evolution-snapshot {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+}
+
+.therapy-evolution-snapshot > span {
+  color: var(--ink-muted);
+  font-size: var(--fs-badge);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.therapy-evolution-snapshot time {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.therapy-evolution-snapshot a,
+.therapy-evolution-finding-heading a {
+  justify-self: start;
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+
+.therapy-evolution-connector {
+  color: var(--primary);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.therapy-evolution-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.therapy-evolution-metric {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+}
+
+.therapy-evolution-metric strong {
+  color: var(--primary);
+  font-size: var(--fs-section);
+  font-variant-numeric: tabular-nums;
+}
+
+.therapy-evolution-metric span {
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+  overflow-wrap: anywhere;
+}
+
+.therapy-evolution-section {
+  display: grid;
+  gap: 10px;
+}
+
+.therapy-evolution-delta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.therapy-evolution-group {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+}
+
+.therapy-evolution-group h4 {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: var(--fs-small);
+}
+
+.therapy-evolution-group h4 span,
+.therapy-evolution-finding-group summary span {
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.therapy-evolution-group ul,
+.therapy-evolution-finding-group ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.therapy-evolution-group li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-small);
+}
+
+.therapy-evolution-arrow {
+  color: var(--ink-muted);
+}
+
+.therapy-evolution-finding-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.therapy-evolution-finding-group {
+  padding: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+}
+
+.therapy-evolution-finding-group summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--tap);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.therapy-evolution-finding-group ul {
+  margin-top: 8px;
+}
+
+.therapy-evolution-finding-group li {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+.therapy-evolution-finding-heading {
+  flex-wrap: wrap;
+}
+
+.therapy-evolution-finding-states {
+  display: grid;
+  gap: 6px;
+}
+
+.therapy-evolution-finding-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-small);
+}
+
+.therapy-evolution-finding-state > span:first-child {
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
 @media (max-width: 600px) {
   .patient-history-header {
     align-items: flex-start;
@@ -207,6 +435,11 @@
   .patient-history-run-link {
     display: none;
   }
+
+  .therapy-evolution { padding: 12px; }
+  .therapy-evolution-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .therapy-evolution-delta-grid { grid-template-columns: minmax(0, 1fr); }
+  .therapy-evolution-snapshot { padding: 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
