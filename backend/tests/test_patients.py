@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 import pytest
+from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 
 from apps.analysis.models import AnalysisRun, RiskFinding
@@ -176,7 +177,7 @@ class TestPatientAnalysisHistory:
         assert len(body["results"]) == 1
         result = body["results"][0]
         assert result["run_id"] == run.pk
-        assert result["occurred_at"].startswith(happened_at.date().isoformat())
+        assert parse_datetime(result["occurred_at"]) == happened_at
         assert result["medication_count"] == 3
         assert result["findings_count"] == 2
         assert result["severity_counts"] == {"major": 1, "moderate": 0, "minor": 0, "unknown": 1}
