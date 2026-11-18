@@ -161,3 +161,7 @@ export function deriveSteps(status: RunStatus, trace: AgentTraceStep[]): StepVie
 /** GET /api/analysis/runs/ — the signed-in clinician's own runs, newest first. */
 export const listAnalyses = (page = 1, status?: RunStatus) =>
   api<Paginated<AnalysisListItem>>(`/analysis/runs/?page=${page}${status ? `&status=${status}` : ""}`);
+
+/** Completed runs for the selected patient, for an explicitly linked clinician follow-up. */
+export const listPatientAnalyses = (patientId: number) =>
+  api<Paginated<AnalysisListItem>>(`/analysis/runs/?page_size=100&patient=${patientId}&status=completed`);

@@ -1,0 +1,152 @@
+.interaction-map {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.interaction-map-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.interaction-map-heading h2,
+.interaction-map-heading p,
+.interaction-map-safety,
+.interaction-map-empty {
+  margin: 0;
+}
+
+.interaction-map-heading h2 {
+  margin-bottom: var(--space-1);
+}
+
+.interaction-map-count {
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+}
+
+.interaction-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.interaction-map-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+}
+
+.interaction-map-legend-line {
+  width: 24px;
+  height: 0;
+  border-top: 3px solid var(--ink-muted);
+}
+
+.interaction-map-legend-line.severity-major { border-color: var(--sev-major); }
+.interaction-map-legend-line.severity-moderate { border-color: var(--sev-moderate); }
+.interaction-map-legend-line.severity-minor { border-color: var(--sev-minor); }
+.interaction-map-legend-line.severity-unknown { border-color: var(--sev-unknown); }
+.interaction-map-legend-line.verification-unverified { border-top-style: dashed; }
+.interaction-map-legend-line.verification-conflict { border-top-style: dotted; border-top-width: 4px; }
+
+.interaction-map-scroll {
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-inner);
+  background:
+    radial-gradient(circle at 1px 1px, var(--border-soft) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--bg);
+}
+
+.interaction-map-svg {
+  display: block;
+  width: 100%;
+  min-width: 520px;
+  height: auto;
+}
+
+.interaction-map-edge {
+  color: var(--ink-muted);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.interaction-map-edge-line {
+  stroke: currentColor;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.interaction-map-edge-hit {
+  stroke: transparent;
+  stroke-width: 18;
+  vector-effect: non-scaling-stroke;
+}
+
+.interaction-map-edge:hover .interaction-map-edge-line,
+.interaction-map-edge:focus-within .interaction-map-edge-line {
+  stroke-width: 5;
+}
+
+.interaction-map-edge.severity-major { color: var(--sev-major); }
+.interaction-map-edge.severity-moderate { color: var(--sev-moderate); }
+.interaction-map-edge.severity-minor { color: var(--sev-minor); }
+.interaction-map-edge.severity-unknown { color: var(--sev-unknown); }
+.interaction-map-edge.verification-unverified .interaction-map-edge-line { stroke-dasharray: 8 5; }
+.interaction-map-edge.verification-conflict .interaction-map-edge-line { stroke-dasharray: 2 5; stroke-width: 4; }
+
+.interaction-map-edge-label {
+  fill: var(--ink);
+  stroke: var(--bg);
+  stroke-width: 5px;
+  paint-order: stroke;
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.interaction-map-node rect {
+  fill: var(--surface);
+  stroke: var(--primary);
+  stroke-width: 2;
+  filter: drop-shadow(0 2px 4px rgb(20 32 45 / 12%));
+}
+
+.interaction-map-node.state-not_checked rect {
+  fill: var(--sev-unknown-soft);
+  stroke: var(--sev-unknown);
+  stroke-dasharray: 6 4;
+}
+
+.interaction-map-node-label {
+  fill: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.interaction-map-node-detail {
+  fill: var(--ink-muted);
+  font-size: 11px;
+}
+
+.interaction-map-safety {
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--sev-moderate);
+  background: var(--sev-moderate-soft);
+}
+
+@media (max-width: 560px) {
+  .interaction-map-heading {
+    flex-direction: column;
+  }
+}

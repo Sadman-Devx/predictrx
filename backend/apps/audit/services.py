@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 # Action names. Use these constants, never string literals, so a typo cannot create a silent audit gap.
 PATIENT_LIST = "patient_list"
 PATIENT_READ = "patient_read"
+PATIENT_ANALYSIS_HISTORY_READ = "patient_analysis_history_read"
 PATIENT_CREATE = "patient_create"
 PATIENT_UPDATE = "patient_update"
 MEDICATION_LIST = "medication_list"
@@ -22,6 +23,9 @@ ANALYSIS_START = "analysis_start"
 ANALYSIS_READ = "analysis_read"
 ANALYSIS_TRACE_READ = "analysis_trace_read"
 PATIENT_CARD_READ = "patient_card_read"  # the plain-Bangla patient card of a run was read by its owner
+FOLLOWUP_LIST = "followup_list"
+FOLLOWUP_CREATE = "followup_create"
+FOLLOWUP_UPDATE = "followup_update"
 TWIN_RUN = "twin_run"  # a what-if scenario was requested for a completed run (meta: replay, base_run_id, counts)
 TWIN_READ = "twin_read"  # a stored what-if scenario (op=detail) or a run's scenario list (op=list) was read
 FAMILY_VIEW = "family_view"  # a family user opened a patient's summary (or saw the patient in their list)

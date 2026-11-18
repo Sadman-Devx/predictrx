@@ -52,9 +52,10 @@ The Google ID-token flow does not need a client secret.
 Run tests: `cd backend && pytest`
 
 ## Implementation and remaining validation
-The repository contains Django APIs and models for drugs, interactions, analysis, patients, consent and family
-sharing; RAG/indexing and evaluation code; the LangGraph analysis pipeline; a DB-backed local MCP server; and the
-React clinician/family flows, including the What-if simulation. The optional PubMed MCP utility accepts only
+The repository contains Django APIs and models for drugs, interactions, analysis, patients, consent, family
+sharing and clinician-owned follow-up tasks; RAG/indexing and evaluation code; the LangGraph analysis pipeline; a
+DB-backed local MCP server; and the React clinician/family flows, including the What-if simulation and follow-up
+board. The optional PubMed MCP utility accepts only
 fixed, general research topics and is excluded from clinical-analysis tools.
 
 Code being present is not the same as clinical or production validation. In particular:

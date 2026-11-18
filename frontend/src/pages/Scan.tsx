@@ -60,6 +60,10 @@ function patientIdFrom(value: unknown): number | null {
   return typeof n === "number" && Number.isInteger(n) && n > 0 ? n : null;
 }
 
+function scanIdFrom(value: string | null): number | null {
+  return patientIdFrom(value);
+}
+
 /** Early checks on the chosen file. The server checks the real bytes again, so this never replaces its answer. */
 function checkFile(file: File): FormError | null {
   if (file.size === 0) return { key: "scan.error.empty" };
@@ -150,7 +154,7 @@ export default function Scan() {
   // ---- upload + watch ----
   const [formError, setFormError] = useState<FormError | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [scanId, setScanId] = useState<number | null>(null);
+  const [scanId, setScanId] = useState<number | null>(() => scanIdFrom(searchParams.get("scan")));
   const [replay, setReplay] = useState(false);
   const [rowsFailed, setRowsFailed] = useState(false);
   const { scan, issue, loading, retry } = useScan(scanId);
