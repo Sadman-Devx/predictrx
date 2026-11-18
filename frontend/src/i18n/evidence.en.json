@@ -1,5 +1,10 @@
 {
   "evidence.button": "Evidence",
+  "evidence.compareButton": "Compare sources",
+  "evidence.conflictTitle": "Evidence conflict lens",
+  "evidence.conflictCompareNote": "This finding is marked as a conflict. Compare the attached source records and available excerpts; no source is ranked here.",
+  "evidence.conflictSingleNote": "Only one source record is attached, so a side-by-side comparison is not available.",
+  "evidence.conflictUnavailable": "No source records are available here to compare. Do not rely on this finding without checking the source records.",
   "evidence.panel.title": "Why are we saying this?",
   "evidence.panel.label": "Evidence for this finding",
   "evidence.count.none": "No sources",

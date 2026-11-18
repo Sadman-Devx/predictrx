@@ -131,20 +131,23 @@ interface PanelProps {
 /**
  * "Why are we saying this?" under a finding: an Evidence button that expands to the sources behind the warning.
  * Each source shows its name (a link when one is known), a short quote from it and a confidence bar.
- * Renders nothing when there is no evidence: the finding card then shows its own honest "no source" note.
+ * Conflict findings can still open the lens with an explicit unavailable state when no evidence is attached.
  */
 export function EvidencePanel({ evidence, confidence, basis }: PanelProps) {
   const { t } = useI18n();
   const uid = useId();
   const [open, setOpen] = useState(false);
   const panelId = `${uid}-evidence`;
+  const isConflict = normalizeVerification(basis.verification_status) === "conflict";
 
-  if (evidence.length === 0) return null;
+  if (evidence.length === 0 && !isConflict) return null;
 
-  const basisText = t(evidence.length === 1 ? "confidence.basis.one" : "confidence.basis.many", {
-    n: evidence.length,
-    sources: basisSources(basis),
-  });
+  const basisText = evidence.length > 0
+    ? t(evidence.length === 1 ? "confidence.basis.one" : "confidence.basis.many", {
+        n: evidence.length,
+        sources: basisSources(basis),
+      })
+    : "";
 
   return (
     <div className="ev">
@@ -156,7 +159,7 @@ export function EvidencePanel({ evidence, confidence, basis }: PanelProps) {
         onClick={() => setOpen((cur) => !cur)}
       >
         <DocIcon />
-        {t("evidence.button")}
+        {t(isConflict ? "evidence.compareButton" : "evidence.button")}
         <svg className="ev-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="m6 9 6 6 6-6" />
         </svg>
@@ -164,16 +167,29 @@ export function EvidencePanel({ evidence, confidence, basis }: PanelProps) {
 
       {open && (
         <div id={panelId} className="ev-panel" role="region" aria-label={t("evidence.panel.label")}>
-          <p className="ev-panel-title">{t("evidence.panel.title")}</p>
-          <ul className="ev-list">
-            {evidence.map((item, i) => (
-              <EvidenceRow key={`${item.type}-${item.id ?? "x"}-${i}`} item={item} fallback={confidence} />
-            ))}
-          </ul>
-          <p className="muted small ev-foot">
-            {basisText} · {t(VERIFY_LABEL[normalizeVerification(basis.verification_status)])}
-          </p>
-          <p className="muted small ev-foot">{t("evidence.confidence.note")}</p>
+          <p className="ev-panel-title">{t(isConflict ? "evidence.conflictTitle" : "evidence.panel.title")}</p>
+          {isConflict && (
+            <p className="ev-compare-note" role="note">
+              {t(evidence.length > 1 ? "evidence.conflictCompareNote" : "evidence.conflictSingleNote")}
+            </p>
+          )}
+          {evidence.length > 0 ? (
+            <ul className={`ev-list${isConflict ? " ev-list-compare" : ""}`}>
+              {evidence.map((item, i) => (
+                <EvidenceRow key={`${item.type}-${item.id ?? "x"}-${i}`} item={item} fallback={confidence} />
+              ))}
+            </ul>
+          ) : (
+            <p className="finding-note note-warn" role="note">{t("evidence.conflictUnavailable")}</p>
+          )}
+          {evidence.length > 0 && (
+            <>
+              <p className="muted small ev-foot">
+                {basisText} · {t(VERIFY_LABEL[normalizeVerification(basis.verification_status)])}
+              </p>
+              <p className="muted small ev-foot">{t("evidence.confidence.note")}</p>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -1,0 +1,116 @@
+/* ===== severity donut + verification bar (analysis results, overview card) =====
+   Tokens only (styles/tokens.css). Colour is never alone: every segment is also a legend row with a shape and a word. */
+
+.sevchart {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-inner);
+  background: var(--bg);
+}
+
+.sevchart-block {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+}
+
+.sevchart-title {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+/* ---- donut ---- */
+.sevchart-donut-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-5);
+}
+
+.sevchart-donut {
+  flex: none;
+  width: 132px;
+  height: 132px;
+}
+
+.sevchart-ring-track,
+.sevchart-seg {
+  fill: none;
+  stroke-width: 14;
+}
+
+.sevchart-ring-track { stroke: var(--track); }
+.sevchart-seg.seg-major { stroke: var(--sev-major); }
+.sevchart-seg.seg-moderate { stroke: var(--sev-moderate); }
+.sevchart-seg.seg-minor { stroke: var(--sev-minor); }
+.sevchart-seg.seg-unknown { stroke: var(--sev-unknown); }
+
+.sevchart-total {
+  fill: var(--ink);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.sevchart-total-label {
+  fill: var(--ink-muted);
+  font-size: 9px;
+}
+
+/* ---- legend (shared by the donut and the bar) ---- */
+.sevchart-legend {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sevchart-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.sevchart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ---- verification bar ---- */
+.sevchart-bar {
+  display: flex;
+  gap: 2px;
+  height: 16px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--track);
+}
+
+.sevchart-bar-seg {
+  min-width: 8px;
+  height: 100%;
+}
+
+.sevchart-bar-seg.ver-verified { background: var(--sev-minor); }
+.sevchart-bar-seg.ver-conflict { background: var(--conflict); }
+/* unverified: hatched, so it differs from the others by pattern and not only by colour */
+.sevchart-bar-seg.ver-unverified {
+  background: repeating-linear-gradient(45deg, var(--sev-unknown) 0 4px, var(--sev-unknown-soft) 4px 8px);
+}
+
+.sevchart-hint { margin: 0; }
+
+@media (max-width: 700px) {
+  .sevchart { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sevchart-seg { transition: stroke-width var(--dur) ease; }
+  .sevchart-seg:hover { stroke-width: 17; }
+}

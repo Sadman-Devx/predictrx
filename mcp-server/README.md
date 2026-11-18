@@ -32,7 +32,7 @@ the same `.env` (`DATABASE_URL`, `REDIS_URL`) and the tables loaded (`data/pipel
 cd mcp-server
 pip install -r requirements.txt
 python server.py                 # SSE on :8001
-python test_client.py            # second terminal: calls every tool over SSE, exits 0 on success
+python test_client.py            # second terminal: checks tool registration and all local tools over SSE
 ```
 
 ## Status
