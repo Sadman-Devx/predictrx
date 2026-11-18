@@ -125,13 +125,17 @@ def _local_vision(prompt: str, image: bytes, system: str, max_tokens: int) -> st
     r.raise_for_status()
     return r.json().get("response", "")
 
-def _gemini_vision(prompt: str, image: bytes, media_type: str, system: str, max_tokens: int) -> str:
-    """Google AI Studio (Gemini API). Key and model come from env (GEMINI_API_KEY, GEMINI_MODEL)."""
+def _gemini_vision(prompt: str, image: bytes, media_type: str, system: str, max_tokens: int) -> tuple[str, str]:
+    """Return generated text and the Gemini model that served the request."""
     import time
 
     import httpx
 
     model = setting("GEMINI_MODEL", "")
+    fallback_model = setting("GEMINI_FALLBACK_MODEL", "")
+    if fallback_model and fallback_model == model:
+        raise LLMNotConfigured("GEMINI_FALLBACK_MODEL must differ from GEMINI_MODEL")
+
     body = {
         "systemInstruction": {"parts": [{"text": system}]},
         "contents": [{"role": "user", "parts": [
@@ -140,26 +144,47 @@ def _gemini_vision(prompt: str, image: bytes, media_type: str, system: str, max_
         ]}],
         "generationConfig": {"temperature": 0, "maxOutputTokens": int(max_tokens)},
     }
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     headers = {"x-goog-api-key": setting("GEMINI_API_KEY", "")}  # header, not URL: keeps the key out of error logs
 
-    delays = (3, 8, 15)  # seconds to wait before retry 1, 2, 3 (well inside the task's 200 s soft limit)
-    for attempt in range(len(delays) + 1):
-        try:
-            r = httpx.post(url, headers=headers, json=body, timeout=float(setting("CLOUD_LLM_TIMEOUT", 60.0)))
-            if r.status_code in (429, 500, 503, 504) and attempt < len(delays):
-                logger.warning("gemini returned %s, retrying in %ss", r.status_code, delays[attempt])
-                time.sleep(delays[attempt])
-                continue
-            r.raise_for_status()
-            break
-        except httpx.TransportError:  # timeout / connection reset: also worth a retry
-            if attempt >= len(delays):
-                raise
-            time.sleep(delays[attempt])
+    retry_delays = (3, 8, 15)
+    retryable_statuses = {408, 429, 500, 502, 503, 504}
+    failover_statuses = retryable_statuses | {404}
+    models = [model] + ([fallback_model] if fallback_model else [])
 
-    parts = (r.json().get("candidates") or [{}])[0].get("content", {}).get("parts", [])
-    return "".join(p.get("text", "") for p in parts)
+    for model_index, active_model in enumerate(models):
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{active_model}:generateContent"
+        attempt_limit = 1 if fallback_model else len(retry_delays) + 1
+        for attempt in range(attempt_limit):
+            try:
+                response = httpx.post(
+                    url, headers=headers, json=body, timeout=float(setting("CLOUD_LLM_TIMEOUT", 60.0))
+                )
+            except httpx.TransportError:
+                if model_index == 0 and fallback_model:
+                    logger.warning("gemini primary transport failed; switching to fallback model %s", fallback_model)
+                    break
+                if attempt < attempt_limit - 1:
+                    logger.warning("gemini transport failed, retrying in %ss", retry_delays[attempt])
+                    time.sleep(retry_delays[attempt])
+                    continue
+                raise
+
+            if response.status_code in failover_statuses and model_index == 0 and fallback_model:
+                logger.warning(
+                    "gemini primary returned %s; switching to fallback model %s",
+                    response.status_code, fallback_model,
+                )
+                break
+            if response.status_code in retryable_statuses and attempt < attempt_limit - 1:
+                logger.warning("gemini returned %s, retrying in %ss", response.status_code, retry_delays[attempt])
+                time.sleep(retry_delays[attempt])
+                continue
+
+            response.raise_for_status()
+            parts = (response.json().get("candidates") or [{}])[0].get("content", {}).get("parts", [])
+            return "".join(part.get("text", "") for part in parts), active_model
+
+    raise LLMNotConfigured("Gemini request ended without a response")
 
 
 def vision_complete(prompt: str, *, image: bytes, media_type: str, system: str = "", max_tokens: int = 1500) -> VisionReply:
@@ -175,7 +200,8 @@ def vision_complete(prompt: str, *, image: bytes, media_type: str, system: str =
         return VisionReply(_local_vision(prompt, image, system, max_tokens), "local", settings.LOCAL_LLM_MODEL)
 
     if setting("GEMINI_API_KEY", "") and setting("GEMINI_MODEL", ""):
-        return VisionReply(_gemini_vision(prompt, image, media_type, system, max_tokens), "cloud", setting("GEMINI_MODEL", ""))
+        text, model = _gemini_vision(prompt, image, media_type, system, max_tokens)
+        return VisionReply(text, "cloud", model)
     
     if is_cloud_configured():
         return VisionReply(_cloud_vision(prompt, image, media_type, system, max_tokens), "cloud", settings.CLOUD_LLM_MODEL)
