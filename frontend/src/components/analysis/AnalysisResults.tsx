@@ -2,20 +2,18 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import "../../styles/results.css";
 import { useI18n, type MessageKey } from "../../i18n";
-import { pickSummary, SEVERITIES, severityCounts, sortFindings, verificationCounts, VERIFICATIONS } from "../../lib/results";
+import { pickSummary, severityCounts, sortFindings, verificationCounts } from "../../lib/results";
 import type { AgentTraceStep, AnalysisRunStatus, TimelineStage } from "../../lib/types";
-import { SeverityBadge } from "../ui/SeverityBadge";
 import { StatusPill } from "../ui/StatusPill";
 import { Tabs } from "../ui/Tabs";
 import { FindingCard } from "./FindingCard";
 import { InteractionNetworkMap } from "./InteractionNetworkMap";
-import { ClinicalReviewChecklist } from "./ClinicalReviewChecklist";
 import { PatientCardView } from "./PatientCardView";
 import { SafetyBrief } from "./SafetyBrief";
+import { SeverityBreakdownChart } from "./SeverityBreakdownChart";
 import { TraceTimeline } from "./TraceTimeline";
 import { TraceView } from "./TraceView";
 import { TwinView } from "./TwinView";
-import { VerificationBadge } from "./VerificationBadge";
 
 interface Props {
   /** A run whose status is "completed": the server sends the findings, the summary and the frozen medicine list with it. */
@@ -91,26 +89,8 @@ export function AnalysisResults({ run, trace, traceKnown, timeline }: Props) {
 
         <p>{countText}</p>
 
-        {findings.length > 0 && (
-          <>
-            <div className="count-row" role="group" aria-label={t("results.sev.label")}>
-              {SEVERITIES.filter((s) => sev[s] > 0).map((s) => (
-                <span key={s} className="count-item">
-                  <SeverityBadge severity={s} />
-                  <strong>{sev[s]}</strong>
-                </span>
-              ))}
-            </div>
-            <div className="count-row" role="group" aria-label={t("results.verify.label")}>
-              {VERIFICATIONS.filter((v) => ver[v] > 0).map((v) => (
-                <span key={v} className="count-item">
-                  <VerificationBadge status={v} />
-                  <strong>{ver[v]}</strong>
-                </span>
-              ))}
-            </div>
-          </>
-        )}
+        {/* Severity donut + verification bar (replaces the two plain count rows: same numbers, with a legend). */}
+        {findings.length > 0 && <SeverityBreakdownChart severity={sev} verification={ver} />}
 
         <div>
           <h2>{t("results.summary.title")}</h2>
@@ -131,7 +111,6 @@ export function AnalysisResults({ run, trace, traceKnown, timeline }: Props) {
       </div>
 
       {run.interaction_map && <InteractionNetworkMap map={run.interaction_map} />}
-      <ClinicalReviewChecklist key={run.run_id} findings={findings} />
 
       {gaps.length > 0 && (
         <div className="card notice" role="note">
