@@ -30,6 +30,7 @@ const NAV: NavItem[] = [
   { to: "/patients", key: "nav.patients", icon: "patients", roles: STAFF },
   { to: "/scan", key: "nav.scan", icon: "scan", also: ["/medications", "/review"], roles: STAFF },
   { to: "/analysis", key: "nav.analysis", icon: "analyses", roles: STAFF },
+  { to: "/evaluation", key: "nav.evaluation", icon: "analyses", roles: ["admin"] },
   { to: "/family", key: "nav.family", icon: "heart", roles: ["family"] },
 ];
 

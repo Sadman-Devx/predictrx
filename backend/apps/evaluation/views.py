@@ -1,4 +1,5 @@
 from django.db import transaction
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -7,7 +8,7 @@ from rest_framework.views import APIView
 from apps.audit import services as audit
 from core.permissions import IsAdminRole
 
-from . import services
+from . import dashboard, services
 from .models import EvalRun
 from .serializers import EvalRunSerializer, EvalStartResponseSerializer, EvalStartSerializer
 
@@ -50,3 +51,17 @@ class EvalRunDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAdminRole]
     serializer_class = EvalRunSerializer
     queryset = EvalRun.objects.all()
+
+
+class EvalDashboardView(APIView):
+    """GET /api/eval/dashboard/ — everything the evaluation page shows, in one read-only call. Admin only.
+
+    Only recorded runs and saved findings are read; nothing is computed here that a run did not measure. The test
+    split carries counts only (no per-case list), the dev split also carries its pass/fail table. No patient data.
+    """
+
+    permission_classes = [IsAdminRole]
+
+    @extend_schema(tags=["Evaluation"], responses=OpenApiTypes.OBJECT)
+    def get(self, request):
+        return Response(dashboard.build_dashboard())

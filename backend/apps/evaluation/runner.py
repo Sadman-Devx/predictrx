@@ -6,8 +6,9 @@ Life cycle:  queued --claim--> running --persist--> completed
 * A duplicate delivery finds status != queued and returns 'skipped' (no second run on the same row).
 * The split is read when the run executes, and the exact cases are fingerprinted, so a result can always be tied
   to the set it was measured on.
-* Per-case details (which pairs were missed) are stored for the DEV split only. For the test split only counts are
-  stored: a list of missed test pairs invites fixing the data until the test passes, which is tuning on the test set.
+* Per-case details (which pairs passed / failed) are stored for the DEV split only. For the test split only counts
+  are stored: a list of missed test pairs invites fixing the data until the test passes, which is tuning on the
+  test set.
 * Logs carry the run id and the exception class only.
 
 error_code values: no_cases · tools_unavailable · timeout · eval_failed · enqueue_failed (set when queuing) ·
@@ -23,6 +24,8 @@ from . import metrics, services
 from .models import EvalCase, EvalRun
 
 logger = logging.getLogger(__name__)
+
+MAX_CASE_RESULTS = 300  # dev split only: every case with its pass/fail outcome (dashboard table)
 
 TEST_RERUN_NOTE = ("The test split is meant to be reported once. This is run #{n}. Do not change prompts, "
                    "thresholds or data in response to test results.")
@@ -62,6 +65,34 @@ def _missed_by_reason(cases: list, predictions: list) -> dict:
     return dict(reasons)
 
 
+def case_outcome(expected: str, predicted: str) -> str:
+    """One case, one word. `match` is the only pass.
+
+    match              reviewer 'none' and system 'unknown', or both name the same severity
+    missed             reviewer says it interacts, system found nothing citable
+    false_alarm        reviewer says no interaction, system flagged one
+    severity_mismatch  both flag it, but with different severities
+    """
+    if expected == "none":
+        return "match" if predicted == "unknown" else "false_alarm"
+    if predicted == "unknown":
+        return "missed"
+    return "match" if predicted == expected else "severity_mismatch"
+
+
+def _case_results(cases: list, predictions: list) -> list:
+    """Every dev case with its outcome (pass/fail table). Never produced for the test split."""
+    out = []
+    for case, p in zip(cases, predictions):
+        outcome = case_outcome(case.expected_severity, p.severity)
+        out.append({"drug_a": case.drug_a.generic_name, "drug_b": case.drug_b.generic_name,
+                    "expected": case.expected_severity, "predicted": p.severity, "pair_status": p.pair_status,
+                    "outcome": outcome, "passed": outcome == "match"})
+        if len(out) >= MAX_CASE_RESULTS:
+            break
+    return out
+
+
 def _dev_details(cases: list, predictions: list) -> list:
     out = []
     for case, p in zip(cases, predictions):
@@ -74,6 +105,13 @@ def _dev_details(cases: list, predictions: list) -> list:
         if len(out) >= services.MAX_DEV_DETAILS:
             break
     return out
+
+
+def _circular_count(cases: list) -> int:
+    """How many labels name DDInter / openFDA as their source: the data this system retrieves from.
+    Such a label can only show that the pipeline reproduces its own source, not that it is clinically right."""
+    return sum(1 for c in cases
+               if any(word in f"{c.rationale_ref} {c.reviewed_by}".lower() for word in services.CIRCULAR_SOURCES))
 
 
 def execute_run(run_id: int) -> str:
@@ -95,8 +133,10 @@ def execute_run(run_id: int) -> str:
         result["caveats"] = services.split_warnings(run.split, len(cases), by_severity)
         if run.split == "dev":
             result["case_details"] = _dev_details(cases, predictions)
+            result["case_results"] = _case_results(cases, predictions)
 
-        config = {**run.config, **config, "split": run.split, "n_unreviewed": sum(1 for c in cases if not c.reviewed_by)}
+        config = {**run.config, **config, "split": run.split, "n_unreviewed": sum(1 for c in cases if not c.reviewed_by),
+                  "n_circular_reference": _circular_count(cases)}
         if run.split == "test":
             number = EvalRun.objects.filter(kind="pairs", split="test", status="completed").count() + 1
             config["test_run_number"] = number
