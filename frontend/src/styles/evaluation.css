@@ -1,0 +1,25 @@
+/* ===== Evaluation dashboard (admin). Tokens only (styles/tokens.css). ===== */
+.eval-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-4); }
+.eval-stat { display: grid; gap: var(--space-2); align-content: start; margin: 0; }
+.eval-stat + .eval-stat { margin-top: 0; }
+.eval-stat-label { margin: 0; font-weight: 600; }
+.eval-stat-value { margin: 0; font-size: 32px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.eval-stat-value.na { font-size: var(--fs-section); color: var(--ink-muted); }
+.eval-stat-sub { margin: 0; }
+.eval-bar { height: 6px; border-radius: var(--radius-pill); background: var(--track); overflow: hidden; }
+.eval-bar > span { display: block; height: 100%; background: var(--primary); }
+.eval-note { margin: 0; }
+.eval-callout { margin-bottom: var(--space-4); display: grid; gap: var(--space-2); }
+.eval-callout h2 { margin: 0; font-size: var(--fs-section); }
+.eval-callout ul { margin: 0; padding-inline-start: 1.2em; display: grid; gap: var(--space-2); }
+.eval-guard { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.eval-guard p { margin: 0; }
+.eval-meta { margin: 0 0 var(--space-3); }
+.eval-set { margin: var(--space-2) 0 0; display: grid; gap: var(--space-1); }
+.eval-set p { margin: 0; }
+.eval-table-title { margin: 0 0 var(--space-3); font-size: var(--fs-section); }
+.eval-history { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.eval-history li { display: grid; gap: 2px; padding: var(--space-2) 0; border-bottom: 1px solid var(--border-soft); }
+.eval-history li:last-child { border-bottom: 0; }
+.eval-row-fail th, .eval-row-fail td { background: var(--sev-major-soft); }
+.eval-foot { margin-top: var(--space-4); }

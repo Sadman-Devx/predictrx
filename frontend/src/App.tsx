@@ -6,6 +6,7 @@ import { AppShell } from "./components/layout/AppShell";
 import AnalysisList from "./pages/AnalysisList";
 import AnalysisRun from "./pages/AnalysisRun";
 import Dashboard from "./pages/Dashboard";
+import Evaluation from "./pages/Evaluation";
 import Family from "./pages/Family";
 import FamilyPatient from "./pages/FamilyPatient";
 import Login from "./pages/Login";
@@ -56,6 +57,11 @@ export default function App() {
             <Route path="analysis/:runId" element={<AnalysisRun />} />
             {/* Day 10: the What-if simulation is a tab of a finished analysis; /twin lists the finished ones and opens that tab. */}
             <Route path="twin" element={<TwinHome />} />
+          </Route>
+
+          {/* Admin only: honest evaluation numbers (recall, precision, severity match, guardrail). The server is the real gate. */}
+          <Route element={<ProtectedRoute roles={["admin"]} />}>
+            <Route path="evaluation" element={<Evaluation />} />
           </Route>
 
           {/* Day 9: family view (read-only, only for the "family" role). */}
