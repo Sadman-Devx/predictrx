@@ -1,0 +1,245 @@
+/* ===== interaction heatmap (drug x drug matrix) =====
+   Tokens only. Severity = colour + shape + word. Verification = border style (solid / dashed / double ring).
+   There is no green "safe" cell: an empty cell is neutral and means "no finding returned". */
+
+.heatmap {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.heatmap-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.heatmap-heading h2,
+.heatmap-heading p,
+.heatmap-safety,
+.heatmap-empty {
+  margin: 0;
+}
+
+.heatmap-heading h2 { margin-bottom: var(--space-1); }
+
+.heatmap-count {
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+}
+
+/* ---- legend ---- */
+.heatmap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+}
+
+.heatmap-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--fs-badge);
+  font-weight: 600;
+}
+
+.heatmap-legend-item.sev-major { background: var(--sev-major-soft); border-color: var(--sev-major); color: var(--sev-major); }
+.heatmap-legend-item.sev-moderate { background: var(--sev-moderate-soft); border-color: var(--sev-moderate); color: var(--sev-moderate-text); }
+.heatmap-legend-item.sev-minor { background: var(--sev-minor-soft); border-color: var(--sev-minor); color: var(--sev-minor-text); }
+.heatmap-legend-item.sev-unknown { background: var(--sev-unknown-soft); border-color: var(--sev-unknown); color: var(--sev-unknown); }
+.heatmap-legend-item.legend-empty { border: 1px dashed var(--border-strong); color: var(--ink-muted); }
+.heatmap-legend-item.legend-unchecked {
+  border: 1px dashed var(--sev-unknown);
+  color: var(--sev-unknown);
+  background: repeating-linear-gradient(45deg, var(--sev-unknown-soft) 0 6px, var(--surface) 6px 12px);
+}
+.heatmap-legend-item.legend-ver { border-color: var(--ink-muted); }
+.heatmap-legend-item.ver-unverified { border-style: dashed; }
+.heatmap-legend-item.ver-conflict {
+  border-color: var(--conflict);
+  box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 4px var(--conflict);
+}
+
+/* ---- matrix ---- */
+.heatmap-scroll {
+  max-width: 100%;
+  overflow: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-inner);
+  background: var(--bg);
+}
+
+.heatmap-table {
+  margin: 0 auto;
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+
+.heatmap-corner { min-width: 90px; }
+
+.heatmap-col,
+.heatmap-row {
+  color: var(--ink);
+  font-size: var(--fs-badge);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.heatmap-col {
+  min-width: 76px;
+  max-width: 96px;
+  padding: 0 2px var(--space-1);
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.heatmap-row {
+  max-width: 150px;
+  padding-right: var(--space-2);
+  text-align: right;
+}
+
+.heatmap-col.is-active,
+.heatmap-row.is-active { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+
+.heatmap-col.is-unchecked,
+.heatmap-row.is-unchecked { color: var(--ink-muted); font-style: italic; }
+
+.heatmap-tag {
+  display: block;
+  color: var(--sev-unknown);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.heatmap-cell {
+  width: 76px;
+  height: 56px;
+  padding: 0;
+}
+
+.heatmap-self {
+  border-radius: var(--radius-control);
+  background: var(--track);
+  opacity: 0.5;
+}
+
+.heatmap-none,
+.heatmap-unchecked {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-control);
+  color: var(--border-strong);
+}
+
+.heatmap-none { border: 1px dashed var(--border); background: var(--surface); }
+.heatmap-unchecked {
+  border: 1px dashed var(--sev-unknown);
+  color: var(--sev-unknown);
+  background: repeating-linear-gradient(45deg, var(--sev-unknown-soft) 0 6px, var(--surface) 6px 12px);
+}
+
+.heatmap-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+
+.heatmap-btn.sev-major { background: var(--sev-major-soft); border-color: var(--sev-major); color: var(--sev-major); }
+.heatmap-btn.sev-moderate { background: var(--sev-moderate-soft); border-color: var(--sev-moderate); color: var(--sev-moderate-text); }
+.heatmap-btn.sev-minor { background: var(--sev-minor-soft); border-color: var(--sev-minor); color: var(--sev-minor-text); }
+.heatmap-btn.sev-unknown { background: var(--sev-unknown-soft); border-color: var(--sev-unknown); color: var(--sev-unknown); }
+
+/* verification: dashed = unverified, double ring = conflict (never hidden) */
+.heatmap-btn.ver-unverified { border-style: dashed; }
+.heatmap-btn.ver-conflict {
+  box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 5px var(--conflict);
+}
+
+.heatmap-btn:hover,
+.heatmap-btn.is-active { outline: 3px solid var(--primary); outline-offset: 2px; }
+.heatmap-btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+.heatmap-multi { font-weight: 600; opacity: 0.85; }
+
+/* ---- detail panel (source + confidence of the hovered / focused / tapped cell) ---- */
+.heatmap-detail {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 56px;
+}
+
+.heatmap-detail-hint { margin: 0; }
+
+.heatmap-detail-item {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-soft);
+  border-left: 6px solid var(--border-strong);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+}
+
+.heatmap-detail-item.sev-major { border-left-color: var(--sev-major); }
+.heatmap-detail-item.sev-moderate { border-left-color: var(--sev-moderate); }
+.heatmap-detail-item.sev-minor { border-left-color: var(--sev-minor); }
+.heatmap-detail-item.sev-unknown { border-left-color: var(--sev-unknown); }
+
+.heatmap-detail-item p { margin: 0; overflow-wrap: anywhere; }
+
+.heatmap-detail-pair {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.heatmap-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.heatmap-detail-link { justify-self: start; font-weight: 600; }
+
+.heatmap-safety {
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--sev-moderate);
+  background: var(--sev-moderate-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heatmap-btn { transition: outline-offset var(--dur) ease; }
+}
+
+@media (max-width: 560px) {
+  .heatmap-heading { flex-direction: column; }
+}
