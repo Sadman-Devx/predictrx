@@ -58,7 +58,7 @@ export default function Patients() {
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return items.filter((p) => {
-      if (q && !p.patient_code.toLowerCase().includes(q)) return false;
+      if (q && !p.patient_code.toLowerCase().includes(q) && !(p.name ?? "").toLowerCase().includes(q)) return false;
       if (activeFilter === "consent") return p.consent_active === true;
       if (activeFilter === "noConsent") return p.consent_active === false;
       return true;
@@ -166,7 +166,7 @@ export default function Patients() {
               <li key={p.id}>
                 <Link to={`/patients/${p.id}`} className="patient-card">
                   <span className="patient-card-head">
-                    <span className="patient-code">{p.patient_code}</span>
+                    <span className="patient-code">{p.name?.trim() ? p.name : p.patient_code}</span>
                     {typeof p.consent_active === "boolean" &&
                       (p.consent_active ? (
                         <span className="pill pill-consent">
@@ -180,6 +180,7 @@ export default function Patients() {
                         </span>
                       ))}
                   </span>
+                  {p.name?.trim() && <span className="patient-meta">{p.patient_code}</span>}
                   <span className="patient-meta">{details || t("patients.noDetails")}</span>
                   {typeof p.medication_count === "number" && (
                     <span className="patient-meta">
