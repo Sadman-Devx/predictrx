@@ -16,8 +16,10 @@ import NotFound from "./pages/NotFound";
 import PatientDetail from "./pages/PatientDetail";
 import Patients from "./pages/Patients";
 import Profile from "./pages/Profile";
+import ReviewQueue from "./pages/ReviewQueue";
 import ResetPassword from "./pages/ResetPassword";
 import Scan from "./pages/Scan";
+import TrustCenter from "./pages/TrustCenter";
 import TwinHome from "./pages/TwinHome";
 import VerifyEmail from "./pages/VerifyEmail";
 import type { Role } from "./lib/types";
@@ -44,6 +46,8 @@ export default function App() {
           <Route index element={<Home />} />
           {/* Every signed-in role: account details, resend verification, change password. */}
           <Route path="profile" element={<Profile />} />
+          {/* Trust center: what the system knows, does not know, and has not verified yet. Static text + two record counts. */}
+          <Route path="trust" element={<TrustCenter />} />
 
           {/* Staff screens. A family member who types one of these addresses is sent back to "/" (and from there to /family). */}
           <Route element={<ProtectedRoute roles={STAFF} />}>
@@ -58,6 +62,8 @@ export default function App() {
             <Route path="analysis/:runId" element={<AnalysisRun />} />
             <Route element={<ProtectedRoute roles={["doctor", "pharmacist"]} />}>
               <Route path="follow-ups" element={<FollowUps />} />
+              {/* Review queue: a suggested order to look at patients in, from plain rules. Reads existing endpoints only. */}
+              <Route path="review-queue" element={<ReviewQueue />} />
             </Route>
             {/* Day 10: the What-if simulation is a tab of a finished analysis; /twin lists the finished ones and opens that tab. */}
             <Route path="twin" element={<TwinHome />} />

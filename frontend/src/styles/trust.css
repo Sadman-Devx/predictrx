@@ -1,0 +1,30 @@
+/* Trust Center. Tokens only. */
+.trust-page .card { margin-top: var(--space-4); }
+.trust-page .card h2 { margin-top: 0; }
+.trust-note { border-left: 4px solid var(--primary); }
+.trust-note p { margin: 0; }
+.trust-stats { display: flex; flex-wrap: wrap; gap: var(--space-4); margin: var(--space-3) 0; }
+.trust-stat {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 180px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  background: var(--primary-soft);
+}
+.trust-stat strong { font-size: var(--fs-title); }
+.trust-list, .trust-sources { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-3); }
+.trust-sources { list-style: none; padding-left: 0; }
+.trust-sources p { margin: var(--space-1) 0 0; }
+.trust-tag {
+  display: inline-block;
+  padding: 1px var(--space-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-badge);
+  font-weight: 600;
+  color: var(--ink-muted);
+  background: var(--sev-unknown-soft);
+}
+.trust-tag-pending { color: var(--sev-moderate-text); background: var(--sev-moderate-soft); border-style: solid; border-color: var(--sev-moderate); }

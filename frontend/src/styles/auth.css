@@ -148,13 +148,20 @@
 
 .auth-or { margin: 18px 0 12px; text-align: center; font-size: 12px; color: var(--auth-text); }
 .auth-social { display: flex; justify-content: center; gap: 14px; }
+/* Google button = same look as the Facebook / LinkedIn buttons (bordered rounded box + plain letter).
+   The official Google widget stays on top of it, invisible, so a click still starts the real Google sign-in. */
 .auth-google-wrap {
-  position: relative; display: flex; align-items: center; justify-content: center; width: 42px; height: 42px;
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--auth-border);
+  background: transparent; overflow: hidden; transition: background-color 150ms ease;
 }
+.auth-google-wrap:hover { background: var(--auth-input); }
+.auth-google-wrap:focus-within { outline: 3px solid var(--auth-btn); outline-offset: 2px; }
+.auth-google-widget { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; opacity: 0.01; cursor: pointer; }
 .auth-google-widget:empty { display: none; }
 .auth-google-mark {
   position: absolute; inset: 0; z-index: 1; display: grid; place-items: center;
-  color: var(--auth-text); font: 600 16px/1 var(--auth-font); pointer-events: none;
+  color: var(--auth-text); font: 600 14px/1 var(--auth-font); pointer-events: none;
 }
 .auth-social button {
   width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--auth-border); background: transparent;
@@ -162,6 +169,10 @@
 }
 .auth-social button:hover { background: var(--auth-input); }
 .auth-social button:disabled { opacity: 0.6; cursor: wait; }
+/* fallback Google button (shown before the widget is ready) sits inside the wrap, so it needs no border of its own */
+.auth-social .auth-google-wrap button { width: 100%; height: 100%; border: 0; border-radius: inherit; }
+.auth-social .auth-google-wrap button:hover { background: transparent; }
+.auth-social .auth-google-wrap button:focus-visible { outline: none; }
 
 .auth-msg {
   margin: 0 0 12px; padding: 9px 12px; border-radius: 10px; font-size: 12px; line-height: 1.5; max-width: none;
@@ -314,7 +325,9 @@
   .auth-input input, .auth-submit { height: clamp(34px, 6.6cqh, 46px); }
   .auth-forgot { margin-bottom: clamp(6px, 1.6cqh, 12px); }
   .auth-or { margin: clamp(10px, 2.6cqh, 18px) 0 clamp(8px, 1.8cqh, 12px); }
-  .auth-social button { width: clamp(32px, 5.8cqh, 42px); height: clamp(32px, 5.8cqh, 42px); }
+  .auth-social button,
+  .auth-google-wrap { width: clamp(32px, 5.8cqh, 42px); height: clamp(32px, 5.8cqh, 42px); }
+  .auth-social .auth-google-wrap button { width: 100%; height: 100%; }
   .auth-block h2 { font-size: clamp(22px, 4.6cqh, 32px); }
   .auth-ghost { height: clamp(36px, 6.2cqh, 44px); }
 }
