@@ -1,28 +1,55 @@
-# PredictRx — 3-minute demo video script
+# PredictRx — 3-minute demo video (live URL only, no slides)
 
-Target length: **3:00** (hard cap). Language: narrate in English with Bangla on-screen captions (or the reverse — pick one and keep it).
-Rule: every shot must be a **real run** of the deployed app, on **synthetic data**. No mock-ups, no fabricated numbers.
-Before recording: log in as the demo doctor, make sure the "DEMO DATA" badge is visible, and open the agent trace once so it is warm.
+Everything is screen-recorded from **https://predictrx-assi.malaysiawest.cloudapp.azure.com**. Narration in English; Bangla shown where the product is Bangla-first. Synthetic data only (the "DEMO DATA" badge stays visible). Hard cap 3:00.
 
-| # | Segment | Time | On screen | Narration |
-|---|---|---|---|---|
-| 1 | Problem & users | 0:00–0:30 | Prescription photo with local brand names; one slide: doctor / caregiver / NRB family | "In Bangladesh, patients take medicines by **brand name** and carry paper prescriptions. Interaction databases speak English and generic names. A busy doctor has no quick, trustworthy way to check a medication list — and an NRB son or daughter abroad can't see risk in a parent's medicines at all. PredictRx closes that gap." |
-| 2 | AI solution | 0:30–1:00 | Login page (Bangla/English toggle) → Dashboard → one slide of the pipeline: Resolver → Clinical Notes → Drug Interaction → Advisory → Verifier | "PredictRx is a **Bangla-first, evidence-cited medication-safety assistant**. A multi-agent pipeline resolves brand to generic, checks interactions against public sources, and a **Verifier agent** cross-checks every finding. If there is no source, it says *insufficient evidence* — it never guesses. It is decision support, not a diagnosis." |
-| 3 | Live demo / flow | 1:00–2:05 | Scan a **synthetic** prescription → Review & Confirm (edit one drug, show resolve badges) → Run analysis (stepper) → Results (severity cards, evidence chips, verified/unverified/conflict) → Patient card (Bangla) → Family view → What-if | "I upload a synthetic prescription. The model extracts the drugs — and I **confirm** the list; a human is always in the loop. Brand names resolve to generics, unresolved ones are flagged, not guessed. The pipeline runs live. Each finding shows its **mechanism, source and confidence**, plus a verification badge. The patient gets a short Bangla card — no dosing, just 'discuss with your doctor'. With consent, a family member sees a read-only summary. And a what-if: add one more drug and see how the interaction picture changes." |
-| 4 | AI approach | 2:05–2:35 | Architecture graphic; agent trace panel showing `mcp_sse` tool calls; one line each: LangGraph, RAG, MCP, Ollama | "Under the hood: **LangGraph** agents, **RAG** over openFDA labels with semantic chunking, contextual prefixes and a graph of drug–interaction links, stored in **Postgres + pgvector**. A **custom MCP server over SSE** exposes `resolve_brand`, `lookup_drug` and `check_interaction` — the Verifier uses the same deterministic tools, independent of the LLM's prose. **PII is redacted** before any cloud call; embeddings run locally on **Ollama**. Data comes through an ingest → parse → clean → store → analytics pipeline, orchestrated with **n8n**, hosted on an Azure VM." |
-| 5 | Impact, KPIs, next steps | 2:35–3:00 | KPI slide (only numbers from a recorded eval run — see note) → roadmap slide → closing card with project name + link | "Our goal: **100% of warnings carry a source**. [Insert measured recall / precision / n **only if** the pharmacist-reviewed test set has been run — otherwise say 'we report measured accuracy once our reviewed test set is complete'.] Next: licensed data for commercial use, pharmacist-verified brand mapping, IoT vitals, federated learning across hospitals. PredictRx — fewer medication errors, in Bangla, with evidence you can check." |
+## Before you record
+- Clean Chrome profile or F11 full-screen (hide profile photo, extensions, taskbar).
+- UI in **English** for the main flow; switch to **Bangla** only for the language toggle and the Patient card.
+- Pre-run one analysis on demo patient PX-2B5MHGN7 so Results, Agent trace and What-if are ready. Keep a scan ready for the live `/review` pass.
+- Record the **auth part separately** (test email + demo Google account, inbox blurred) and cut it in.
+- Rehearse once. Record in pieces and join them in an editor.
 
-## Shot list & checks
-- [ ] Record on the **live URL** (not localhost), from a clean browser profile.
-- [ ] Use only the synthetic demo patient; no real names, no real prescriptions.
-- [ ] Show the disclaimer strip ("Decision support only. Not a diagnosis.") at least once, clearly.
-- [ ] Show one **unresolved/unverified** case on purpose — it proves the system is honest.
-- [ ] Captions in Bangla + English; check Bangla text for typos.
-- [ ] Do not show API keys, `.env`, demo passwords or the database dump.
-- [ ] Do not claim any accuracy, time-saved or KPI number that is not backed by a recorded run.
-- [ ] Do not claim NRB/mentor contribution unless it really happened.
-- [ ] Upload to YouTube (unlisted/public as the portal requires), confirm it plays while logged out, then paste the link into `form-fields.md` and the portal.
-- [ ] Keep a **fallback clip** (screen recording of the full demo path) in case the live site is down during judging.
+## Timeline
+
+| Time | Page (live URL) | What you do | What you say |
+|---|---|---|---|
+| 0:00–0:14 | **/login** | Show the page; click বাংলা and back to English; point at the disclaimer strip | "In Bangladesh, patients take medicines by **brand name**, while interaction databases speak English and generic names. Doctors have little time to cross-check, and families abroad can't see the risk in a parent's medicines. PredictRx closes that gap." |
+| 0:14–0:24 | **/register** → email OTP → code | Fill form, show the OTP email, enter code | "It's Bangla-first, with English too. New accounts are **verified by a one-time code** sent to email." |
+| 0:24–0:30 | **/login** → Google (G) | Click G, pick the demo account | "Or sign in with Google." |
+| 0:30–0:36 | **Dashboard** | Let the DEMO DATA badge and "New analysis" button show | "Everything here is synthetic demo data, and it's decision support, not a diagnosis." |
+| 0:36–0:42 | **/patients/1** (patient record) | Click the patient; **scroll straight past the Consent card** to the safety history: severity bars per analysis and the "what changed" comparison; then click **New analysis** | "Each patient has a safety history, and a comparison of what changed between two analyses. Now a new analysis." |
+| 0:42–0:58 | **New analysis → /review** | Prescription image beside the drug list; point at "matched" badges and the 100% generic match; on **Paracetamol (unresolved)** choose a generic; tick "I checked this list against the prescription"; click Run | "A vision model reads the prescription, but a **human confirms**. Matched brands show the generic and a match score. An ambiguous name is flagged, not guessed — I choose. Analysis won't start until every drug is resolved and I confirm." |
+| 0:58–1:06 | **/analysis/3** (progress) | Let the 6 steps tick | "Six visible steps — upload, OCR, brand to generic, interaction check, guardrail and verify, final report — each with status and time." |
+| 1:06–1:16 | **Results (top)** | Stats, severity donut, verification bar; hover Print / PDF | "Fifteen findings for six drugs, split by severity and by verification status. One click makes a sourced PDF for the clinician." |
+| 1:16–1:30 | **Findings → Evidence** | Scroll from the top (major → moderate); open Evidence on *aspirin + ciprofloxacin* | "Major first. Every finding shows its source, licence and confidence, with a verified badge — so the claim can be checked." |
+| 1:30–1:36 | **An unknown finding** (acetaminophen + ciprofloxacin) | Point at the text | "With no record it says so: **'no interaction record found — this does not mean the combination is safe.'**" |
+| 1:36–1:44 | **Patient card** tab → switch UI to Bangla | Scroll the Bangla card and yellow box | "A plain-Bangla card for the patient or caregiver. It never tells anyone to start, stop or change a medicine." |
+| 1:44–1:50 | **What-if** tab (back to English) | Show the "simulation for research" banner and the add-a-drug box | "A what-if view re-reads interaction records for an added drug. It's a lookup, not a forecast." |
+| 1:50–2:10 | **Agent trace** tab | Scroll the agents and tool calls | "Under the hood: **LangGraph** agents, RAG over openFDA labels in Postgres with pgvector, and a **custom MCP server over SSE** with deterministic tools. The Verifier re-checks through the same tools, independent of the model's wording. PII is redacted before any cloud call; embeddings and sensitive text run locally on Ollama." |
+| 2:10–2:20 | **Results (top)** again | Point at the counts | "In this run: 6 drugs, 15 pairs checked, 11 verified against a cited record, and pairs with no record shown as **unknown, never safe**. We claim no accuracy yet." |
+| 2:20–2:28 | **Review queue** (পর্যালোচনার তালিকা) | Open "how the order is decided" (conflict → major → overdue follow-up → unverified → moderate …); **click outside the box** so no focus outline shows; point at the patient's flags | "A transparent, **rule-based** review order — no AI ranking. And a patient with no flag is never called safe." |
+| 2:28–2:52 | **Trust center** (`/trust`) | Scroll top → bottom without stopping | "The Trust center states how it's protected — the Verifier, no 'safe' for missing records, a dosing guardrail, PII removal, an audit log — what is **still unverified**, and what's only planned: a pharmacist-verified brand list, independent evaluation, licensed data, ESP32 vitals, federated learning." |
+| 2:52–3:00 | **/login** (URL visible) | Hold on the address bar | "PredictRx — fewer medication errors, in Bangla, with evidence you can check." |
+
+**Numbers (2:10):** read them from your Results screen when you record (analysis #3: 6 drugs, 15 findings, 2 major, 5 moderate, 1 minor, 7 unknown, 11 verified, 4 unverified). Call it "one synthetic demo run", not accuracy.
+
+## Cut if you run over (in order)
+What-if (6 s) → Patient record (6 s) → Review queue (8 s) → Google sign-in (6 s). Keep email OTP.
+
+## Do not film
+Patient page **Consent** card at the top (shows "status not available") — scroll past it, Follow-up board (one task only).
+## Confirm before recording
+I could not see the **Agent trace** tab contents or the top of the **Trust center** in your screenshots. Open both once. If the trace is thin, shorten 1:50–2:10 to 10 s and give the time to Trust center.
+
+## Final checklist
+- [ ] Recorded on the live URL
+- [ ] Only the synthetic patient; demo accounts only; inbox blurred
+- [ ] Disclaimer strip and DEMO DATA badge visible
+- [ ] One unknown/unverified case, one major, one moderate, one verified badge visible
+- [ ] No accuracy/time-saved claim; no NRB/mentor claim
+- [ ] Bangla text checked
+- [ ] Uploaded to YouTube, plays logged-out; link in the portal Proof tab
+- [ ] Fallback clip saved
 
 ## Video link
 `[TBD — YouTube URL]`
