@@ -11,11 +11,13 @@ import listBn from "./list.bn.json";
 import listEn from "./list.en.json";
 import insightsBn from "./insights.bn.json";
 import insightsEn from "./insights.en.json";
+import trustBn from "./trustqueue.bn.json";
+import trustEn from "./trustqueue.en.json";
 
 // The Evidence panel strings live in their own small files (evidence.bn.json / evidence.en.json) and are merged here,
 // so every UI string still comes from i18n files and nothing is hard-coded in a component.
-const bn = { ...bnBase, ...evidenceBn, ...listBn, ...accountBn, ...evalBn, ...insightsBn };
-const en = { ...enBase, ...evidenceEn, ...listEn, ...accountEn, ...evalEn, ...insightsEn };
+const bn = { ...bnBase, ...evidenceBn, ...listBn, ...accountBn, ...evalBn, ...insightsBn, ...trustBn };
+const en = { ...enBase, ...evidenceEn, ...listEn, ...accountEn, ...evalEn, ...insightsEn, ...trustEn };
 
 export type Lang = "bn" | "en";
 export type MessageKey = keyof typeof bn;

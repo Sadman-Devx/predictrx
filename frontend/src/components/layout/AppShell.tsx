@@ -32,8 +32,10 @@ const NAV: NavItem[] = [
   { to: "/scan", key: "nav.scan", icon: "scan", also: ["/medications", "/review"], roles: STAFF },
   { to: "/analysis", key: "nav.analysis", icon: "analyses", roles: STAFF },
   { to: "/follow-ups", key: "nav.followups", icon: "shield-check", roles: ["doctor", "pharmacist"] },
+  { to: "/review-queue", key: "nav.reviewqueue", icon: "list", roles: ["doctor", "pharmacist"] },
   { to: "/evaluation", key: "nav.evaluation", icon: "analyses", roles: ["admin"] },
   { to: "/family", key: "nav.family", icon: "heart", roles: ["family"] },
+  { to: "/trust", key: "nav.trust", icon: "info", roles: [...STAFF, "family"] },
 ];
 
 function isActive(item: NavItem, pathname: string): boolean {
