@@ -146,6 +146,8 @@ export type ResolutionStatus = "unresolved" | "resolved" | "user_confirmed";
 export interface Patient {
   id: number;
   patient_code: string;
+  /** Optional display name; "" when none was entered. Older server responses may omit it. */
+  name?: string;
   birth_year: number | null;
   sex: string;
   weight_kg: string | null;
@@ -177,6 +179,7 @@ export interface PatientAnalysisHistory {
 }
 
 export interface PatientInput {
+  name?: string;
   birth_year?: number;
   sex?: Sex;
   weight_kg?: string;

@@ -18,6 +18,7 @@ const SEXES: { value: Sex | ""; key: MessageKey }[] = [
 
 export function PatientForm({ onCreated, onCancel }: Props) {
   const { t } = useI18n();
+  const [name, setName] = useState("");
   const [birthYear, setBirthYear] = useState("");
   const [sex, setSex] = useState<Sex | "">("");
   const [weight, setWeight] = useState("");
@@ -39,6 +40,7 @@ export function PatientForm({ onCreated, onCancel }: Props) {
     if (next.birthYear || next.weight) return;
 
     const payload: PatientInput = {};
+    if (name.trim()) payload.name = name.trim();
     if (year !== null) payload.birth_year = year;
     if (sex) payload.sex = sex;
     if (w !== null) payload.weight_kg = String(w);
@@ -61,6 +63,19 @@ export function PatientForm({ onCreated, onCancel }: Props) {
       {errors.form && <p className="alert" role="alert">{t(errors.form)}</p>}
 
       <div className="form-grid">
+        <label className="field">
+          {t("patients.name")}
+          <input
+            type="text"
+            maxLength={100}
+            autoComplete="off"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            aria-describedby="name-hint"
+          />
+          <span id="name-hint" className="muted small">{t("patients.name.hint")}</span>
+        </label>
+
         <label className="field">
           {t("patients.birthYear")}
           <input

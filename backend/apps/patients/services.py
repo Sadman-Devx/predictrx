@@ -35,7 +35,7 @@ _CODE_LENGTH = 8
 _MAX_CODE_ATTEMPTS = 5
 
 # The only fields a clinician may change after creation. `owner` and `patient_code` are never client-editable.
-UPDATABLE_FIELDS = ("birth_year", "sex", "weight_kg")
+UPDATABLE_FIELDS = ("name", "birth_year", "sex", "weight_kg")
 
 ANALYSIS_SCOPE = "analysis"
 FAMILY_SCOPE = "family_view"

@@ -88,7 +88,10 @@ export default function PatientDetail() {
     <section>
       <Link to="/patients" className="back-link"><Icon name="arrow-left" size={18} />{t("patients.back")}</Link>
 
-      <PageHeader title={patient.patient_code} subtitle={facts.length ? facts.join(" · ") : t("patients.noDetails")}
+      <PageHeader title={patient.name?.trim() ? patient.name : patient.patient_code}
+        subtitle={[patient.name?.trim() ? patient.patient_code : null, ...(facts.length ? facts : [t("patients.noDetails")])]
+          .filter((x): x is string => x !== null)
+          .join(" · ")}
         demo
         actions={<Link to={`/scan?patient=${patient.id}`} className="btn">{t("patients.startAnalysis")}</Link>}
       />

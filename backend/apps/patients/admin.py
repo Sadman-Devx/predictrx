@@ -41,14 +41,14 @@ class AnalysisConsentFilter(admin.SimpleListFilter):
 
 @admin.register(Patient)
 class PatientAdmin(PatientDataAdminMixin, BaseModelAdmin):
-    list_display = ("patient_code", "owner", "analysis_consent", "medication_total", "created_at")
+    list_display = ("patient_code", "name", "owner", "analysis_consent", "medication_total", "created_at")
     list_filter = (AnalysisConsentFilter, "sex")
-    search_fields = ("patient_code", "owner__email")
+    search_fields = ("patient_code", "name", "owner__email")
     list_select_related = ("owner",)
     ordering = ("-created_at", "-id")
-    readonly_fields = ("patient_code", "owner", "birth_year", "sex", "weight_kg", "created_at", "consent_state")
+    readonly_fields = ("patient_code", "name", "owner", "birth_year", "sex", "weight_kg", "created_at", "consent_state")
     fieldsets = (
-        (None, {"fields": ("patient_code", "owner", "birth_year", "sex", "weight_kg", "created_at")}),
+        (None, {"fields": ("patient_code", "name", "owner", "birth_year", "sex", "weight_kg", "created_at")}),
         ("Consent state (as the banner shows it)", {"fields": ("consent_state",)}),
     )
 

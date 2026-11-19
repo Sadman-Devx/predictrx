@@ -6,6 +6,8 @@ class Patient(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="patients")
     # Pseudonymous label shown in the UI. Real names are not required.
     patient_code = models.CharField(max_length=20, unique=True)
+    # Optional display name. Never required, never sent to an LLM, never written to audit logs or traces.
+    name = models.CharField(max_length=100, blank=True, default="")
     birth_year = models.PositiveSmallIntegerField(null=True, blank=True)
     sex = models.CharField(max_length=10, blank=True)
     weight_kg = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
