@@ -13,6 +13,7 @@
   "trust.counts.drugs": "medicines (generic names) in the data",
   "trust.counts.interactions": "interaction records, all sources",
   "trust.counts.unavailable": "unavailable",
+  "trust.counts.labels": "Of these, about 590 also have openFDA label text (checked on this installation, 19 Nov 2026). The rest have interaction records only, so explanations for them are limited.",
   "trust.counts.note": "These are record counts. They are not a measure of accuracy or of how complete the data is.",
 
   "trust.limit.title": "What it does not know",

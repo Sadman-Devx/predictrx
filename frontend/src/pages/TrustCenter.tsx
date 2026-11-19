@@ -90,6 +90,7 @@ export default function TrustCenter() {
             <span className="muted small">{t("trust.counts.interactions")}</span>
           </div>
         </div>
+        <p className="muted small">{t("trust.counts.labels")}</p>
         <p className="muted small">{t("trust.counts.note")}</p>
       </section>
 
