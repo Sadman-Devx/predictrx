@@ -71,9 +71,7 @@ export function PatientForm({ onCreated, onCancel }: Props) {
             autoComplete="off"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            aria-describedby="name-hint"
           />
-          <span id="name-hint" className="muted small">{t("patients.name.hint")}</span>
         </label>
 
         <label className="field">
