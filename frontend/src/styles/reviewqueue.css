@@ -1,0 +1,33 @@
+/* Review Queue. Tokens only; every reason pairs a shape + text with its colour. */
+.rq-page .card { margin-top: var(--space-4); }
+.rq-note { border-left: 4px solid var(--primary); }
+.rq-note p { margin: 0 0 var(--space-2); }
+.rq-note summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+.rq-rules { margin: var(--space-2) 0 0; padding-left: var(--space-5); display: grid; gap: var(--space-1); }
+.rq-list { list-style: none; margin: 0; padding: 0; }
+.rq-row-head { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.rq-reasons { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.rq-reason {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  font-size: var(--fs-badge);
+  font-weight: 600;
+  color: var(--ink-muted);
+  background: var(--sev-unknown-soft);
+}
+.rq-reason-conflict { color: var(--conflict); background: var(--conflict-soft); border-color: var(--conflict); }
+.rq-reason-major { color: var(--sev-major); background: var(--sev-major-soft); border-color: var(--sev-major); }
+.rq-reason-overdue,
+.rq-reason-unverified,
+.rq-reason-moderate { color: var(--sev-moderate-text); background: var(--sev-moderate-soft); border-color: var(--sev-moderate); }
+.rq-links { margin-top: var(--space-3); display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.rq-clear summary { cursor: pointer; font-weight: 600; }
+.rq-clear-list { margin: var(--space-2) 0 0; padding-left: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); }
+
+@media (max-width: 600px) {
+  .rq-links .btn { flex: 1 1 100%; justify-content: center; text-align: center; }
+}
