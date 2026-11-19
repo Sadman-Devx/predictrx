@@ -1,6 +1,5 @@
 {
-  "patients.name": "রোগীর নাম (ঐচ্ছিক)",
-  "patients.name.hint": "ফাঁকা রাখলে শুধু রোগীর কোড দেখানো হবে। নামটি কখনো এআই-তে পাঠানো হয় না।",
+  "patients.name": "রোগীর নাম",
   "patients.search.label": "রোগীর নাম বা কোড দিয়ে খুঁজুন",
   "patients.search.placeholder": "রোগীর নাম বা কোড দিয়ে খুঁজুন"
 }

@@ -1,6 +1,5 @@
 {
-  "patients.name": "Patient name (optional)",
-  "patients.name.hint": "Leave empty to use only the patient code. The name is never sent to AI.",
+  "patients.name": "Patient name",
   "patients.search.label": "Search by patient name or code",
   "patients.search.placeholder": "Search by patient name or code"
 }
